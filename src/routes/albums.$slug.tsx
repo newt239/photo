@@ -97,6 +97,12 @@ export const Route = createFileRoute("/albums/$slug")({
     return { userId };
   },
   component: AlbumDetailPage,
-  loader: async ({ params }: { readonly params: { readonly slug: string } }): Promise<AlbumDetail> =>
-    getAlbumBySlug({ data: { slug: params.slug } }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | Photo` }],
+  }),
+  loader: async ({
+    params,
+  }: {
+    readonly params: { readonly slug: string };
+  }): Promise<AlbumDetail> => getAlbumBySlug({ data: { slug: params.slug } }),
 });

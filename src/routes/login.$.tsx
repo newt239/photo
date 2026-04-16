@@ -10,4 +10,7 @@ const LoginPage = () => {
   );
 };
 
-export const Route = createFileRoute("/login/$")({ component: LoginPage });
+export const Route = createFileRoute("/login/$")({
+  component: LoginPage,
+  head: () => ({ meta: [{ title: "ログイン | Photo" }] }),
+});

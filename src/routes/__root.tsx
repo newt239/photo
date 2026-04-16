@@ -6,8 +6,6 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { cookieColorSchemeManager } from "#/lib/color-scheme.ts";
 import { getColorSchemeCookie } from "#/server/color-scheme.ts";
 
-import Footer from "../components/Footer";
-import Header from "../components/Header";
 import ClerkProvider from "../integrations/clerk/provider";
 import appCss from "../styles.css?url";
 
@@ -16,18 +14,14 @@ const colorSchemeManager = cookieColorSchemeManager();
 const RootDocument = ({ children }: { children: React.ReactNode }) => {
   const { colorScheme } = Route.useLoaderData();
   return (
-    <html lang="en" {...mantineHtmlProps}>
+    <html lang="ja" {...mantineHtmlProps}>
       <head>
         <ColorSchemeScript defaultColorScheme={colorScheme} />
         <HeadContent />
       </head>
       <body>
         <MantineProvider defaultColorScheme={colorScheme} colorSchemeManager={colorSchemeManager}>
-          <ClerkProvider>
-            <Header />
-            {children}
-            <Footer />
-          </ClerkProvider>
+          <ClerkProvider>{children}</ClerkProvider>
         </MantineProvider>
         <Scripts />
       </body>
@@ -60,7 +54,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "Photo",
       },
     ],
   }),

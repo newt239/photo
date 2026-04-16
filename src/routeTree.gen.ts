@@ -9,8 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PhotosIndexRouteImport } from './routes/photos.index'
 import { Route as AlbumsIndexRouteImport } from './routes/albums.index'
@@ -23,14 +22,9 @@ import { Route as AlbumsSlugRouteImport } from './routes/albums.$slug'
 import { Route as AlbumsSlugPhotosPhotoIdRouteImport } from './routes/albums.$slug.photos.$photoId'
 import { Route as ApiIUserIdPhotoIdFileRouteImport } from './routes/api/i.$userId.$photoId.$file'
 
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -91,8 +85,7 @@ const ApiIUserIdPhotoIdFileRoute = ApiIUserIdPhotoIdFileRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
   '/albums/$slug': typeof AlbumsSlugRouteWithChildren
   '/albums/new': typeof AlbumsNewRoute
   '/login/$': typeof LoginSplatRoute
@@ -106,8 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
   '/albums/$slug': typeof AlbumsSlugRouteWithChildren
   '/albums/new': typeof AlbumsNewRoute
   '/login/$': typeof LoginSplatRoute
@@ -122,8 +114,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
   '/albums/$slug': typeof AlbumsSlugRouteWithChildren
   '/albums/new': typeof AlbumsNewRoute
   '/login/$': typeof LoginSplatRoute
@@ -139,8 +130,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
-    | '/dashboard'
+    | '/settings'
     | '/albums/$slug'
     | '/albums/new'
     | '/login/$'
@@ -154,8 +144,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
-    | '/dashboard'
+    | '/settings'
     | '/albums/$slug'
     | '/albums/new'
     | '/login/$'
@@ -169,8 +158,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/about'
-    | '/dashboard'
+    | '/settings'
     | '/albums/$slug'
     | '/albums/new'
     | '/login/$'
@@ -185,8 +173,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  DashboardRoute: typeof DashboardRoute
+  SettingsRoute: typeof SettingsRoute
   AlbumsSlugRoute: typeof AlbumsSlugRouteWithChildren
   AlbumsNewRoute: typeof AlbumsNewRoute
   LoginSplatRoute: typeof LoginSplatRoute
@@ -200,18 +187,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -308,8 +288,7 @@ const AlbumsSlugRouteWithChildren = AlbumsSlugRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  DashboardRoute: DashboardRoute,
+  SettingsRoute: SettingsRoute,
   AlbumsSlugRoute: AlbumsSlugRouteWithChildren,
   AlbumsNewRoute: AlbumsNewRoute,
   LoginSplatRoute: LoginSplatRoute,

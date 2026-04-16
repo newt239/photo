@@ -33,7 +33,7 @@ export const AddPhotosToAlbumModal = ({
       return;
     }
     setLoading(true);
-    void listMyPhotos()
+    void listMyPhotos({ data: {} })
       .then((rows) => {
         setPhotos(rows);
         setSelected(new Set());

@@ -130,9 +130,7 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
       <Stack gap={4}>
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Title order={2}>{photo.title ?? "(無題)"}</Title>
-          <Badge variant="light">
-            {photo.visibility === "public" ? "公開" : "非公開"}
-          </Badge>
+          <Badge variant="light">{photo.visibility === "public" ? "公開" : "非公開"}</Badge>
         </Group>
         {takenAt && (
           <Text size="sm" c="dimmed">
@@ -141,10 +139,7 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
         )}
       </Stack>
 
-      <div
-        className={classes.frame}
-        style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
-      >
+      <div className={classes.frame} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
         <img src={imageSrc} alt={photo.title ?? ""} />
       </div>
 

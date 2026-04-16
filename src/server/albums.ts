@@ -34,42 +34,45 @@ export const createAlbum = createServerFn({ method: "POST" })
     return { id, slug };
   });
 
-export const listMyAlbums = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await requireUserId();
-  const db = getDb(env.DB);
-  const rows = await db
-    .select({
-      coverPhotoId: albums.coverPhotoId,
-      coverStorageKey: sql<string | null>`(
-          SELECT p.storage_key FROM album_photos ap
-          JOIN photos p ON p.id = ap.photo_id
-          WHERE ap.album_id = ${albums.id}
-          ORDER BY ap.sort_order ASC, ap.added_at ASC
-          LIMIT 1
-        )`.as("cover_storage_key"),
-      coverThumbnailKey: sql<string | null>`(
-          SELECT p.thumbnail_key FROM album_photos ap
-          JOIN photos p ON p.id = ap.photo_id
-          WHERE ap.album_id = ${albums.id}
-          ORDER BY ap.sort_order ASC, ap.added_at ASC
-          LIMIT 1
-        )`.as("cover_thumbnail_key"),
-      createdAt: albums.createdAt,
-      description: albums.description,
-      id: albums.id,
-      photoCount: sql<number>`(
-          SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums.id}
-        )`.as("photo_count"),
-      slug: albums.slug,
-      title: albums.title,
-      updatedAt: albums.updatedAt,
-      visibility: albums.visibility,
-    })
-    .from(albums)
-    .where(eq(albums.userId, userId))
-    .orderBy(desc(albums.createdAt));
-  return rows;
-});
+export const listMyAlbums = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ limit: z.number().int().positive().max(200).optional() }))
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = getDb(env.DB);
+    const rows = await db
+      .select({
+        coverPhotoId: albums.coverPhotoId,
+        coverStorageKey: sql<string | null>`(
+            SELECT p.storage_key FROM album_photos ap
+            JOIN photos p ON p.id = ap.photo_id
+            WHERE ap.album_id = ${albums.id}
+            ORDER BY ap.sort_order ASC, ap.added_at ASC
+            LIMIT 1
+          )`.as("cover_storage_key"),
+        coverThumbnailKey: sql<string | null>`(
+            SELECT p.thumbnail_key FROM album_photos ap
+            JOIN photos p ON p.id = ap.photo_id
+            WHERE ap.album_id = ${albums.id}
+            ORDER BY ap.sort_order ASC, ap.added_at ASC
+            LIMIT 1
+          )`.as("cover_thumbnail_key"),
+        createdAt: albums.createdAt,
+        description: albums.description,
+        id: albums.id,
+        photoCount: sql<number>`(
+            SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums.id}
+          )`.as("photo_count"),
+        slug: albums.slug,
+        title: albums.title,
+        updatedAt: albums.updatedAt,
+        visibility: albums.visibility,
+      })
+      .from(albums)
+      .where(eq(albums.userId, userId))
+      .orderBy(desc(albums.createdAt))
+      .limit(data.limit ?? 200);
+    return rows;
+  });
 
 export const getAlbumBySlug = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string().min(1) }))

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import {
+  Anchor,
   Button,
   Group,
   Paper,
@@ -10,7 +11,7 @@ import {
   Textarea,
   Title,
 } from "@mantine/core";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 
 import { createAlbum } from "#/server/albums.ts";
 import { fetchAuth } from "#/server/auth.ts";
@@ -48,6 +49,9 @@ const NewAlbumPage = () => {
 
   return (
     <Stack p="xl" gap="md" maw={680} mx="auto">
+      <Anchor component={Link} to="/" size="sm">
+        ← ホーム
+      </Anchor>
       <Title order={2}>新しいアルバム</Title>
       <Paper withBorder radius="md" p="lg">
         <form onSubmit={handleSubmit}>
@@ -99,4 +103,5 @@ export const Route = createFileRoute("/albums/new")({
     return { userId };
   },
   component: NewAlbumPage,
+  head: () => ({ meta: [{ title: "新規アルバム | Photo" }] }),
 });

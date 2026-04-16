@@ -129,17 +129,19 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     return { id: data.photoId };
   });
 
-export const listMyPhotos = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await requireUserId();
-  const db = getDb(env.DB);
-  const rows = await db
-    .select()
-    .from(photos)
-    .where(eq(photos.userId, userId))
-    .orderBy(desc(photos.uploadedAt))
-    .limit(200);
-  return rows;
-});
+export const listMyPhotos = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ limit: z.number().int().positive().max(200).optional() }))
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = getDb(env.DB);
+    const rows = await db
+      .select()
+      .from(photos)
+      .where(eq(photos.userId, userId))
+      .orderBy(desc(photos.uploadedAt))
+      .limit(data.limit ?? 200);
+    return rows;
+  });
 
 export const getPhoto = createServerFn({ method: "GET" })
   .inputValidator(z.object({ id: z.string().min(1) }))
