@@ -1,0 +1,215 @@
+import { useState } from 'react'
+import { useRouter } from '@tanstack/react-router'
+import {
+  Button,
+  Group,
+  List,
+  Paper,
+  Progress,
+  Stack,
+  Text,
+} from '@mantine/core'
+import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone'
+import { createPhotoUpload, finalizePhoto } from '#/server/photos.ts'
+import {
+  extractExif,
+  generateThumbnail,
+  probeDimensions,
+} from '#/lib/image.ts'
+
+const ACCEPTED_MIME = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'image/heic',
+  'image/heif',
+  'image/gif',
+] as const
+
+type UploadState = {
+  id: string
+  name: string
+  status: 'queued' | 'preparing' | 'uploading' | 'saving' | 'done' | 'error'
+  progress: number
+  error?: string
+}
+
+export function UploadDropzone({ onComplete }: { onComplete?: () => void }) {
+  const [items, setItems] = useState<Array<UploadState>>([])
+  const [busy, setBusy] = useState(false)
+  const router = useRouter()
+
+  const updateItem = (id: string, patch: Partial<UploadState>) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, ...patch } : it)),
+    )
+  }
+
+  async function putToR2(url: string, body: Blob, contentType: string) {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body,
+    })
+    if (!res.ok) {
+      throw new Error(`R2_PUT_FAILED_${res.status}`)
+    }
+  }
+
+  async function uploadOne(file: File, id: string) {
+    const contentType = file.type.toLowerCase()
+    if (!ACCEPTED_MIME.includes(contentType as (typeof ACCEPTED_MIME)[number])) {
+      updateItem(id, { status: 'error', error: `非対応の形式: ${contentType}` })
+      return
+    }
+    try {
+      updateItem(id, { status: 'preparing', progress: 5 })
+      const [dims, exif, thumb] = await Promise.all([
+        probeDimensions(file),
+        extractExif(file),
+        generateThumbnail(file),
+      ])
+
+      updateItem(id, { progress: 25 })
+      const prep = await createPhotoUpload({
+        data: {
+          contentType: contentType as (typeof ACCEPTED_MIME)[number],
+          size: file.size,
+          hasThumbnail: !!thumb,
+        },
+      })
+
+      updateItem(id, { status: 'uploading', progress: 40 })
+      await putToR2(prep.originalUrl, file, contentType)
+
+      if (thumb && prep.thumbnailUrl) {
+        updateItem(id, { progress: 70 })
+        await putToR2(prep.thumbnailUrl, thumb, 'image/webp')
+      }
+
+      updateItem(id, { status: 'saving', progress: 85 })
+      await finalizePhoto({
+        data: {
+          photoId: prep.photoId,
+          originalKey: prep.originalKey,
+          thumbnailKey: prep.thumbnailKey,
+          mimeType: contentType as (typeof ACCEPTED_MIME)[number],
+          fileSize: file.size,
+          width: dims.width,
+          height: dims.height,
+          ...exif,
+        },
+      })
+
+      updateItem(id, { status: 'done', progress: 100 })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      updateItem(id, { status: 'error', error: message })
+    }
+  }
+
+  async function handleDrop(files: Array<File>) {
+    const newItems: Array<UploadState> = files.map((f) => ({
+      id: `${Date.now()}-${f.name}-${Math.random().toString(36).slice(2, 6)}`,
+      name: f.name,
+      status: 'queued',
+      progress: 0,
+    }))
+    setItems((prev) => [...prev, ...newItems])
+    setBusy(true)
+    try {
+      for (const [idx, file] of files.entries()) {
+        await uploadOne(file, newItems[idx].id)
+      }
+      await router.invalidate()
+      onComplete?.()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Stack gap="md">
+      <Dropzone
+        onDrop={handleDrop}
+        onReject={(rejections) => {
+          // eslint-disable-next-line no-console
+          console.warn('rejected files', rejections)
+        }}
+        accept={IMAGE_MIME_TYPE}
+        maxSize={50 * 1024 * 1024}
+        loading={busy}
+        multiple
+      >
+        <Group justify="center" mih={160} style={{ pointerEvents: 'none' }}>
+          <Stack align="center" gap={4}>
+            <Text size="xl" fw={600}>
+              画像をドラッグ&ドロップ
+            </Text>
+            <Text size="sm" c="dimmed">
+              JPEG / PNG / WebP / AVIF / HEIC、1 ファイル 50 MB まで
+            </Text>
+          </Stack>
+        </Group>
+      </Dropzone>
+
+      {items.length > 0 && (
+        <Paper withBorder p="md" radius="md">
+          <List spacing="sm" size="sm">
+            {items.map((it) => (
+              <List.Item key={it.id}>
+                <Stack gap={4}>
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text size="sm" truncate>
+                      {it.name}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {labelFor(it.status)}
+                    </Text>
+                  </Group>
+                  <Progress
+                    value={it.progress}
+                    color={it.status === 'error' ? 'red' : undefined}
+                  />
+                  {it.error && (
+                    <Text size="xs" c="red">
+                      {it.error}
+                    </Text>
+                  )}
+                </Stack>
+              </List.Item>
+            ))}
+          </List>
+        </Paper>
+      )}
+
+      <Group justify="flex-end">
+        <Button
+          variant="default"
+          onClick={() => setItems([])}
+          disabled={busy || items.length === 0}
+        >
+          履歴をクリア
+        </Button>
+      </Group>
+    </Stack>
+  )
+}
+
+function labelFor(status: UploadState['status']): string {
+  switch (status) {
+    case 'queued':
+      return '待機中'
+    case 'preparing':
+      return '前処理中'
+    case 'uploading':
+      return 'アップロード中'
+    case 'saving':
+      return '保存中'
+    case 'done':
+      return '完了'
+    case 'error':
+      return 'エラー'
+  }
+}

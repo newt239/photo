@@ -21,20 +21,26 @@ export default function Header() {
             Home
           </Link>
           <Link
-            to="/about"
+            to="/photos"
             className={classes.link}
             activeProps={{ 'data-status': 'active' }}
           >
-            About
+            Photos
           </Link>
-          <a
-            href="https://tanstack.com/start/latest/docs/framework/react/overview"
+          <Link
+            to="/albums"
             className={classes.link}
-            target="_blank"
-            rel="noreferrer"
+            activeProps={{ 'data-status': 'active' }}
           >
-            Docs
-          </a>
+            Albums
+          </Link>
+          <Link
+            to="/dashboard"
+            className={classes.link}
+            activeProps={{ 'data-status': 'active' }}
+          >
+            Dashboard
+          </Link>
           <ClerkHeader />
           <ThemeToggle />
         </Group>

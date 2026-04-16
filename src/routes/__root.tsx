@@ -9,11 +9,19 @@ import Footer from '../components/Footer'
 import Header from '../components/Header'
 
 import ClerkProvider from '../integrations/clerk/provider'
+import { cookieColorSchemeManager } from '#/lib/color-scheme.ts'
+import { getColorSchemeCookie } from '#/server/color-scheme.ts'
 
 import mantineCoreCss from '@mantine/core/styles.css?url'
+import mantineDropzoneCss from '@mantine/dropzone/styles.css?url'
 import appCss from '../styles.css?url'
 
+const colorSchemeManager = cookieColorSchemeManager()
+
 export const Route = createRootRoute({
+  loader: async () => ({
+    colorScheme: await getColorSchemeCookie(),
+  }),
   head: () => ({
     meta: [
       {
@@ -34,6 +42,10 @@ export const Route = createRootRoute({
       },
       {
         rel: 'stylesheet',
+        href: mantineDropzoneCss,
+      },
+      {
+        rel: 'stylesheet',
         href: appCss,
       },
     ],
@@ -42,14 +54,18 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { colorScheme } = Route.useLoaderData()
   return (
     <html lang="en" {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript defaultColorScheme="auto" />
+        <ColorSchemeScript defaultColorScheme={colorScheme} />
         <HeadContent />
       </head>
       <body>
-        <MantineProvider defaultColorScheme="auto">
+        <MantineProvider
+          defaultColorScheme={colorScheme}
+          colorSchemeManager={colorSchemeManager}
+        >
           <ClerkProvider>
             <Header />
             {children}

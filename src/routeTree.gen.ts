@@ -12,8 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PhotosIndexRouteImport } from './routes/photos.index'
+import { Route as AlbumsIndexRouteImport } from './routes/albums.index'
 import { Route as RegisterSplatRouteImport } from './routes/register.$'
+import { Route as PhotosUploadRouteImport } from './routes/photos.upload'
 import { Route as LoginSplatRouteImport } from './routes/login.$'
+import { Route as AlbumsNewRouteImport } from './routes/albums.new'
+import { Route as AlbumsSlugRouteImport } from './routes/albums.$slug'
+import { Route as ApiIUserIdPhotoIdFileRouteImport } from './routes/api/i.$userId.$photoId.$file'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -30,9 +36,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PhotosIndexRoute = PhotosIndexRouteImport.update({
+  id: '/photos/',
+  path: '/photos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlbumsIndexRoute = AlbumsIndexRouteImport.update({
+  id: '/albums/',
+  path: '/albums/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterSplatRoute = RegisterSplatRouteImport.update({
   id: '/register/$',
   path: '/register/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhotosUploadRoute = PhotosUploadRouteImport.update({
+  id: '/photos/upload',
+  path: '/photos/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginSplatRoute = LoginSplatRouteImport.update({
@@ -40,43 +61,116 @@ const LoginSplatRoute = LoginSplatRouteImport.update({
   path: '/login/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlbumsNewRoute = AlbumsNewRouteImport.update({
+  id: '/albums/new',
+  path: '/albums/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlbumsSlugRoute = AlbumsSlugRouteImport.update({
+  id: '/albums/$slug',
+  path: '/albums/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiIUserIdPhotoIdFileRoute = ApiIUserIdPhotoIdFileRouteImport.update({
+  id: '/api/i/$userId/$photoId/$file',
+  path: '/api/i/$userId/$photoId/$file',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
+  '/albums/$slug': typeof AlbumsSlugRoute
+  '/albums/new': typeof AlbumsNewRoute
   '/login/$': typeof LoginSplatRoute
+  '/photos/upload': typeof PhotosUploadRoute
   '/register/$': typeof RegisterSplatRoute
+  '/albums/': typeof AlbumsIndexRoute
+  '/photos/': typeof PhotosIndexRoute
+  '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
+  '/albums/$slug': typeof AlbumsSlugRoute
+  '/albums/new': typeof AlbumsNewRoute
   '/login/$': typeof LoginSplatRoute
+  '/photos/upload': typeof PhotosUploadRoute
   '/register/$': typeof RegisterSplatRoute
+  '/albums': typeof AlbumsIndexRoute
+  '/photos': typeof PhotosIndexRoute
+  '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
+  '/albums/$slug': typeof AlbumsSlugRoute
+  '/albums/new': typeof AlbumsNewRoute
   '/login/$': typeof LoginSplatRoute
+  '/photos/upload': typeof PhotosUploadRoute
   '/register/$': typeof RegisterSplatRoute
+  '/albums/': typeof AlbumsIndexRoute
+  '/photos/': typeof PhotosIndexRoute
+  '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/dashboard' | '/login/$' | '/register/$'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/dashboard'
+    | '/albums/$slug'
+    | '/albums/new'
+    | '/login/$'
+    | '/photos/upload'
+    | '/register/$'
+    | '/albums/'
+    | '/photos/'
+    | '/api/i/$userId/$photoId/$file'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/dashboard' | '/login/$' | '/register/$'
-  id: '__root__' | '/' | '/about' | '/dashboard' | '/login/$' | '/register/$'
+  to:
+    | '/'
+    | '/about'
+    | '/dashboard'
+    | '/albums/$slug'
+    | '/albums/new'
+    | '/login/$'
+    | '/photos/upload'
+    | '/register/$'
+    | '/albums'
+    | '/photos'
+    | '/api/i/$userId/$photoId/$file'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/dashboard'
+    | '/albums/$slug'
+    | '/albums/new'
+    | '/login/$'
+    | '/photos/upload'
+    | '/register/$'
+    | '/albums/'
+    | '/photos/'
+    | '/api/i/$userId/$photoId/$file'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   DashboardRoute: typeof DashboardRoute
+  AlbumsSlugRoute: typeof AlbumsSlugRoute
+  AlbumsNewRoute: typeof AlbumsNewRoute
   LoginSplatRoute: typeof LoginSplatRoute
+  PhotosUploadRoute: typeof PhotosUploadRoute
   RegisterSplatRoute: typeof RegisterSplatRoute
+  AlbumsIndexRoute: typeof AlbumsIndexRoute
+  PhotosIndexRoute: typeof PhotosIndexRoute
+  ApiIUserIdPhotoIdFileRoute: typeof ApiIUserIdPhotoIdFileRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,11 +196,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/photos/': {
+      id: '/photos/'
+      path: '/photos'
+      fullPath: '/photos/'
+      preLoaderRoute: typeof PhotosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/albums/': {
+      id: '/albums/'
+      path: '/albums'
+      fullPath: '/albums/'
+      preLoaderRoute: typeof AlbumsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register/$': {
       id: '/register/$'
       path: '/register/$'
       fullPath: '/register/$'
       preLoaderRoute: typeof RegisterSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/photos/upload': {
+      id: '/photos/upload'
+      path: '/photos/upload'
+      fullPath: '/photos/upload'
+      preLoaderRoute: typeof PhotosUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/$': {
@@ -116,6 +231,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/albums/new': {
+      id: '/albums/new'
+      path: '/albums/new'
+      fullPath: '/albums/new'
+      preLoaderRoute: typeof AlbumsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/albums/$slug': {
+      id: '/albums/$slug'
+      path: '/albums/$slug'
+      fullPath: '/albums/$slug'
+      preLoaderRoute: typeof AlbumsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/i/$userId/$photoId/$file': {
+      id: '/api/i/$userId/$photoId/$file'
+      path: '/api/i/$userId/$photoId/$file'
+      fullPath: '/api/i/$userId/$photoId/$file'
+      preLoaderRoute: typeof ApiIUserIdPhotoIdFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -123,8 +259,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   DashboardRoute: DashboardRoute,
+  AlbumsSlugRoute: AlbumsSlugRoute,
+  AlbumsNewRoute: AlbumsNewRoute,
   LoginSplatRoute: LoginSplatRoute,
+  PhotosUploadRoute: PhotosUploadRoute,
   RegisterSplatRoute: RegisterSplatRoute,
+  AlbumsIndexRoute: AlbumsIndexRoute,
+  PhotosIndexRoute: PhotosIndexRoute,
+  ApiIUserIdPhotoIdFileRoute: ApiIUserIdPhotoIdFileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
