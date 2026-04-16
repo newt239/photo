@@ -18,6 +18,7 @@
     {
       "binding": "MY_BUCKET",
       "bucket_name": "photo",
+      "remote": true,
     },
   ],
 }

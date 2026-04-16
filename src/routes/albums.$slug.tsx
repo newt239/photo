@@ -10,6 +10,7 @@ import { fetchAuth } from "#/server/auth.ts";
 
 const AlbumDetailPage = () => {
   const { album, photos } = Route.useLoaderData();
+  const { slug } = Route.useParams();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const existingIds = useMemo(() => new Set(photos.map((p) => p.id)), [photos]);
@@ -45,6 +46,7 @@ const AlbumDetailPage = () => {
           {photos.map((p) => (
             <PhotoCard
               key={p.id}
+              albumSlug={slug}
               photo={{
                 height: p.height,
                 id: p.id,

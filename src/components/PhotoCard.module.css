@@ -1,3 +1,14 @@
+.link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 120ms ease;
+}
+
+.link:hover {
+  transform: translateY(-2px);
+}
+
 .card {
   overflow: hidden;
 }
