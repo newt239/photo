@@ -12,6 +12,7 @@
       "binding": "DB",
       "database_name": "photo",
       "database_id": "25507ef0-d4a4-46e0-92c0-d5f568d21f06",
+      "migrations_dir": "drizzle",
     },
   ],
   "r2_buckets": [

@@ -1,205 +1,63 @@
-Welcome to your new TanStack Start app!
+# photo
 
-# Getting Started
+個人向け写真管理アプリ。Cloudflare Workers 上で動作する TanStack Start ベースの SSR アプリ。
 
-To run this application:
+## 技術スタック
 
-```bash
-npm install
-npm run dev
-```
+- **Framework**: TanStack Start (React 19, SSR)
+- **UI**: Mantine + CSS Modules
+- **Auth**: Clerk
+- **DB**: Cloudflare D1 + Drizzle ORM
+- **Storage**: Cloudflare R2
+- **Runtime**: Cloudflare Workers
 
-# Building For Production
-
-To build this application for production:
-
-```bash
-npm run build
-```
-
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## セットアップ
 
 ```bash
-npm run test
+pnpm install
 ```
 
-## Styling
+`.env.local` に以下を設定:
 
-This project uses [Mantine](https://mantine.dev/) for its component library and [CSS Modules](https://github.com/css-modules/css-modules) for custom styles.
-
-- Mantine's global styles are imported from `@mantine/core/styles.css` in `src/routes/__root.tsx`.
-- The app is wrapped with `MantineProvider` in the same file, enabling theming and the automatic color scheme.
-- PostCSS is configured via `postcss.config.cjs` with `postcss-preset-mantine` and `postcss-simple-vars` so you can use Mantine mixins and breakpoint variables inside `.module.css` files.
-- For component-scoped styles, create a `ComponentName.module.css` next to the component and import it as `import classes from './ComponentName.module.css'`.
-
-## Setting up Clerk
-
-- Set the `VITE_CLERK_PUBLISHABLE_KEY` in your `.env.local`.
-
-## T3Env
-
-- You can use T3Env to add type safety to your environment variables.
-- Add Environment variables to the `src/env.mjs` file.
-- Use the environment variables in your code.
-
-### Usage
-
-```ts
-import { env } from "#/env";
-
-console.log(env.VITE_APP_TITLE);
+```
+VITE_CLERK_PUBLISHABLE_KEY=...
+CLOUDFLARE_ACCOUNT_ID=...
+CLOUDFLARE_TOKEN=...
 ```
 
-## Routing
+## 開発コマンド
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
+```bash
+pnpm dev        # 開発サーバー (http://localhost:3000)
+pnpm build      # 本番ビルド
+pnpm preview    # ビルド成果物のプレビュー
+pnpm test       # Vitest
+pnpm codecheck  # typecheck + lint + format
 ```
 
-Then anywhere in your JSX you can use it like so:
+## データベース
 
-```tsx
-<Link to="/about">About</Link>
+Drizzle でスキーマ (`src/db/schema.ts`) からマイグレーション SQL を生成:
+
+```bash
+pnpm db:generate  # ./drizzle に出力
+pnpm db:studio    # Drizzle Studio
 ```
 
-This will create a link that will navigate to the `/about` route.
+D1 へのマイグレーション適用は wrangler 経由で実行:
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+```bash
+# ローカル D1 (開発用)
+pnpm wrangler d1 migrations apply photo --local
 
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "My App" },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-});
+# 本番 D1
+pnpm wrangler d1 migrations apply photo --remote
 ```
 
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
+> `wrangler.jsonc` の `d1_databases[].migrations_dir` に `drizzle` を指定しているため、drizzle-kit が生成した SQL をそのまま wrangler が読み込む。
 
-## Server Functions
+## デプロイ
 
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from "@tanstack/react-start";
-
-const getServerTime = createServerFn({
-  method: "GET",
-}).handler(async () => {
-  return new Date().toISOString();
-});
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState("");
-
-  useEffect(() => {
-    getServerTime().then(setTime);
-  }, []);
-
-  return <div>Server time: {time}</div>;
-}
+```bash
+pnpm wrangler deploy
 ```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@tanstack/react-start";
-
-export const Route = createFileRoute("/api/hello")({
-  server: {
-    handlers: {
-      GET: () => json({ message: "Hello, World!" }),
-    },
-  },
-});
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/people")({
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json();
-  },
-  component: PeopleComponent,
-});
-
-function PeopleComponent() {
-  const data = Route.useLoaderData();
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
