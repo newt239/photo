@@ -2,4 +2,5 @@ allowBuilds:
   '@clerk/shared': true
   better-sqlite3: true
   esbuild: true
-minimumReleaseAge: 1440
+  sharp: true
+  workerd: true

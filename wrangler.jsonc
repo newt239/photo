@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "photo",
+  "compatibility_date":  "2026-04-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "vars": {
+    "MY_VAR": "Hello from Cloudflare",
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "photo",
+    "database_id": "25507ef0-d4a4-46e0-92c0-d5f568d21f06"
+  }],
+  "r2_buckets": [{
+    "binding": "MY_BUCKET",
+    "bucket_name": "photo"
+  }]
+}
