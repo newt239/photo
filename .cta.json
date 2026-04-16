@@ -4,7 +4,7 @@
   "typescript": true,
   "packageManager": "npm",
   "includeExamples": false,
-  "tailwind": true,
+  "tailwind": false,
   "addOnOptions": {
     "drizzle": {
       "database": "sqlite"

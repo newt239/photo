@@ -1,0 +1,5 @@
+.main {
+  max-width: 1080px;
+  margin-inline: auto;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+}

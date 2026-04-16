@@ -1,4 +1,12 @@
 import { useStore } from '@tanstack/react-form'
+import {
+  Button,
+  Select as MantineSelect,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from '@mantine/core'
 
 import { useFieldContext, useFormContext } from '#/hooks/demo.form-context'
 
@@ -7,13 +15,9 @@ export function SubscribeButton({ label }: { label: string }) {
   return (
     <form.Subscribe selector={(state) => state.isSubmitting}>
       {(isSubmitting) => (
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-        >
+        <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
           {label}
-        </button>
+        </Button>
       )}
     </form.Subscribe>
   )
@@ -25,16 +29,18 @@ function ErrorMessages({
   errors: Array<string | { message: string }>
 }) {
   return (
-    <>
+    <Stack gap={2} mt={4}>
       {errors.map((error) => (
-        <div
+        <Text
           key={typeof error === 'string' ? error : error.message}
-          className="text-red-500 mt-1 font-bold"
+          size="sm"
+          c="red"
+          fw={700}
         >
           {typeof error === 'string' ? error : error.message}
-        </div>
+        </Text>
       ))}
-    </>
+    </Stack>
   )
 }
 
@@ -50,16 +56,13 @@ export function TextField({
 
   return (
     <div>
-      <label htmlFor={label} className="block font-bold mb-1 text-xl">
-        {label}
-        <input
-          value={field.state.value}
-          placeholder={placeholder}
-          onBlur={field.handleBlur}
-          onChange={(e) => field.handleChange(e.target.value)}
-          className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </label>
+      <TextInput
+        label={label}
+        value={field.state.value}
+        placeholder={placeholder}
+        onBlur={field.handleBlur}
+        onChange={(e) => field.handleChange(e.currentTarget.value)}
+      />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
   )
@@ -77,16 +80,13 @@ export function TextArea({
 
   return (
     <div>
-      <label htmlFor={label} className="block font-bold mb-1 text-xl">
-        {label}
-        <textarea
-          value={field.state.value}
-          onBlur={field.handleBlur}
-          rows={rows}
-          onChange={(e) => field.handleChange(e.target.value)}
-          className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </label>
+      <Textarea
+        label={label}
+        value={field.state.value}
+        onBlur={field.handleBlur}
+        rows={rows}
+        onChange={(e) => field.handleChange(e.currentTarget.value)}
+      />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
   )
@@ -105,22 +105,13 @@ export function Select({
 
   return (
     <div>
-      <label htmlFor={label} className="block font-bold mb-1 text-xl">
-        {label}
-      </label>
-      <select
-        name={field.name}
+      <MantineSelect
+        label={label}
+        data={values}
         value={field.state.value}
         onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
-        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        {values.map((value) => (
-          <option key={value.value} value={value.value}>
-            {value.label}
-          </option>
-        ))}
-      </select>
+        onChange={(value) => field.handleChange(value ?? '')}
+      />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
   )

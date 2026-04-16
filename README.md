@@ -27,16 +27,12 @@ npm run test
 
 ## Styling
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+This project uses [Mantine](https://mantine.dev/) for its component library and [CSS Modules](https://github.com/css-modules/css-modules) for custom styles.
 
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
+- Mantine's global styles are imported from `@mantine/core/styles.css` in `src/routes/__root.tsx`.
+- The app is wrapped with `MantineProvider` in the same file, enabling theming and the automatic color scheme.
+- PostCSS is configured via `postcss.config.cjs` with `postcss-preset-mantine` and `postcss-simple-vars` so you can use Mantine mixins and breakpoint variables inside `.module.css` files.
+- For component-scoped styles, create a `ComponentName.module.css` next to the component and import it as `import classes from './ComponentName.module.css'`.
 
 
 ## Setting up Clerk

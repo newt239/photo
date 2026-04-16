@@ -18,8 +18,9 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",
+    "@mantine/core": "^9.0.2",
+    "@mantine/hooks": "^9.0.2",
     "@t3-oss/env-core": "^0.13.10",
-    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-form": "latest",
     "@tanstack/react-router": "latest",
@@ -33,11 +34,9 @@
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.18",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.16",
     "@tanstack/devtools-vite": "latest",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
@@ -48,6 +47,9 @@
     "@vitejs/plugin-react": "^6.0.1",
     "dotenv": "^17.3.1",
     "jsdom": "^28.1.0",
+    "postcss": "^8.5.10",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "vite": "^8.0.0",
