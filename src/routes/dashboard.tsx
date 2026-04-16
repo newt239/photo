@@ -1,21 +1,10 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Paper, Stack, Text, Title } from '@mantine/core'
-import { fetchAuth } from '../server/auth'
+import { Paper, Stack, Text, Title } from "@mantine/core";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/dashboard')({
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth()
-    if (!userId) {
-      throw redirect({ to: '/login/$', params: { _splat: '' } })
-    }
-    return { userId }
-  },
-  loader: ({ context }) => ({ userId: context.userId }),
-  component: DashboardPage,
-})
+import { fetchAuth } from "../server/auth";
 
-function DashboardPage() {
-  const { userId } = Route.useLoaderData()
+const DashboardPage = () => {
+  const { userId } = Route.useLoaderData();
   return (
     <Stack p="xl" gap="md">
       <Title order={2}>Dashboard</Title>
@@ -26,5 +15,17 @@ function DashboardPage() {
         <Text ff="monospace">{userId}</Text>
       </Paper>
     </Stack>
-  )
-}
+  );
+};
+
+export const Route = createFileRoute("/dashboard")({
+  beforeLoad: async () => {
+    const { userId } = await fetchAuth();
+    if (!userId) {
+      throw redirect({ params: { _splat: "" }, to: "/login/$" });
+    }
+    return { userId };
+  },
+  component: DashboardPage,
+  loader: ({ context }) => ({ userId: context.userId }),
+});

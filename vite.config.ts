@@ -1,20 +1,14 @@
-import { defineConfig } from 'vite'
-
-import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import { cloudflare } from '@cloudflare/vite-plugin'
-
-import viteReact from '@vitejs/plugin-react'
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 const config = defineConfig({
+  plugins: [tanstackStart(), viteReact(), cloudflare({ viteEnvironment: { name: "ssr" } })],
   resolve: {
+    dedupe: ["@clerk/react", "@clerk/shared", "@clerk/tanstack-react-start"],
     tsconfigPaths: true,
-    dedupe: ['@clerk/react', '@clerk/shared', '@clerk/tanstack-react-start'],
   },
-  plugins: [
-    tanstackStart(),
-    viteReact(),
-    cloudflare({ viteEnvironment: { name: 'ssr' } }),
-  ],
-})
+});
 
-export default config
+export default config;

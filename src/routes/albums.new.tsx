@@ -1,9 +1,5 @@
-import { useState } from 'react'
-import {
-  createFileRoute,
-  redirect,
-  useNavigate,
-} from '@tanstack/react-router'
+import { useState } from "react";
+
 import {
   Button,
   Group,
@@ -13,49 +9,42 @@ import {
   TextInput,
   Textarea,
   Title,
-} from '@mantine/core'
-import { fetchAuth } from '#/server/auth.ts'
-import { createAlbum } from '#/server/albums.ts'
+} from "@mantine/core";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/albums/new')({
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth()
-    if (!userId) {
-      throw redirect({ to: '/login/$', params: { _splat: '' } })
+import { createAlbum } from "#/server/albums.ts";
+import { fetchAuth } from "#/server/auth.ts";
+
+const NewAlbumPage = () => {
+  const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [visibility, setVisibility] = useState<"private" | "public">("private");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (title.trim().length === 0 || submitting) {
+      return;
     }
-    return { userId }
-  },
-  component: NewAlbumPage,
-})
-
-function NewAlbumPage() {
-  const navigate = useNavigate()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [visibility, setVisibility] = useState<'private' | 'public'>('private')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (title.trim().length === 0 || submitting) return
-    setSubmitting(true)
-    setError(null)
+    setSubmitting(true);
+    setError(null);
     try {
       const { slug } = await createAlbum({
         data: {
-          title: title.trim(),
           description: description.trim() || null,
+          title: title.trim(),
           visibility,
         },
-      })
-      await navigate({ to: '/albums/$slug', params: { slug } })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      });
+      await navigate({ params: { slug }, to: "/albums/$slug" });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <Stack p="xl" gap="md" maw={680} mx="auto">
@@ -81,20 +70,16 @@ function NewAlbumPage() {
             <div>
               <SegmentedControl
                 value={visibility}
-                onChange={(v) => setVisibility(v as 'private' | 'public')}
+                onChange={(v) => setVisibility(v as "private" | "public")}
                 data={[
-                  { label: '非公開', value: 'private' },
-                  { label: '公開', value: 'public' },
+                  { label: "非公開", value: "private" },
+                  { label: "公開", value: "public" },
                 ]}
               />
             </div>
-            {error && <div style={{ color: 'red' }}>{error}</div>}
+            {error && <div style={{ color: "red" }}>{error}</div>}
             <Group justify="flex-end">
-              <Button
-                type="submit"
-                loading={submitting}
-                disabled={title.trim().length === 0}
-              >
+              <Button type="submit" loading={submitting} disabled={title.trim().length === 0}>
                 作成
               </Button>
             </Group>
@@ -102,5 +87,16 @@ function NewAlbumPage() {
         </form>
       </Paper>
     </Stack>
-  )
-}
+  );
+};
+
+export const Route = createFileRoute("/albums/new")({
+  beforeLoad: async () => {
+    const { userId } = await fetchAuth();
+    if (!userId) {
+      throw redirect({ params: { _splat: "" }, to: "/login/$" });
+    }
+    return { userId };
+  },
+  component: NewAlbumPage,
+});

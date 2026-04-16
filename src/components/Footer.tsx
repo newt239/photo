@@ -1,8 +1,9 @@
-import { Text } from '@mantine/core'
-import classes from './Footer.module.css'
+import { Text } from "@mantine/core";
+
+import classes from "./Footer.module.css";
 
 export default function Footer() {
-  const year = new Date().getFullYear()
+  const year = new Date().getFullYear();
 
   return (
     <footer className={classes.footer}>
@@ -13,5 +14,5 @@ export default function Footer() {
         </Text>
       </div>
     </footer>
-  )
+  );
 }

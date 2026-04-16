@@ -1,21 +1,21 @@
-import { createEnv } from '@t3-oss/env-core'
-import { z } from 'zod'
+import { createEnv } from "@t3-oss/env-core";
+import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    SERVER_URL: z.string().url().optional(),
     CLERK_SECRET_KEY: z.string().min(1),
     CLERK_WEBHOOK_SECRET: z.string().min(1),
     CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
     R2_ACCESS_KEY_ID: z.string().min(1),
     R2_SECRET_ACCESS_KEY: z.string().min(1),
+    SERVER_URL: z.string().url().optional(),
   },
 
   /**
    * The prefix that client-side variables must have. This is enforced both at
    * a type-level and at runtime.
    */
-  clientPrefix: 'VITE_',
+  clientPrefix: "VITE_",
 
   client: {
     VITE_APP_TITLE: z.string().min(1).optional(),
@@ -28,7 +28,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     ...import.meta.env,
-    ...(typeof process !== 'undefined' ? process.env : {}),
+    ...(typeof process !== "undefined" ? process.env : {}),
   },
 
   /**
@@ -45,4 +45,4 @@ export const env = createEnv({
    * explicitly specify this option as true.
    */
   emptyStringAsUndefined: true,
-})
+});

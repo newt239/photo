@@ -6,15 +6,21 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
+    "codecheck": "pnpm run typecheck && pnpm run lint && pnpm run format",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
-    "db:studio": "drizzle-kit studio"
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "dev": "vite dev --port 3000",
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --fix",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@clerk/tanstack-react-start": "^1.1.1",
@@ -46,6 +52,9 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.1",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60.0",
+    "oxlint-tsgolint": "^0.21.0",
     "postcss": "8.5.10",
     "postcss-preset-mantine": "1.18.0",
     "postcss-simple-vars": "7.0.1",

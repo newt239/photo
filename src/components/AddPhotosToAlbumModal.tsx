@@ -1,72 +1,73 @@
-import { useEffect, useState } from 'react'
-import {
-  Button,
-  Checkbox,
-  Group,
-  Modal,
-  ScrollArea,
-  SimpleGrid,
-  Stack,
-  Text,
-} from '@mantine/core'
-import { addPhotosToAlbum } from '#/server/albums.ts'
-import { listMyPhotos } from '#/server/photos.ts'
-import { photoImageUrl } from './PhotoCard'
-import classes from './AddPhotosToAlbumModal.module.css'
+import { useEffect, useState } from "react";
 
-type PhotoItem = Awaited<ReturnType<typeof listMyPhotos>>[number]
+import { Button, Checkbox, Group, Modal, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
 
-export function AddPhotosToAlbumModal({
+import { addPhotosToAlbum } from "#/server/albums.ts";
+import { listMyPhotos } from "#/server/photos.ts";
+
+import classes from "./AddPhotosToAlbumModal.module.css";
+import { photoImageUrl } from "./PhotoCard";
+
+type PhotoItem = Awaited<ReturnType<typeof listMyPhotos>>[number];
+
+export const AddPhotosToAlbumModal = ({
   albumId,
   opened,
   onClose,
   onAdded,
   existingPhotoIds,
 }: {
-  albumId: string
-  opened: boolean
-  onClose: () => void
-  onAdded: () => void
-  existingPhotoIds: Set<string>
-}) {
-  const [photos, setPhotos] = useState<Array<PhotoItem>>([])
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [loading, setLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  albumId: string;
+  opened: boolean;
+  onClose: () => void;
+  onAdded: () => void;
+  existingPhotoIds: Set<string>;
+}) => {
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!opened) return
-    setLoading(true)
+    if (!opened) {
+      return;
+    }
+    setLoading(true);
     listMyPhotos()
       .then((rows) => {
-        setPhotos(rows)
-        setSelected(new Set())
+        setPhotos(rows);
+        setSelected(new Set());
       })
-      .finally(() => setLoading(false))
-  }, [opened])
+      .finally(() => setLoading(false));
+  }, [opened]);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
-  async function handleSubmit() {
-    if (selected.size === 0 || submitting) return
-    setSubmitting(true)
+  const handleSubmit = async () => {
+    if (selected.size === 0 || submitting) {
+      return;
+    }
+    setSubmitting(true);
     try {
       await addPhotosToAlbum({
-        data: { albumId, photoIds: Array.from(selected) },
-      })
-      onAdded()
-      onClose()
+        data: { albumId, photoIds: [...selected] },
+      });
+      onAdded();
+      onClose();
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <Modal opened={opened} onClose={onClose} title="写真を追加" size="lg">
@@ -83,8 +84,8 @@ export function AddPhotosToAlbumModal({
           <ScrollArea.Autosize mah={480}>
             <SimpleGrid cols={{ base: 3, sm: 4 }} spacing="sm">
               {photos.map((p) => {
-                const already = existingPhotoIds.has(p.id)
-                const checked = selected.has(p.id)
+                const already = existingPhotoIds.has(p.id);
+                const checked = selected.has(p.id);
                 return (
                   <label
                     key={p.id}
@@ -105,7 +106,7 @@ export function AddPhotosToAlbumModal({
                       aria-label={p.title ?? p.id}
                     />
                   </label>
-                )
+                );
               })}
             </SimpleGrid>
           </ScrollArea.Autosize>
@@ -115,15 +116,11 @@ export function AddPhotosToAlbumModal({
           <Button variant="default" onClick={onClose}>
             キャンセル
           </Button>
-          <Button
-            onClick={handleSubmit}
-            loading={submitting}
-            disabled={selected.size === 0}
-          >
-            {selected.size > 0 ? `${selected.size} 枚を追加` : '追加'}
+          <Button onClick={handleSubmit} loading={submitting} disabled={selected.size === 0}>
+            {selected.size > 0 ? `${selected.size} 枚を追加` : "追加"}
           </Button>
         </Group>
       </Stack>
     </Modal>
-  )
-}
+  );
+};

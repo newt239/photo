@@ -40,9 +40,7 @@
       "indexes": {
         "album_photos_photo_id_idx": {
           "name": "album_photos_photo_id_idx",
-          "columns": [
-            "photo_id"
-          ],
+          "columns": ["photo_id"],
           "isUnique": false
         }
       },
@@ -51,12 +49,8 @@
           "name": "album_photos_album_id_albums_id_fk",
           "tableFrom": "album_photos",
           "tableTo": "albums",
-          "columnsFrom": [
-            "album_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["album_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -64,22 +58,15 @@
           "name": "album_photos_photo_id_photos_id_fk",
           "tableFrom": "album_photos",
           "tableTo": "photos",
-          "columnsFrom": [
-            "photo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["photo_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "album_photos_album_id_photo_id_pk": {
-          "columns": [
-            "album_id",
-            "photo_id"
-          ],
+          "columns": ["album_id", "photo_id"],
           "name": "album_photos_album_id_photo_id_pk"
         }
       },
@@ -115,9 +102,7 @@
       "indexes": {
         "album_shares_user_id_idx": {
           "name": "album_shares_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -126,12 +111,8 @@
           "name": "album_shares_album_id_albums_id_fk",
           "tableFrom": "album_shares",
           "tableTo": "albums",
-          "columnsFrom": [
-            "album_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["album_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -139,22 +120,15 @@
           "name": "album_shares_user_id_users_id_fk",
           "tableFrom": "album_shares",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "album_shares_album_id_user_id_pk": {
-          "columns": [
-            "album_id",
-            "user_id"
-          ],
+          "columns": ["album_id", "user_id"],
           "name": "album_shares_album_id_user_id_pk"
         }
       },
@@ -233,16 +207,12 @@
       "indexes": {
         "albums_slug_idx": {
           "name": "albums_slug_idx",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         },
         "albums_user_id_idx": {
           "name": "albums_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -251,12 +221,8 @@
           "name": "albums_user_id_users_id_fk",
           "tableFrom": "albums",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -264,12 +230,8 @@
           "name": "albums_cover_photo_id_photos_id_fk",
           "tableFrom": "albums",
           "tableTo": "photos",
-          "columnsFrom": [
-            "cover_photo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cover_photo_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -307,9 +269,7 @@
       "indexes": {
         "photo_shares_user_id_idx": {
           "name": "photo_shares_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -318,12 +278,8 @@
           "name": "photo_shares_photo_id_photos_id_fk",
           "tableFrom": "photo_shares",
           "tableTo": "photos",
-          "columnsFrom": [
-            "photo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["photo_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -331,22 +287,15 @@
           "name": "photo_shares_user_id_users_id_fk",
           "tableFrom": "photo_shares",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "photo_shares_photo_id_user_id_pk": {
-          "columns": [
-            "photo_id",
-            "user_id"
-          ],
+          "columns": ["photo_id", "user_id"],
           "name": "photo_shares_photo_id_user_id_pk"
         }
       },
@@ -529,24 +478,17 @@
       "indexes": {
         "photos_user_id_idx": {
           "name": "photos_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "photos_taken_at_idx": {
           "name": "photos_taken_at_idx",
-          "columns": [
-            "taken_at"
-          ],
+          "columns": ["taken_at"],
           "isUnique": false
         },
         "photos_lat_lng_idx": {
           "name": "photos_lat_lng_idx",
-          "columns": [
-            "latitude",
-            "longitude"
-          ],
+          "columns": ["latitude", "longitude"],
           "isUnique": false
         }
       },
@@ -555,12 +497,8 @@
           "name": "photos_user_id_users_id_fk",
           "tableFrom": "photos",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -620,9 +558,7 @@
       "indexes": {
         "users_email_idx": {
           "name": "users_email_idx",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },

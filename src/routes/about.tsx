@@ -1,12 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Paper, Text, Title } from '@mantine/core'
-import classes from './about.module.css'
+import { Paper, Text, Title } from "@mantine/core";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/about')({
-  component: About,
-})
+import classes from "./about.module.css";
 
-function About() {
+const About = () => {
   return (
     <main className={classes.main}>
       <Paper withBorder radius="lg" p="xl">
@@ -17,11 +14,14 @@ function About() {
           A small starter with room to grow.
         </Title>
         <Text c="dimmed">
-          TanStack Start gives you type-safe routing, server functions, and
-          modern SSR defaults. Use this as a clean foundation, then layer in
-          your own routes, styling, and add-ons.
+          TanStack Start gives you type-safe routing, server functions, and modern SSR defaults. Use
+          this as a clean foundation, then layer in your own routes, styling, and add-ons.
         </Text>
       </Paper>
     </main>
-  )
-}
+  );
+};
+
+export const Route = createFileRoute("/about")({
+  component: About,
+});

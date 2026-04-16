@@ -1,60 +1,20 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import {
-  ColorSchemeScript,
-  MantineProvider,
-  mantineHtmlProps,
-} from '@mantine/core'
+import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
+import mantineCoreCss from "@mantine/core/styles.css?url";
+import mantineDropzoneCss from "@mantine/dropzone/styles.css?url";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 
-import Footer from '../components/Footer'
-import Header from '../components/Header'
+import { cookieColorSchemeManager } from "#/lib/color-scheme.ts";
+import { getColorSchemeCookie } from "#/server/color-scheme.ts";
 
-import ClerkProvider from '../integrations/clerk/provider'
-import { cookieColorSchemeManager } from '#/lib/color-scheme.ts'
-import { getColorSchemeCookie } from '#/server/color-scheme.ts'
+import Footer from "../components/Footer";
+import Header from "../components/Header";
+import ClerkProvider from "../integrations/clerk/provider";
+import appCss from "../styles.css?url";
 
-import mantineCoreCss from '@mantine/core/styles.css?url'
-import mantineDropzoneCss from '@mantine/dropzone/styles.css?url'
-import appCss from '../styles.css?url'
+const colorSchemeManager = cookieColorSchemeManager();
 
-const colorSchemeManager = cookieColorSchemeManager()
-
-export const Route = createRootRoute({
-  loader: async () => ({
-    colorScheme: await getColorSchemeCookie(),
-  }),
-  head: () => ({
-    meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'TanStack Start Starter',
-      },
-    ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: mantineCoreCss,
-      },
-      {
-        rel: 'stylesheet',
-        href: mantineDropzoneCss,
-      },
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-    ],
-  }),
-  shellComponent: RootDocument,
-})
-
-function RootDocument({ children }: { children: React.ReactNode }) {
-  const { colorScheme } = Route.useLoaderData()
+const RootDocument = ({ children }: { children: React.ReactNode }) => {
+  const { colorScheme } = Route.useLoaderData();
   return (
     <html lang="en" {...mantineHtmlProps}>
       <head>
@@ -62,10 +22,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <MantineProvider
-          defaultColorScheme={colorScheme}
-          colorSchemeManager={colorSchemeManager}
-        >
+        <MantineProvider defaultColorScheme={colorScheme} colorSchemeManager={colorSchemeManager}>
           <ClerkProvider>
             <Header />
             {children}
@@ -75,5 +32,40 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
-}
+  );
+};
+
+export const Route = createRootRoute({
+  head: () => ({
+    links: [
+      {
+        rel: "stylesheet",
+        href: mantineCoreCss,
+      },
+      {
+        rel: "stylesheet",
+        href: mantineDropzoneCss,
+      },
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+    ],
+    meta: [
+      {
+        charSet: "utf-8",
+      },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
+      },
+      {
+        title: "TanStack Start Starter",
+      },
+    ],
+  }),
+  loader: async () => ({
+    colorScheme: await getColorSchemeCookie(),
+  }),
+  shellComponent: RootDocument,
+});

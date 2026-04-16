@@ -1,8 +1,9 @@
-import { Link } from '@tanstack/react-router'
-import { Group } from '@mantine/core'
-import ClerkHeader from '../integrations/clerk/header-user.tsx'
-import ThemeToggle from './ThemeToggle'
-import classes from './Header.module.css'
+import { Group } from "@mantine/core";
+import { Link } from "@tanstack/react-router";
+
+import ClerkHeader from "../integrations/clerk/header-user.tsx";
+import classes from "./Header.module.css";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
   return (
@@ -13,32 +14,16 @@ export default function Header() {
         </Link>
 
         <Group gap="md" className={classes.nav}>
-          <Link
-            to="/"
-            className={classes.link}
-            activeProps={{ 'data-status': 'active' }}
-          >
+          <Link to="/" className={classes.link} activeProps={{ "data-status": "active" }}>
             Home
           </Link>
-          <Link
-            to="/photos"
-            className={classes.link}
-            activeProps={{ 'data-status': 'active' }}
-          >
+          <Link to="/photos" className={classes.link} activeProps={{ "data-status": "active" }}>
             Photos
           </Link>
-          <Link
-            to="/albums"
-            className={classes.link}
-            activeProps={{ 'data-status': 'active' }}
-          >
+          <Link to="/albums" className={classes.link} activeProps={{ "data-status": "active" }}>
             Albums
           </Link>
-          <Link
-            to="/dashboard"
-            className={classes.link}
-            activeProps={{ 'data-status': 'active' }}
-          >
+          <Link to="/dashboard" className={classes.link} activeProps={{ "data-status": "active" }}>
             Dashboard
           </Link>
           <ClerkHeader />
@@ -46,5 +31,5 @@ export default function Header() {
         </Group>
       </div>
     </header>
-  )
+  );
 }

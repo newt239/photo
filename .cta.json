@@ -17,10 +17,5 @@
   "routerOnly": false,
   "version": 1,
   "framework": "react",
-  "chosenAddOns": [
-    "clerk",
-    "drizzle",
-    "form",
-    "t3env"
-  ]
+  "chosenAddOns": ["clerk", "drizzle", "form", "t3env"]
 }

@@ -1,26 +1,12 @@
-import { createFileRoute, redirect, Link } from '@tanstack/react-router'
-import { Button, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core'
-import { fetchAuth } from '#/server/auth.ts'
-import { listMyAlbums } from '#/server/albums.ts'
-import { AlbumCard } from '#/components/AlbumCard.tsx'
+import { Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/albums/')({
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth()
-    if (!userId) {
-      throw redirect({ to: '/login/$', params: { _splat: '' } })
-    }
-    return { userId }
-  },
-  loader: async () => {
-    const albums = await listMyAlbums()
-    return { albums }
-  },
-  component: AlbumsIndexPage,
-})
+import { AlbumCard } from "#/components/AlbumCard.tsx";
+import { listMyAlbums } from "#/server/albums.ts";
+import { fetchAuth } from "#/server/auth.ts";
 
-function AlbumsIndexPage() {
-  const { albums } = Route.useLoaderData()
+const AlbumsIndexPage = () => {
+  const { albums } = Route.useLoaderData();
   return (
     <Stack p="xl" gap="md" maw={1200} mx="auto">
       <Group justify="space-between">
@@ -34,12 +20,27 @@ function AlbumsIndexPage() {
           アルバムはまだありません
         </Text>
       ) : (
-        <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="md">
+        <SimpleGrid cols={{ base: 2, md: 4, sm: 3 }} spacing="md">
           {albums.map((a) => (
             <AlbumCard key={a.id} album={a} />
           ))}
         </SimpleGrid>
       )}
     </Stack>
-  )
-}
+  );
+};
+
+export const Route = createFileRoute("/albums/")({
+  beforeLoad: async () => {
+    const { userId } = await fetchAuth();
+    if (!userId) {
+      throw redirect({ params: { _splat: "" }, to: "/login/$" });
+    }
+    return { userId };
+  },
+  component: AlbumsIndexPage,
+  loader: async () => {
+    const albums = await listMyAlbums();
+    return { albums };
+  },
+});
