@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "entry": ["src/start.ts!", "src/router.tsx!", "src/routes/**/*.{ts,tsx}!"],
+  "ignore": ["drizzle.config.ts"],
+  "ignoreDependencies": ["lucide-react", "cloudflare"],
+  "drizzle": false
+}

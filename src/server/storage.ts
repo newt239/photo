@@ -12,7 +12,7 @@ const MIME_EXT: Record<string, string> = {
   "image/webp": "webp",
 };
 
-export const extFromMime = (mime: string): string => {
+const extFromMime = (mime: string): string => {
   return MIME_EXT[mime.toLowerCase()] ?? "bin";
 };
 

@@ -5,7 +5,7 @@ import { Anchor, Badge, Card, Group, SimpleGrid, Stack, Text, Title } from "@man
 import { photoImageUrl } from "./PhotoCard";
 import classes from "./PhotoDetailView.module.css";
 
-export type PhotoDetailData = {
+type PhotoDetailData = {
   readonly id: string;
   readonly title: string | null;
   readonly storageKey: string;

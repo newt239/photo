@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 
-export const slugify = (input: string): string => {
+const slugify = (input: string): string => {
   const normalized = input
     .normalize("NFKD")
     .replaceAll(/[\u0300-\u036F]/g, "")

@@ -1,6 +1,6 @@
 import exifr from "exifr";
 
-export type ImageMeta = {
+type ImageMeta = {
   width: number;
   height: number;
   takenAt: string | null;

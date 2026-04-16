@@ -7,7 +7,7 @@
   },
   "scripts": {
     "build": "vite build",
-    "codecheck": "pnpm run typecheck && pnpm run lint && pnpm run format",
+    "codecheck": "pnpm run typecheck && pnpm run lint && pnpm run format && pnpm run knip",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:pull": "drizzle-kit pull",
@@ -16,10 +16,10 @@
     "dev": "vite dev --port 3000",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
+    "knip": "knip",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --fix",
     "preview": "vite preview",
-    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -28,13 +28,8 @@
     "@mantine/dropzone": "^9.0.2",
     "@mantine/hooks": "9.0.2",
     "@t3-oss/env-core": "0.13.11",
-    "@tanstack/react-devtools": "0.10.2",
-    "@tanstack/react-form": "1.29.0",
     "@tanstack/react-router": "1.168.22",
-    "@tanstack/react-router-devtools": "1.166.13",
-    "@tanstack/react-router-ssr-query": "1.166.11",
     "@tanstack/react-start": "1.167.41",
-    "@tanstack/router-plugin": "1.167.22",
     "aws4fetch": "^1.0.20",
     "drizzle-kit": "0.31.10",
     "drizzle-orm": "0.45.2",
@@ -43,7 +38,6 @@
     "nanoid": "^5.1.9",
     "react": "19.2.5",
     "react-dom": "19.2.5",
-    "svix": "^1.90.0",
     "zod": "4.3.6"
   },
   "devDependencies": {
@@ -52,6 +46,7 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.1",
+    "knip": "6.4.1",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.60.0",
     "oxlint-tsgolint": "^0.21.0",
