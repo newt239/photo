@@ -1,8 +1,8 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { PhotoGrid } from "#/components/PhotoGrid.tsx";
+import type { PhotoCardData } from "#/components/PhotoCard.tsx";
 import { fetchAuth } from "#/server/auth.ts";
 import { listMyPhotos } from "#/server/photos.ts";
 
@@ -30,8 +30,7 @@ export const Route = createFileRoute("/photos/")({
     return { userId };
   },
   component: PhotosIndexPage,
-  loader: async () => {
-    const photos = await listMyPhotos();
-    return { photos };
-  },
+  loader: async (): Promise<{ photos: readonly PhotoCardData[] }> => ({
+    photos: await listMyPhotos(),
+  }),
 });

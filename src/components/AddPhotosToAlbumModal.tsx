@@ -24,7 +24,7 @@ export const AddPhotosToAlbumModal = ({
   existingPhotoIds: Set<string>;
 }) => {
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState(new Set<string>());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -33,7 +33,7 @@ export const AddPhotosToAlbumModal = ({
       return;
     }
     setLoading(true);
-    listMyPhotos()
+    void listMyPhotos()
       .then((rows) => {
         setPhotos(rows);
         setSelected(new Set());

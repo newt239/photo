@@ -1,7 +1,7 @@
 import { Paper, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { fetchAuth } from "../server/auth";
+import { fetchAuth } from "#/server/auth.ts";
 
 const DashboardPage = () => {
   const { userId } = Route.useLoaderData();

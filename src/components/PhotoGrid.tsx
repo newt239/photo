@@ -5,10 +5,10 @@ import { PhotoCard, type PhotoCardData } from "./PhotoCard";
 export const PhotoGrid = ({
   photos,
   emptyMessage = "写真はまだありません",
-}: {
-  photos: PhotoCardData[];
+}: Readonly<{
+  photos: readonly PhotoCardData[];
   emptyMessage?: string;
-}) => {
+}>) => {
   if (photos.length === 0) {
     return (
       <Text c="dimmed" size="sm">

@@ -98,17 +98,20 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: () => void }) => {
   };
 
   const handleDrop = async (files: File[]) => {
-    const newItems: UploadState[] = files.map((f) => ({
-      id: `${Date.now()}-${f.name}-${Math.random().toString(36).slice(2, 6)}`,
-      name: f.name,
-      progress: 0,
-      status: "queued",
+    const batch: { file: File; item: UploadState }[] = files.map((file) => ({
+      file,
+      item: {
+        id: `${Date.now()}-${file.name}-${Math.random().toString(36).slice(2, 6)}`,
+        name: file.name,
+        progress: 0,
+        status: "queued",
+      },
     }));
-    setItems((prev) => [...prev, ...newItems]);
+    setItems((prev) => [...prev, ...batch.map((b) => b.item)]);
     setBusy(true);
     try {
-      for (const [idx, file] of files.entries()) {
-        await uploadOne(file, newItems[idx].id);
+      for (const { file, item } of batch) {
+        await uploadOne(file, item.id);
       }
       await router.invalidate();
       onComplete?.();
@@ -182,25 +185,13 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: () => void }) => {
   );
 };
 
-const labelFor = (status: UploadState["status"]): string => {
-  switch (status) {
-    case "queued": {
-      return "待機中";
-    }
-    case "preparing": {
-      return "前処理中";
-    }
-    case "uploading": {
-      return "アップロード中";
-    }
-    case "saving": {
-      return "保存中";
-    }
-    case "done": {
-      return "完了";
-    }
-    case "error": {
-      return "エラー";
-    }
-  }
+const STATUS_LABEL: Record<UploadState["status"], string> = {
+  done: "完了",
+  error: "エラー",
+  preparing: "前処理中",
+  queued: "待機中",
+  saving: "保存中",
+  uploading: "アップロード中",
 };
+
+const labelFor = (status: UploadState["status"]): string => STATUS_LABEL[status];

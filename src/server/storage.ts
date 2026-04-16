@@ -25,8 +25,8 @@ export const buildThumbnailKey = (userId: string, photoId: string): string => {
 };
 
 export const keyOwnerId = (storageKey: string): string | null => {
-  const match = storageKey.match(/^users\/([^/]+)\//);
-  return match ? match[1] : null;
+  const match = /^users\/([^/]+)\//.exec(storageKey);
+  return match?.[1] ?? null;
 };
 
 const r2Client = (): AwsClient => {

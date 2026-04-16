@@ -58,7 +58,7 @@ export const extractExif = async (file: File): Promise<Omit<ImageMeta, "width" |
       tags.DateTimeOriginal instanceof Date
         ? tags.DateTimeOriginal.toISOString()
         : tags.CreateDate instanceof Date
-          ? (tags.CreateDate as Date).toISOString()
+          ? tags.CreateDate.toISOString()
           : null;
     return {
       altitude: numOrNull(tags.GPSAltitude),
@@ -112,12 +112,12 @@ const strOrNull = (v: unknown): string | null => {
   const trimmed = v.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
-const replaceDates = (_key: string, value: unknown) => {
+const replaceDates = (_key: string, value: unknown): unknown => {
   if (value instanceof Date) {
     return value.toISOString();
   }
   if (value instanceof Uint8Array) {
-    return;
+    return undefined;
   }
   return value;
 };

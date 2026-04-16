@@ -63,10 +63,27 @@ const AlbumDetailPage = () => {
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
         existingPhotoIds={existingIds}
-        onAdded={() => router.invalidate()}
+        onAdded={async () => router.invalidate()}
       />
     </Stack>
   );
+};
+
+type AlbumDetail = {
+  readonly album: {
+    readonly id: string;
+    readonly title: string | null;
+    readonly description: string | null;
+    readonly visibility: "public" | "private";
+  };
+  readonly photos: readonly {
+    readonly id: string;
+    readonly title: string | null;
+    readonly storageKey: string;
+    readonly thumbnailKey: string | null;
+    readonly width: number;
+    readonly height: number;
+  }[];
 };
 
 export const Route = createFileRoute("/albums/$slug")({
@@ -78,8 +95,6 @@ export const Route = createFileRoute("/albums/$slug")({
     return { userId };
   },
   component: AlbumDetailPage,
-  loader: async ({ params }) => {
-    const data = await getAlbumBySlug({ data: { slug: params.slug } });
-    return data;
-  },
+  loader: async ({ params }: { readonly params: { readonly slug: string } }): Promise<AlbumDetail> =>
+    getAlbumBySlug({ data: { slug: params.slug } }),
 });

@@ -70,7 +70,7 @@ const NewAlbumPage = () => {
             <div>
               <SegmentedControl
                 value={visibility}
-                onChange={(v) => setVisibility(v as "private" | "public")}
+                onChange={(v) => setVisibility(v)}
                 data={[
                   { label: "非公開", value: "private" },
                   { label: "公開", value: "public" },

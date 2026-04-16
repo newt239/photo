@@ -3,19 +3,17 @@ import { Card, Text } from "@mantine/core";
 import classes from "./PhotoCard.module.css";
 
 export type PhotoCardData = {
-  id: string;
-  title: string | null;
-  storageKey: string;
-  thumbnailKey: string | null;
-  width: number;
-  height: number;
+  readonly id: string;
+  readonly title: string | null;
+  readonly storageKey: string;
+  readonly thumbnailKey: string | null;
+  readonly width: number;
+  readonly height: number;
 };
 
-export const photoImageUrl = (key: string): string => {
-  return `/api/i/${key}`;
-};
+export const photoImageUrl = (key: string): string => `/api/i/${key}`;
 
-export const PhotoCard = ({ photo }: { photo: PhotoCardData }) => {
+export const PhotoCard = ({ photo }: Readonly<{ photo: PhotoCardData }>) => {
   const src = photoImageUrl(photo.thumbnailKey ?? photo.storageKey);
   return (
     <Card withBorder radius="md" padding={0} className={classes.card}>

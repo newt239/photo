@@ -1,7 +1,7 @@
 import { Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 
-import { AlbumCard } from "#/components/AlbumCard.tsx";
+import { AlbumCard, type AlbumCardData } from "#/components/AlbumCard.tsx";
 import { listMyAlbums } from "#/server/albums.ts";
 import { fetchAuth } from "#/server/auth.ts";
 
@@ -39,8 +39,7 @@ export const Route = createFileRoute("/albums/")({
     return { userId };
   },
   component: AlbumsIndexPage,
-  loader: async () => {
-    const albums = await listMyAlbums();
-    return { albums };
-  },
+  loader: async (): Promise<{ albums: readonly AlbumCardData[] }> => ({
+    albums: await listMyAlbums(),
+  }),
 });
