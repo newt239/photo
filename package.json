@@ -23,13 +23,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@clerk/tanstack-react-start": "^1.1.1",
-    "@mantine/core": "9.0.2",
-    "@mantine/dropzone": "^9.0.2",
-    "@mantine/hooks": "9.0.2",
+    "@clerk/tanstack-react-start": "^1.1.5",
+    "@mantine/core": "9.1.0",
+    "@mantine/dropzone": "^9.1.0",
+    "@mantine/hooks": "9.1.0",
     "@t3-oss/env-core": "0.13.11",
-    "@tanstack/react-router": "1.168.22",
-    "@tanstack/react-start": "1.167.41",
+    "@tanstack/react-router": "1.168.23",
+    "@tanstack/react-start": "1.167.42",
     "aws4fetch": "^1.0.20",
     "drizzle-kit": "0.31.10",
     "drizzle-orm": "0.45.2",
@@ -41,21 +41,21 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.32.3",
+    "@cloudflare/vite-plugin": "^1.33.1",
     "@types/node": "25.6.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.1",
-    "knip": "6.4.1",
-    "oxfmt": "^0.45.0",
-    "oxlint": "^1.60.0",
-    "oxlint-tsgolint": "^0.21.0",
+    "knip": "6.6.1",
+    "oxfmt": "^0.46.0",
+    "oxlint": "^1.61.0",
+    "oxlint-tsgolint": "^0.21.1",
     "postcss": "8.5.10",
     "postcss-preset-mantine": "1.18.0",
     "postcss-simple-vars": "7.0.1",
-    "typescript": "6.0.2",
-    "vite": "8.0.8",
-    "wrangler": "^4.83.0"
+    "typescript": "6.0.3",
+    "vite": "8.0.9",
+    "wrangler": "^4.84.1"
   },
   "packageManager": "pnpm@10.32.1"
 }
