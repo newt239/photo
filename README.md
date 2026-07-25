@@ -61,6 +61,16 @@ rustup target add wasm32-unknown-unknown
 
 動作確認用のページを `/admin/debug/wasm` に用意している。
 
+### Cloudflare Workers Builds
+
+Cloudflare のビルド環境には Rust ツールチェーンがないため、ダッシュボードの build command を以下に変更する必要がある。
+
+```bash
+bash infra/cloudflare-build.sh
+```
+
+このスクリプトは rustup と wasm-pack を必要に応じて導入したうえで `pnpm wasm:build` → `pnpm build` を実行する。
+
 ## データベース
 
 Drizzle でスキーマ (`src/db/schema.ts`) からマイグレーション SQL を生成:
