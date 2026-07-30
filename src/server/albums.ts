@@ -16,7 +16,7 @@ const createAlbumInput = z.object({
 });
 
 export const createAlbum = createServerFn({ method: "POST" })
-  .inputValidator(createAlbumInput)
+  .validator(createAlbumInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     await ensureUserRow(userId);
@@ -35,7 +35,7 @@ export const createAlbum = createServerFn({ method: "POST" })
   });
 
 export const listMyAlbums = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ limit: z.number().int().positive().max(200).optional() }))
+  .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);
@@ -75,7 +75,7 @@ export const listMyAlbums = createServerFn({ method: "GET" })
   });
 
 export const getAlbumBySlug = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ slug: z.string().min(1) }))
+  .validator(z.object({ slug: z.string().min(1) }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);
@@ -117,7 +117,7 @@ const addPhotosInput = z.object({
 });
 
 export const addPhotosToAlbum = createServerFn({ method: "POST" })
-  .inputValidator(addPhotosInput)
+  .validator(addPhotosInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);
