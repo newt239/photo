@@ -20,6 +20,7 @@ import { Route as AdminPhotosIndexRouteImport } from './routes/admin.photos.inde
 import { Route as AdminAlbumsIndexRouteImport } from './routes/admin.albums.index'
 import { Route as AdminPhotosUploadRouteImport } from './routes/admin.photos.upload'
 import { Route as AdminPhotosPhotoIdRouteImport } from './routes/admin.photos.$photoId'
+import { Route as AdminDebugWasmRouteImport } from './routes/admin.debug.wasm'
 import { Route as AdminAlbumsNewRouteImport } from './routes/admin.albums.new'
 import { Route as AdminAlbumsSlugRouteImport } from './routes/admin.albums.$slug'
 import { Route as ApiIUserIdPhotoIdFileRouteImport } from './routes/api/i.$userId.$photoId.$file'
@@ -80,6 +81,11 @@ const AdminPhotosPhotoIdRoute = AdminPhotosPhotoIdRouteImport.update({
   path: '/photos/$photoId',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDebugWasmRoute = AdminDebugWasmRouteImport.update({
+  id: '/debug/wasm',
+  path: '/debug/wasm',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAlbumsNewRoute = AdminAlbumsNewRouteImport.update({
   id: '/albums/new',
   path: '/albums/new',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/albums/$slug': typeof AdminAlbumsSlugRoute
   '/admin/albums/new': typeof AdminAlbumsNewRoute
+  '/admin/debug/wasm': typeof AdminDebugWasmRoute
   '/admin/photos/$photoId': typeof AdminPhotosPhotoIdRoute
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
   '/admin/albums/': typeof AdminAlbumsIndexRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/albums/$slug': typeof AdminAlbumsSlugRoute
   '/admin/albums/new': typeof AdminAlbumsNewRoute
+  '/admin/debug/wasm': typeof AdminDebugWasmRoute
   '/admin/photos/$photoId': typeof AdminPhotosPhotoIdRoute
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
   '/admin/albums': typeof AdminAlbumsIndexRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/albums/$slug': typeof AdminAlbumsSlugRoute
   '/admin/albums/new': typeof AdminAlbumsNewRoute
+  '/admin/debug/wasm': typeof AdminDebugWasmRoute
   '/admin/photos/$photoId': typeof AdminPhotosPhotoIdRoute
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
   '/admin/albums/': typeof AdminAlbumsIndexRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/albums/$slug'
     | '/admin/albums/new'
+    | '/admin/debug/wasm'
     | '/admin/photos/$photoId'
     | '/admin/photos/upload'
     | '/admin/albums/'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/albums/$slug'
     | '/admin/albums/new'
+    | '/admin/debug/wasm'
     | '/admin/photos/$photoId'
     | '/admin/photos/upload'
     | '/admin/albums'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/albums/$slug'
     | '/admin/albums/new'
+    | '/admin/debug/wasm'
     | '/admin/photos/$photoId'
     | '/admin/photos/upload'
     | '/admin/albums/'
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPhotosPhotoIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/debug/wasm': {
+      id: '/admin/debug/wasm'
+      path: '/debug/wasm'
+      fullPath: '/admin/debug/wasm'
+      preLoaderRoute: typeof AdminDebugWasmRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/albums/new': {
       id: '/admin/albums/new'
       path: '/albums/new'
@@ -330,6 +349,7 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlbumsSlugRoute: typeof AdminAlbumsSlugRoute
   AdminAlbumsNewRoute: typeof AdminAlbumsNewRoute
+  AdminDebugWasmRoute: typeof AdminDebugWasmRoute
   AdminPhotosPhotoIdRoute: typeof AdminPhotosPhotoIdRoute
   AdminPhotosUploadRoute: typeof AdminPhotosUploadRoute
   AdminAlbumsIndexRoute: typeof AdminAlbumsIndexRoute
@@ -342,6 +362,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminAlbumsSlugRoute: AdminAlbumsSlugRoute,
   AdminAlbumsNewRoute: AdminAlbumsNewRoute,
+  AdminDebugWasmRoute: AdminDebugWasmRoute,
   AdminPhotosPhotoIdRoute: AdminPhotosPhotoIdRoute,
   AdminPhotosUploadRoute: AdminPhotosUploadRoute,
   AdminAlbumsIndexRoute: AdminAlbumsIndexRoute,

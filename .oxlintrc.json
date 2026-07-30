@@ -4,6 +4,7 @@
     "node_modules/",
     "dist/",
     "build/",
+    "crates/",
     ".wrangler/",
     ".tanstack/",
     "src/routeTree.gen.ts"

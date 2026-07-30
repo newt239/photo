@@ -22,7 +22,9 @@
     "lint:fix": "oxlint --fix",
     "preinstall": "npx only-allow pnpm",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "wasm:build": "wasm-pack build crates/json-parser --target web --out-dir pkg --release",
+    "wasm:build:dev": "wasm-pack build crates/json-parser --target web --out-dir pkg --dev"
   },
   "dependencies": {
     "@clerk/tanstack-react-start": "1.4.14",
