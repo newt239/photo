@@ -29,7 +29,7 @@ const createPhotoUploadInput = z.object({
 });
 
 export const createPhotoUpload = createServerFn({ method: "POST" })
-  .inputValidator(createPhotoUploadInput)
+  .validator(createPhotoUploadInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     await ensureUserRow(userId);
@@ -75,7 +75,7 @@ const finalizePhotoInput = z.object({
 });
 
 export const finalizePhoto = createServerFn({ method: "POST" })
-  .inputValidator(finalizePhotoInput)
+  .validator(finalizePhotoInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     if (keyOwnerId(data.originalKey) !== userId) {
@@ -132,7 +132,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
   });
 
 export const listMyPhotos = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ limit: z.number().int().positive().max(200).optional() }))
+  .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);
@@ -146,7 +146,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
   });
 
 export const getPhoto = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ id: z.string().min(1) }))
+  .validator(z.object({ id: z.string().min(1) }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);
@@ -168,7 +168,7 @@ const updatePhotoInput = z.object({
 });
 
 export const updatePhoto = createServerFn({ method: "POST" })
-  .inputValidator(updatePhotoInput)
+  .validator(updatePhotoInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);
@@ -195,7 +195,7 @@ const draftSchema = z
   .partial();
 
 export const generatePhotoDraft = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string().min(1) }))
+  .validator(z.object({ id: z.string().min(1) }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);

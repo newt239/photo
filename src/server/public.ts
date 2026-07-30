@@ -40,7 +40,7 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ slug: z.string().min(1) }))
+  .validator(z.object({ slug: z.string().min(1) }))
   .handler(async ({ data }) => {
     const db = getDb(env.DB);
     const [album] = await db
