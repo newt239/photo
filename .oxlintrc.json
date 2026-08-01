@@ -126,6 +126,12 @@
         "import/no-commonjs": "off",
         "import/unambiguous": "off"
       }
+    },
+    {
+      "files": ["drizzle.config.ts"],
+      "rules": {
+        "typescript/no-unnecessary-condition": "off"
+      }
     }
   ]
 }
