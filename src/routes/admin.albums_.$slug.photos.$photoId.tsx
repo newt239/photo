@@ -29,9 +29,6 @@ export const Route = createFileRoute("/admin/albums_/$slug/photos/$photoId")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.caption ?? "写真"} | Photo` }],
   }),
-  loader: async ({
-    params,
-  }: {
-    readonly params: { readonly slug: string; readonly photoId: string };
-  }): Promise<PhotoDetail> => getPhoto({ data: { id: params.photoId } }),
+  loader: async ({ params }: { params: { slug: string; photoId: string } }): Promise<PhotoDetail> =>
+    getPhoto({ data: { id: params.photoId } }),
 });

@@ -2,8 +2,9 @@ import { auth } from "@clerk/tanstack-react-start/server";
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "cloudflare:workers";
 import { and, eq, exists, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 
-import { getDb } from "#/db/index.ts";
+import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 
 const FILE_PATTERN =
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
         }
 
         // 非所有者: 写真自体が public、または public アルバムに属していれば配信
-        const db = getDb(env.DB);
+        const db = drizzle(env.DB, { schema });
         const joinCondition = eq(albumPhotos.albumId, albums.id);
         const publicAlbumCondition = and(
           eq(albumPhotos.photoId, photos.id),

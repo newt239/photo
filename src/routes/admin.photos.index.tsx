@@ -32,7 +32,7 @@ const PhotosIndexPage = () => {
 export const Route = createFileRoute("/admin/photos/")({
   component: PhotosIndexPage,
   head: () => ({ meta: [{ title: "写真 | Photo" }] }),
-  loader: async (): Promise<{ photos: readonly PhotoCardData[] }> => ({
+  loader: async (): Promise<{ photos: PhotoCardData[] }> => ({
     photos: await listMyPhotos({ data: {} }),
   }),
 });

@@ -6,9 +6,9 @@ export const ActionCard = ({
   title,
   description,
 }: {
-  readonly to: "/admin/photos/upload" | "/admin/albums/new" | "/admin/settings";
-  readonly title: string;
-  readonly description: string;
+  to: "/admin/photos/upload" | "/admin/albums/new" | "/admin/settings";
+  title: string;
+  description: string;
 }) => (
   <Card component={Link} to={to} withBorder radius="md" padding="md" style={{ height: "100%" }}>
     <Text fw={600} mb={4}>

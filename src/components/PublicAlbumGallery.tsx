@@ -1,20 +1,19 @@
-import { photoImageUrl } from "./PhotoCard";
 import classes from "./PublicAlbumGallery.module.css";
 
 type PublicGalleryPhoto = {
-  readonly id: string;
-  readonly caption: string | null;
-  readonly alt: string | null;
-  readonly storageKey: string;
-  readonly thumbnailKey: string | null;
-  readonly width: number;
-  readonly height: number;
+  id: string;
+  caption: string | null;
+  alt: string | null;
+  storageKey: string;
+  thumbnailKey: string | null;
+  width: number;
+  height: number;
 };
 
 type PublicAlbumGalleryProps = {
-  readonly title: string | null;
-  readonly description: string | null;
-  readonly photos: readonly PublicGalleryPhoto[];
+  title: string | null;
+  description: string | null;
+  photos: PublicGalleryPhoto[];
 };
 
 export const PublicAlbumGallery = ({ title, description, photos }: PublicAlbumGalleryProps) => (
@@ -24,12 +23,12 @@ export const PublicAlbumGallery = ({ title, description, photos }: PublicAlbumGa
         <a
           key={p.id}
           className={classes.item}
-          href={photoImageUrl(p.storageKey)}
+          href={`/api/i/${p.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
           target="_blank"
           rel="noopener noreferrer"
         >
           <img
-            src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
+            src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
             alt={p.alt ?? p.caption ?? ""}
             loading="lazy"
             style={{ aspectRatio: `${p.width} / ${p.height}` }}

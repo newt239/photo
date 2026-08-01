@@ -72,20 +72,20 @@ const AlbumDetailPage = () => {
 };
 
 type AlbumDetail = {
-  readonly album: {
-    readonly id: string;
-    readonly title: string | null;
-    readonly description: string | null;
-    readonly visibility: "public" | "private";
+  album: {
+    id: string;
+    title: string | null;
+    description: string | null;
+    visibility: "public" | "private";
   };
-  readonly photos: readonly {
-    readonly id: string;
-    readonly caption: string | null;
-    readonly alt: string | null;
-    readonly storageKey: string;
-    readonly thumbnailKey: string | null;
-    readonly width: number;
-    readonly height: number;
+  photos: {
+    id: string;
+    caption: string | null;
+    alt: string | null;
+    storageKey: string;
+    thumbnailKey: string | null;
+    width: number;
+    height: number;
   }[];
 };
 
@@ -94,9 +94,6 @@ export const Route = createFileRoute("/admin/albums/$slug")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | Photo` }],
   }),
-  loader: async ({
-    params,
-  }: {
-    readonly params: { readonly slug: string };
-  }): Promise<AlbumDetail> => getAlbumBySlug({ data: { slug: params.slug } }),
+  loader: async ({ params }: { params: { slug: string } }): Promise<AlbumDetail> =>
+    getAlbumBySlug({ data: { slug: params.slug } }),
 });

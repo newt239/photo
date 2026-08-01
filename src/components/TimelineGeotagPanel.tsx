@@ -17,19 +17,17 @@ import { useRouter } from "@tanstack/react-router";
 import { matchTimeline, parseTimeline, type Timeline } from "#/lib/timeline.ts";
 import { applyPhotoLocations } from "#/server/photos.ts";
 
-import { photoImageUrl } from "./PhotoCard";
-
 export type GeotagCandidate = {
-  readonly id: string;
-  readonly caption: string | null;
-  readonly alt: string | null;
-  readonly storageKey: string;
-  readonly thumbnailKey: string | null;
-  readonly takenAt: string | null;
+  id: string;
+  caption: string | null;
+  alt: string | null;
+  storageKey: string;
+  thumbnailKey: string | null;
+  takenAt: string | null;
 };
 
 type Props = {
-  readonly photos: readonly GeotagCandidate[];
+  photos: GeotagCandidate[];
 };
 
 export const TimelineGeotagPanel = ({ photos }: Props) => {
@@ -227,7 +225,7 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
                       </Table.Td>
                       <Table.Td>
                         <img
-                          src={photoImageUrl(photo.thumbnailKey ?? photo.storageKey)}
+                          src={`/api/i/${(photo.thumbnailKey ?? photo.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
                           alt={photo.alt ?? photo.caption ?? ""}
                           width={56}
                           height={56}

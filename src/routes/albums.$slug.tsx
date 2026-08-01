@@ -23,11 +23,7 @@ export const Route = createFileRoute("/albums/$slug")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | Photo` }],
   }),
-  loader: async ({
-    params,
-  }: {
-    readonly params: { readonly slug: string };
-  }): Promise<PublicAlbum> => {
+  loader: async ({ params }: { params: { slug: string } }): Promise<PublicAlbum> => {
     const result = await getPublicAlbumBySlug({ data: { slug: params.slug } });
     if (!result) {
       throw notFound();

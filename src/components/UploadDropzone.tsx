@@ -217,7 +217,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: () => void }) => {
                             {it.name}
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {labelFor(it.status)}
+                            {STATUS_LABEL[it.status]}
                           </Text>
                           {it.status !== "done" && (
                             <Progress
@@ -298,5 +298,3 @@ const STATUS_LABEL: Record<UploadState["status"], string> = {
   saving: "保存中",
   uploading: "アップロード中",
 };
-
-const labelFor = (status: UploadState["status"]): string => STATUS_LABEL[status];

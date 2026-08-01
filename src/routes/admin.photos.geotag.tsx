@@ -26,7 +26,7 @@ const PhotosGeotagPage = () => {
 export const Route = createFileRoute("/admin/photos/geotag")({
   component: PhotosGeotagPage,
   head: () => ({ meta: [{ title: "位置情報の一括設定 | Photo" }] }),
-  loader: async (): Promise<{ photos: readonly GeotagCandidate[] }> => ({
+  loader: async (): Promise<{ photos: GeotagCandidate[] }> => ({
     photos: await listPhotosMissingLocation({ data: {} }),
   }),
 });

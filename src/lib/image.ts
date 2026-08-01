@@ -35,17 +35,6 @@ export const probeDimensions = async (file: File): Promise<{ width: number; heig
   }
 };
 
-const formatShutter = (value: unknown): string | null => {
-  if (typeof value !== "number" || value <= 0) {
-    return null;
-  }
-  if (value >= 1) {
-    return `${value}s`;
-  }
-  const reciprocal = Math.round(1 / value);
-  return `1/${reciprocal}`;
-};
-
 export const extractExif = async (file: File): Promise<Omit<ImageMeta, "width" | "height">> => {
   try {
     const tags = (await parse(file, {
@@ -62,19 +51,40 @@ export const extractExif = async (file: File): Promise<Omit<ImageMeta, "width" |
         : tags.CreateDate instanceof Date
           ? tags.CreateDate.toISOString()
           : null;
+    const { GPSAltitude, FocalLength, ISO, Orientation, ExposureTime } = tags;
+    const aperture = tags.FNumber ?? tags.ApertureValue;
+    const { latitude, longitude } = tags;
     return {
-      altitude: numOrNull(tags.GPSAltitude),
-      aperture: numOrNull(tags.FNumber ?? tags.ApertureValue),
+      altitude:
+        typeof GPSAltitude === "number" && Number.isFinite(GPSAltitude) ? GPSAltitude : null,
+      aperture: typeof aperture === "number" && Number.isFinite(aperture) ? aperture : null,
       cameraMake: strOrNull(tags.Make),
       cameraModel: strOrNull(tags.Model),
-      focalLength: numOrNull(tags.FocalLength),
-      iso: intOrNull(tags.ISO),
-      latitude: numOrNull(tags.latitude),
+      focalLength:
+        typeof FocalLength === "number" && Number.isFinite(FocalLength) ? FocalLength : null,
+      iso: typeof ISO === "number" && Number.isFinite(ISO) ? Math.trunc(ISO) : null,
+      latitude: typeof latitude === "number" && Number.isFinite(latitude) ? latitude : null,
       lensModel: strOrNull(tags.LensModel),
-      longitude: numOrNull(tags.longitude),
-      orientation: intOrNull(tags.Orientation),
-      rawExif: JSON.stringify(tags, replaceDates),
-      shutterSpeed: formatShutter(tags.ExposureTime),
+      longitude: typeof longitude === "number" && Number.isFinite(longitude) ? longitude : null,
+      orientation:
+        typeof Orientation === "number" && Number.isFinite(Orientation)
+          ? Math.trunc(Orientation)
+          : null,
+      rawExif: JSON.stringify(tags, (_key: string, value: unknown): unknown => {
+        if (value instanceof Date) {
+          return value.toISOString();
+        }
+        if (value instanceof Uint8Array) {
+          return undefined;
+        }
+        return value;
+      }),
+      shutterSpeed:
+        typeof ExposureTime === "number" && ExposureTime > 0
+          ? ExposureTime >= 1
+            ? `${ExposureTime}s`
+            : `1/${Math.round(1 / ExposureTime)}`
+          : null,
       takenAt,
     };
   } catch {
@@ -98,12 +108,6 @@ const emptyExif = (): Omit<ImageMeta, "width" | "height"> => ({
   takenAt: null,
 });
 
-const numOrNull = (v: unknown): number | null =>
-  typeof v === "number" && Number.isFinite(v) ? v : null;
-const intOrNull = (v: unknown): number | null => {
-  const n = numOrNull(v);
-  return n === null ? null : Math.trunc(n);
-};
 const strOrNull = (v: unknown): string | null => {
   if (typeof v !== "string") {
     return null;
@@ -111,16 +115,6 @@ const strOrNull = (v: unknown): string | null => {
   const trimmed = v.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
-const replaceDates = (_key: string, value: unknown): unknown => {
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  if (value instanceof Uint8Array) {
-    return undefined;
-  }
-  return value;
-};
-
 export const generateThumbnail = async (
   file: File,
   maxEdge = 1024,

@@ -1,28 +1,28 @@
 import { z } from "zod";
 
 type TimelineSample = {
-  readonly at: number;
-  readonly latitude: number;
-  readonly longitude: number;
+  at: number;
+  latitude: number;
+  longitude: number;
 };
 
 type TimelineVisit = {
-  readonly start: number;
-  readonly end: number;
-  readonly latitude: number;
-  readonly longitude: number;
+  start: number;
+  end: number;
+  latitude: number;
+  longitude: number;
 };
 
 export type Timeline = {
-  readonly samples: readonly TimelineSample[];
-  readonly visits: readonly TimelineVisit[];
+  samples: TimelineSample[];
+  visits: TimelineVisit[];
 };
 
 export type TimelineMatch = {
-  readonly latitude: number;
-  readonly longitude: number;
-  readonly diffMs: number;
-  readonly source: "visit" | "interpolated" | "nearest";
+  latitude: number;
+  longitude: number;
+  diffMs: number;
+  source: "visit" | "interpolated" | "nearest";
 };
 
 const placeSchema = z.union([z.string(), z.object({ latLng: z.string().optional() })]).optional();
@@ -104,14 +104,6 @@ const toEpoch = (value?: string): number | null => {
   return Number.isNaN(ms) ? null : ms;
 };
 
-const offsetFrom = (startMs: number | null, minutes?: string): number | null => {
-  if (startMs === null || !minutes) {
-    return null;
-  }
-  const value = Number(minutes);
-  return Number.isFinite(value) ? startMs + value * 60_000 : null;
-};
-
 export const parseTimeline = (text: string): Timeline => {
   const parsed = timelineFileSchema.safeParse(JSON.parse(text));
   if (!parsed.success) {
@@ -138,7 +130,10 @@ export const parseTimeline = (text: string): Timeline => {
 
     for (const step of segment.timelinePath ?? []) {
       const point = readCoordinate(step.point);
-      const at = toEpoch(step.time) ?? offsetFrom(start, step.durationMinutesOffsetFromStartTime);
+      const offsetMinutes = Number(step.durationMinutesOffsetFromStartTime);
+      const at =
+        toEpoch(step.time) ??
+        (start !== null && Number.isFinite(offsetMinutes) ? start + offsetMinutes * 60_000 : null);
       if (point && at !== null) {
         samples.push({ at, latitude: point.latitude, longitude: point.longitude });
       }
@@ -171,44 +166,24 @@ export const parseTimeline = (text: string): Timeline => {
   return { samples, visits };
 };
 
-const findVisit = (visits: readonly TimelineVisit[], atMs: number): TimelineVisit | null => {
-  let low = 0;
-  let high = visits.length;
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    const visit = visits[mid];
-    if (visit && visit.start <= atMs) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
-  }
-  const candidate = visits[low - 1];
-  return candidate && candidate.end >= atMs ? candidate : null;
-};
-
-const lowerBound = (samples: readonly TimelineSample[], atMs: number): number => {
-  let low = 0;
-  let high = samples.length;
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    const sample = samples[mid];
-    if (sample && sample.at < atMs) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
-  }
-  return low;
-};
-
 export const matchTimeline = (
   timeline: Timeline,
   atMs: number,
   toleranceMs: number,
 ): TimelineMatch | null => {
-  const visit = findVisit(timeline.visits, atMs);
-  if (visit) {
+  let visitLow = 0;
+  let visitHigh = timeline.visits.length;
+  while (visitLow < visitHigh) {
+    const mid = Math.floor((visitLow + visitHigh) / 2);
+    const candidate = timeline.visits[mid];
+    if (candidate && candidate.start <= atMs) {
+      visitLow = mid + 1;
+    } else {
+      visitHigh = mid;
+    }
+  }
+  const visit = timeline.visits[visitLow - 1];
+  if (visit && visit.end >= atMs) {
     return {
       diffMs: 0,
       latitude: visit.latitude,
@@ -217,9 +192,19 @@ export const matchTimeline = (
     };
   }
 
-  const index = lowerBound(timeline.samples, atMs);
-  const next = timeline.samples[index] ?? null;
-  const prev = index > 0 ? (timeline.samples[index - 1] ?? null) : null;
+  let low = 0;
+  let high = timeline.samples.length;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const sample = timeline.samples[mid];
+    if (sample && sample.at < atMs) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+  const next = timeline.samples[low] ?? null;
+  const prev = low > 0 ? (timeline.samples[low - 1] ?? null) : null;
   const prevDiff = prev ? atMs - prev.at : Number.POSITIVE_INFINITY;
   const nextDiff = next ? next.at - atMs : Number.POSITIVE_INFINITY;
 

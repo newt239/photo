@@ -1,13 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { z } from "zod";
 
-import { getDb } from "#/db/index.ts";
+import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 
 export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async () => {
-  const db = getDb(env.DB);
+  const db = drizzle(env.DB, { schema });
   const rows = await db
     .select({
       coverStorageKey: sql<string | null>`(
@@ -42,7 +43,7 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
 export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
   .validator(z.object({ slug: z.string().min(1) }))
   .handler(async ({ data }) => {
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const [album] = await db
       .select({
         description: albums.description,
