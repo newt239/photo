@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
@@ -159,6 +159,65 @@ export const getPhoto = createServerFn({ method: "GET" })
       throw new Error("NOT_FOUND");
     }
     return row;
+  });
+
+export const listPhotosMissingLocation = createServerFn({ method: "GET" })
+  .validator(z.object({ limit: z.number().int().positive().max(1000).optional() }))
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = getDb(env.DB);
+    const rows = await db
+      .select({
+        alt: photos.alt,
+        caption: photos.caption,
+        id: photos.id,
+        storageKey: photos.storageKey,
+        takenAt: photos.takenAt,
+        thumbnailKey: photos.thumbnailKey,
+      })
+      .from(photos)
+      .where(and(eq(photos.userId, userId), or(isNull(photos.latitude), isNull(photos.longitude))))
+      .orderBy(desc(photos.takenAt))
+      .limit(data.limit ?? 1000);
+    return rows.map((row) => ({ ...row, takenAt: row.takenAt?.toISOString() ?? null }));
+  });
+
+const applyPhotoLocationsInput = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+      }),
+    )
+    .min(1)
+    .max(100),
+});
+
+export const applyPhotoLocations = createServerFn({ method: "POST" })
+  .validator(applyPhotoLocationsInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = getDb(env.DB);
+    const [first, ...rest] = data.items.map((item) =>
+      db
+        .update(photos)
+        .set({ latitude: item.latitude, longitude: item.longitude })
+        .where(
+          and(
+            eq(photos.id, item.id),
+            eq(photos.userId, userId),
+            or(isNull(photos.latitude), isNull(photos.longitude)),
+          ),
+        )
+        .returning({ id: photos.id }),
+    );
+    if (!first) {
+      return { error: "EMPTY", success: false } as const;
+    }
+    const results = await db.batch([first, ...rest]);
+    return { success: true, updated: results.flat().length } as const;
   });
 
 const updatePhotoInput = z.object({
