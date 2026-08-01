@@ -6,7 +6,8 @@ import { and, eq, exists, sql } from "drizzle-orm";
 import { getDb } from "#/db/index.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 
-const FILE_PATTERN = /^(original|thumb)\.(jpg|jpeg|png|webp|avif|heic|heif|gif)$/i;
+const FILE_PATTERN =
+  /^(?<kind>original|thumb)\.(?<extension>jpg|jpeg|png|webp|avif|heic|heif|gif)$/i;
 
 const serveFromR2 = async (key: string, cacheControl: string): Promise<Response> => {
   const obj = await env.MY_BUCKET.get(key);
@@ -37,19 +38,21 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
 
         // 非所有者: 写真自体が public、または public アルバムに属していれば配信
         const db = getDb(env.DB);
+        const joinCondition = eq(albumPhotos.albumId, albums.id);
+        const publicAlbumCondition = and(
+          eq(albumPhotos.photoId, photos.id),
+          eq(albums.visibility, "public"),
+        );
+        const publicAlbumQuery = db
+          .select({ one: sql`1` })
+          .from(albumPhotos)
+          .innerJoin(albums, joinCondition)
+          .where(publicAlbumCondition);
+        const photoCondition = and(eq(photos.id, photoId), eq(photos.userId, ownerId));
         const [row] = await db
-          .select({
-            inPublicAlbum: exists(
-              db
-                .select({ one: sql`1` })
-                .from(albumPhotos)
-                .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
-                .where(and(eq(albumPhotos.photoId, photos.id), eq(albums.visibility, "public"))),
-            ),
-            visibility: photos.visibility,
-          })
+          .select({ inPublicAlbum: exists(publicAlbumQuery), visibility: photos.visibility })
           .from(photos)
-          .where(and(eq(photos.id, photoId), eq(photos.userId, ownerId)))
+          .where(photoCondition)
           .limit(1);
         if (!row || (row.visibility !== "public" && !row.inPublicAlbum)) {
           return new Response("Not Found", { status: 404 });

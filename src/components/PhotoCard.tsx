@@ -14,8 +14,8 @@ export type PhotoCardData = {
 };
 
 export const photoImageUrl = (key: string): string => {
-  const m = /^users\/([^/]+)\/photos\/([^/]+)\/(.+)$/.exec(key);
-  return m ? `/api/i/${m[1]}/${m[2]}/${m[3]}` : "";
+  const m = /^users\/(?<ownerId>[^/]+)\/photos\/(?<photoId>[^/]+)\/(?<file>.+)$/.exec(key);
+  return m?.groups ? `/api/i/${m.groups.ownerId}/${m.groups.photoId}/${m.groups.file}` : "";
 };
 
 type PhotoCardProps = {

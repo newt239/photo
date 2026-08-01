@@ -27,22 +27,20 @@ export type TimelineMatch = {
 
 const placeSchema = z.union([z.string(), z.object({ latLng: z.string().optional() })]).optional();
 
+const pathStepSchema = z
+  .object({
+    durationMinutesOffsetFromStartTime: z.string().optional(),
+    point: z.string().optional(),
+    time: z.string().optional(),
+  })
+  .catch({});
+
 const segmentSchema = z
   .object({
     activity: z.object({ end: placeSchema, start: placeSchema }).optional(),
     endTime: z.string().optional(),
     startTime: z.string().optional(),
-    timelinePath: z
-      .array(
-        z
-          .object({
-            durationMinutesOffsetFromStartTime: z.string().optional(),
-            point: z.string().optional(),
-            time: z.string().optional(),
-          })
-          .catch({}),
-      )
-      .optional(),
+    timelinePath: z.array(pathStepSchema).optional(),
     visit: z
       .object({ topCandidate: z.object({ placeLocation: placeSchema }).optional() })
       .optional(),

@@ -161,6 +161,8 @@ export const getPhoto = createServerFn({ method: "GET" })
     return row;
   });
 
+const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
+
 export const listPhotosMissingLocation = createServerFn({ method: "GET" })
   .validator(z.object({ limit: z.number().int().positive().max(1000).optional() }))
   .handler(async ({ data }) => {
@@ -176,23 +178,27 @@ export const listPhotosMissingLocation = createServerFn({ method: "GET" })
         thumbnailKey: photos.thumbnailKey,
       })
       .from(photos)
-      .where(and(eq(photos.userId, userId), or(isNull(photos.latitude), isNull(photos.longitude))))
+      .where(and(eq(photos.userId, userId), missingLocation))
       .orderBy(desc(photos.takenAt))
       .limit(data.limit ?? 1000);
-    return rows.map((row) => ({ ...row, takenAt: row.takenAt?.toISOString() ?? null }));
+    return rows.map((row) => ({
+      alt: row.alt,
+      caption: row.caption,
+      id: row.id,
+      storageKey: row.storageKey,
+      takenAt: row.takenAt?.toISOString() ?? null,
+      thumbnailKey: row.thumbnailKey,
+    }));
   });
 
+const locationItemSchema = z.object({
+  id: z.string().min(1),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
 const applyPhotoLocationsInput = z.object({
-  items: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        latitude: z.number().min(-90).max(90),
-        longitude: z.number().min(-180).max(180),
-      }),
-    )
-    .min(1)
-    .max(100),
+  items: z.array(locationItemSchema).min(1).max(100),
 });
 
 export const applyPhotoLocations = createServerFn({ method: "POST" })
@@ -200,19 +206,14 @@ export const applyPhotoLocations = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = getDb(env.DB);
-    const [first, ...rest] = data.items.map((item) =>
-      db
+    const [first, ...rest] = data.items.map((item) => {
+      const condition = and(eq(photos.id, item.id), eq(photos.userId, userId), missingLocation);
+      return db
         .update(photos)
         .set({ latitude: item.latitude, longitude: item.longitude })
-        .where(
-          and(
-            eq(photos.id, item.id),
-            eq(photos.userId, userId),
-            or(isNull(photos.latitude), isNull(photos.longitude)),
-          ),
-        )
-        .returning({ id: photos.id }),
-    );
+        .where(condition)
+        .returning({ id: photos.id });
+    });
     if (!first) {
       return { error: "EMPTY", success: false } as const;
     }

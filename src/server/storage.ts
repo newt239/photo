@@ -21,8 +21,8 @@ export const buildThumbnailKey = (userId: string, photoId: string): string =>
   `users/${userId}/photos/${photoId}/thumb.webp`;
 
 export const keyOwnerId = (storageKey: string): string | null => {
-  const match = /^users\/([^/]+)\//.exec(storageKey);
-  return match?.[1] ?? null;
+  const match = /^users\/(?<ownerId>[^/]+)\//.exec(storageKey);
+  return match?.groups?.ownerId ?? null;
 };
 
 const r2Client = (): AwsClient =>
