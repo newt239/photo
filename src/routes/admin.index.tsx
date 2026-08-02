@@ -12,8 +12,8 @@ import type { PhotoCardData } from "#/components/PhotoCard.tsx";
 const PREVIEW_LIMIT = 6;
 
 type LoaderData = {
-  readonly photos: readonly PhotoCardData[];
-  readonly albums: readonly AlbumCardData[];
+  photos: PhotoCardData[];
+  albums: AlbumCardData[];
 };
 
 const AdminIndexPage = () => {

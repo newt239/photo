@@ -6,7 +6,6 @@ import { addPhotosToAlbum } from "#/server/albums.ts";
 import { listMyPhotos } from "#/server/photos.ts";
 
 import classes from "./AddPhotosToAlbumModal.module.css";
-import { photoImageUrl } from "./PhotoCard";
 
 type PhotoItem = Awaited<ReturnType<typeof listMyPhotos>>[number];
 
@@ -94,7 +93,7 @@ export const AddPhotosToAlbumModal = ({
                     data-disabled={already || undefined}
                   >
                     <img
-                      src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
+                      src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
                       alt=""
                       loading="lazy"
                     />

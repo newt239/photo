@@ -16,44 +16,33 @@ import { useRouter } from "@tanstack/react-router";
 
 import { generatePhotoDraft, updatePhoto } from "#/server/photos.ts";
 
-import { photoImageUrl } from "./PhotoCard";
 import classes from "./PhotoDetailView.module.css";
 
 type PhotoDetailData = {
-  readonly id: string;
-  readonly caption: string | null;
-  readonly alt: string | null;
-  readonly storageKey: string;
-  readonly width: number;
-  readonly height: number;
-  readonly mimeType: string;
-  readonly fileSize: number;
-  readonly visibility: "public" | "private";
-  readonly takenAt: Date | string | null;
-  readonly uploadedAt: Date | string | null;
-  readonly cameraMake: string | null;
-  readonly cameraModel: string | null;
-  readonly lensModel: string | null;
-  readonly focalLength: number | null;
-  readonly aperture: number | null;
-  readonly shutterSpeed: string | null;
-  readonly iso: number | null;
-  readonly latitude: number | null;
-  readonly longitude: number | null;
-  readonly altitude: number | null;
+  id: string;
+  caption: string | null;
+  alt: string | null;
+  storageKey: string;
+  width: number;
+  height: number;
+  mimeType: string;
+  fileSize: number;
+  visibility: "public" | "private";
+  takenAt: Date | string | null;
+  uploadedAt: Date | string | null;
+  cameraMake: string | null;
+  cameraModel: string | null;
+  lensModel: string | null;
+  focalLength: number | null;
+  aperture: number | null;
+  shutterSpeed: string | null;
+  iso: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  altitude: number | null;
 };
 
-type InfoRow = { readonly label: string; readonly value: string };
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
+type InfoRow = { label: string; value: string };
 
 const formatDateTime = (value: Date | string | null): string | null => {
   if (!value) {
@@ -72,46 +61,7 @@ const formatDateTime = (value: Date | string | null): string | null => {
   });
 };
 
-const formatCoord = (value: number): string => value.toFixed(6);
-
-const buildExifRows = (photo: PhotoDetailData): readonly InfoRow[] => {
-  const rows: InfoRow[] = [];
-  const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
-  if (camera) {
-    rows.push({ label: "カメラ", value: camera });
-  }
-  if (photo.lensModel) {
-    rows.push({ label: "レンズ", value: photo.lensModel });
-  }
-  if (photo.focalLength !== null) {
-    rows.push({ label: "焦点距離", value: `${photo.focalLength} mm` });
-  }
-  if (photo.aperture !== null) {
-    rows.push({ label: "絞り", value: `f/${photo.aperture}` });
-  }
-  if (photo.shutterSpeed) {
-    rows.push({ label: "シャッター速度", value: `${photo.shutterSpeed} s` });
-  }
-  if (photo.iso !== null) {
-    rows.push({ label: "ISO", value: `ISO ${photo.iso}` });
-  }
-  return rows;
-};
-
-const buildFileRows = (photo: PhotoDetailData): readonly InfoRow[] => {
-  const rows: InfoRow[] = [
-    { label: "サイズ", value: `${photo.width} × ${photo.height}` },
-    { label: "ファイルサイズ", value: formatFileSize(photo.fileSize) },
-    { label: "形式", value: photo.mimeType },
-  ];
-  const uploaded = formatDateTime(photo.uploadedAt);
-  if (uploaded) {
-    rows.push({ label: "アップロード日時", value: uploaded });
-  }
-  return rows;
-};
-
-const renderInfoList = (rows: readonly InfoRow[]) => (
+const renderInfoList = (rows: InfoRow[]) => (
   <Stack gap={6}>
     {rows.map((row) => (
       <Group key={row.label} justify="space-between" gap="md" wrap="nowrap">
@@ -127,15 +77,49 @@ const renderInfoList = (rows: readonly InfoRow[]) => (
 );
 
 type Props = {
-  readonly photo: PhotoDetailData;
-  readonly backLink?: ReactNode;
+  photo: PhotoDetailData;
+  backLink?: ReactNode;
 };
 
 export const PhotoDetailView = ({ photo, backLink }: Props) => {
   const router = useRouter();
-  const imageSrc = photoImageUrl(photo.storageKey);
-  const exifRows = buildExifRows(photo);
-  const fileRows = buildFileRows(photo);
+  const imageSrc = `/api/i/${photo.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
+  const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
+  const exifRows: InfoRow[] = [];
+  if (camera) {
+    exifRows.push({ label: "カメラ", value: camera });
+  }
+  if (photo.lensModel) {
+    exifRows.push({ label: "レンズ", value: photo.lensModel });
+  }
+  if (photo.focalLength !== null) {
+    exifRows.push({ label: "焦点距離", value: `${photo.focalLength} mm` });
+  }
+  if (photo.aperture !== null) {
+    exifRows.push({ label: "絞り", value: `f/${photo.aperture}` });
+  }
+  if (photo.shutterSpeed) {
+    exifRows.push({ label: "シャッター速度", value: `${photo.shutterSpeed} s` });
+  }
+  if (photo.iso !== null) {
+    exifRows.push({ label: "ISO", value: `ISO ${photo.iso}` });
+  }
+
+  const fileSize =
+    photo.fileSize < 1024
+      ? `${photo.fileSize} B`
+      : photo.fileSize < 1024 * 1024
+        ? `${(photo.fileSize / 1024).toFixed(1)} KB`
+        : `${(photo.fileSize / (1024 * 1024)).toFixed(2)} MB`;
+  const fileRows: InfoRow[] = [
+    { label: "サイズ", value: `${photo.width} × ${photo.height}` },
+    { label: "ファイルサイズ", value: fileSize },
+    { label: "形式", value: photo.mimeType },
+  ];
+  const uploaded = formatDateTime(photo.uploadedAt);
+  if (uploaded) {
+    fileRows.push({ label: "アップロード日時", value: uploaded });
+  }
   const takenAt = formatDateTime(photo.takenAt);
   const hasLocation = photo.latitude !== null && photo.longitude !== null;
 
@@ -265,8 +249,8 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
             <Stack gap="xs">
               <Title order={4}>位置情報</Title>
               {renderInfoList([
-                { label: "緯度", value: formatCoord(photo.latitude) },
-                { label: "経度", value: formatCoord(photo.longitude) },
+                { label: "緯度", value: photo.latitude.toFixed(6) },
+                { label: "経度", value: photo.longitude.toFixed(6) },
                 ...(photo.altitude === null
                   ? []
                   : [{ label: "標高", value: `${photo.altitude.toFixed(1)} m` }]),

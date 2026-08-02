@@ -2,27 +2,30 @@ import { Card, Stack, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 
 import classes from "./AlbumCard.module.css";
-import { photoImageUrl } from "./PhotoCard";
 
 export type AlbumCardData = {
-  readonly id: string;
-  readonly slug: string;
-  readonly title: string | null;
-  readonly description: string | null;
-  readonly visibility: "public" | "private";
-  readonly coverThumbnailKey: string | null;
-  readonly coverStorageKey: string | null;
-  readonly photoCount: number;
+  id: string;
+  slug: string;
+  title: string | null;
+  description: string | null;
+  visibility: "public" | "private";
+  coverThumbnailKey: string | null;
+  coverStorageKey: string | null;
+  photoCount: number;
 };
 
-export const AlbumCard = ({ album }: Readonly<{ album: AlbumCardData }>) => {
+export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
   const coverKey = album.coverThumbnailKey ?? album.coverStorageKey;
   return (
     <Link to="/admin/albums/$slug" params={{ slug: album.slug }} className={classes.link}>
       <Card withBorder radius="md" padding={0} className={classes.card}>
         <div className={classes.cover}>
           {coverKey ? (
-            <img src={photoImageUrl(coverKey)} alt="" loading="lazy" />
+            <img
+              src={`/api/i/${coverKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
+              alt=""
+              loading="lazy"
+            />
           ) : (
             <div className={classes.placeholder}>
               <Text size="xs" c="dimmed">

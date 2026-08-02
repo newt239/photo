@@ -73,6 +73,10 @@
     "oxc/no-optional-chaining": "off",
     "oxc/no-rest-spread-properties": "off",
     "react/forbid-component-props": "off",
+    "react/function-component-definition": [
+      "warn",
+      { "namedComponents": "arrow-function", "unnamedComponents": "arrow-function" }
+    ],
     "react/no-danger": "off",
     "react/jsx-filename-extension": ["warn", { "extensions": [".tsx"] }],
     "react/jsx-max-depth": "off",
@@ -112,7 +116,8 @@
     "unicorn/numeric-separators-style": "off",
     "unicorn/prefer-export-from": "off",
     "unicorn/prefer-global-this": "off",
-    "unicorn/prefer-top-level-await": "off"
+    "unicorn/prefer-top-level-await": "off",
+    "unicorn/require-post-message-target-origin": "off"
   },
   "overrides": [
     {
@@ -120,6 +125,12 @@
       "rules": {
         "import/no-commonjs": "off",
         "import/unambiguous": "off"
+      }
+    },
+    {
+      "files": ["drizzle.config.ts"],
+      "rules": {
+        "typescript/no-unnecessary-condition": "off"
       }
     }
   ]

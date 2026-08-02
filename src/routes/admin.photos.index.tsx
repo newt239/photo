@@ -15,9 +15,14 @@ const PhotosIndexPage = () => {
       </Anchor>
       <Group justify="space-between">
         <Title order={2}>写真</Title>
-        <Button component={Link} to="/admin/photos/upload">
-          アップロード
-        </Button>
+        <Group gap="sm">
+          <Button component={Link} to="/admin/photos/geotag" variant="default">
+            位置情報を設定する
+          </Button>
+          <Button component={Link} to="/admin/photos/upload">
+            アップロード
+          </Button>
+        </Group>
       </Group>
       <PhotoGrid photos={photos} />
     </Stack>
@@ -27,7 +32,7 @@ const PhotosIndexPage = () => {
 export const Route = createFileRoute("/admin/photos/")({
   component: PhotosIndexPage,
   head: () => ({ meta: [{ title: "写真 | Photo" }] }),
-  loader: async (): Promise<{ photos: readonly PhotoCardData[] }> => ({
+  loader: async (): Promise<{ photos: PhotoCardData[] }> => ({
     photos: await listMyPhotos({ data: {} }),
   }),
 });

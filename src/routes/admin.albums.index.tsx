@@ -35,7 +35,7 @@ const AlbumsIndexPage = () => {
 export const Route = createFileRoute("/admin/albums/")({
   component: AlbumsIndexPage,
   head: () => ({ meta: [{ title: "アルバム | Photo" }] }),
-  loader: async (): Promise<{ albums: readonly AlbumCardData[] }> => ({
+  loader: async (): Promise<{ albums: AlbumCardData[] }> => ({
     albums: await listMyAlbums({ data: {} }),
   }),
 });

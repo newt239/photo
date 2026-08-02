@@ -1,8 +1,9 @@
 import { auth, clerkClient } from "@clerk/tanstack-react-start/server";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 
-import { getDb } from "#/db/index.ts";
+import * as schema from "#/db/schema.ts";
 import { users } from "#/db/schema.ts";
 
 export const requireUserId = async (): Promise<string> => {
@@ -14,7 +15,7 @@ export const requireUserId = async (): Promise<string> => {
 };
 
 export const ensureUserRow = async (userId: string): Promise<void> => {
-  const db = getDb(env.DB);
+  const db = drizzle(env.DB, { schema });
   const existing = await db
     .select({ id: users.id })
     .from(users)

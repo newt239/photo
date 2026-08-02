@@ -1,11 +1,8 @@
-import type { MantineColorScheme, MantineColorSchemeManager } from "@mantine/core";
+import type { MantineColorSchemeManager } from "@mantine/core";
 
 export const COLOR_SCHEME_COOKIE = "mantine-color-scheme-value";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
-
-export const isColorScheme = (value: unknown): value is MantineColorScheme =>
-  value === "light" || value === "dark" || value === "auto";
 
 export const cookieColorSchemeManager = (
   opts: { key?: string; maxAge?: number } = {},
@@ -29,7 +26,7 @@ export const cookieColorSchemeManager = (
         return defaultValue;
       }
       const value = decodeURIComponent(match.slice(key.length + 1));
-      return isColorScheme(value) ? value : defaultValue;
+      return value === "light" || value === "dark" || value === "auto" ? value : defaultValue;
     },
     set: (value) => {
       if (typeof document === "undefined") {

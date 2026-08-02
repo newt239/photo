@@ -1,13 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
-import { getDb } from "#/db/index.ts";
+import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { ensureUserRow, requireUserId } from "#/lib/auth.ts";
-import { uniqueSlug } from "#/lib/slug.ts";
 
 const createAlbumInput = z.object({
   description: z.string().max(2000).nullable().optional(),
@@ -20,9 +20,15 @@ export const createAlbum = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     await ensureUserRow(userId);
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const id = nanoid();
-    const slug = uniqueSlug(data.title);
+    const normalized = data.title
+      .normalize("NFKD")
+      .replaceAll(/[\u0300-\u036F]/g, "")
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, "-")
+      .replaceAll(/^-+|-+$/g, "");
+    const slug = `${normalized || "album"}-${nanoid(6)}`;
     await db.insert(albums).values({
       description: data.description ?? null,
       id,
@@ -38,7 +44,7 @@ export const listMyAlbums = createServerFn({ method: "GET" })
   .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const rows = await db
       .select({
         coverPhotoId: albums.coverPhotoId,
@@ -78,7 +84,7 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
   .validator(z.object({ slug: z.string().min(1) }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const [album] = await db
       .select()
       .from(albums)
@@ -120,7 +126,7 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
   .validator(addPhotosInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
 
     const [album] = await db
       .select({ id: albums.id })

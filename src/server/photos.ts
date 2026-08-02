@@ -1,13 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
-import { getDb } from "#/db/index.ts";
+import * as schema from "#/db/schema.ts";
 import { photos } from "#/db/schema.ts";
 import { ensureUserRow, requireUserId } from "#/lib/auth.ts";
-import { buildOriginalKey, buildThumbnailKey, keyOwnerId, signPutUrl } from "#/server/storage.ts";
+import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
 
 const ALLOWED_MIME = [
   "image/jpeg",
@@ -34,12 +35,13 @@ export const createPhotoUpload = createServerFn({ method: "POST" })
     const userId = await requireUserId();
     await ensureUserRow(userId);
     const photoId = nanoid();
-    const originalKey = buildOriginalKey(userId, photoId, data.contentType);
+    const extension = MIME_EXT[data.contentType.toLowerCase()] ?? "bin";
+    const originalKey = `users/${userId}/photos/${photoId}/original.${extension}`;
     const originalUrl = await signPutUrl(originalKey, data.contentType);
     let thumbnailKey: string | null = null;
     let thumbnailUrl: string | null = null;
     if (data.hasThumbnail) {
-      thumbnailKey = buildThumbnailKey(userId, photoId);
+      thumbnailKey = `users/${userId}/photos/${photoId}/thumb.webp`;
       thumbnailUrl = await signPutUrl(thumbnailKey, THUMB_MIME);
     }
     return {
@@ -78,10 +80,14 @@ export const finalizePhoto = createServerFn({ method: "POST" })
   .validator(finalizePhotoInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    if (keyOwnerId(data.originalKey) !== userId) {
+    const originalOwner = /^users\/(?<ownerId>[^/]+)\//.exec(data.originalKey)?.groups?.ownerId;
+    if (originalOwner !== userId) {
       throw new Error("FORBIDDEN");
     }
-    if (data.thumbnailKey && keyOwnerId(data.thumbnailKey) !== userId) {
+    const thumbnailOwner = data.thumbnailKey
+      ? /^users\/(?<ownerId>[^/]+)\//.exec(data.thumbnailKey)?.groups?.ownerId
+      : userId;
+    if (thumbnailOwner !== userId) {
       throw new Error("FORBIDDEN");
     }
 
@@ -91,7 +97,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     }
 
     try {
-      const db = getDb(env.DB);
+      const db = drizzle(env.DB, { schema });
       await db.insert(photos).values({
         altitude: data.altitude ?? null,
         aperture: data.aperture ?? null,
@@ -135,7 +141,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
   .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const rows = await db
       .select()
       .from(photos)
@@ -149,7 +155,7 @@ export const getPhoto = createServerFn({ method: "GET" })
   .validator(z.object({ id: z.string().min(1) }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const [row] = await db
       .select()
       .from(photos)
@@ -159,6 +165,66 @@ export const getPhoto = createServerFn({ method: "GET" })
       throw new Error("NOT_FOUND");
     }
     return row;
+  });
+
+const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
+
+export const listPhotosMissingLocation = createServerFn({ method: "GET" })
+  .validator(z.object({ limit: z.number().int().positive().max(1000).optional() }))
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = drizzle(env.DB, { schema });
+    const rows = await db
+      .select({
+        alt: photos.alt,
+        caption: photos.caption,
+        id: photos.id,
+        storageKey: photos.storageKey,
+        takenAt: photos.takenAt,
+        thumbnailKey: photos.thumbnailKey,
+      })
+      .from(photos)
+      .where(and(eq(photos.userId, userId), missingLocation))
+      .orderBy(desc(photos.takenAt))
+      .limit(data.limit ?? 1000);
+    return rows.map((row) => ({
+      alt: row.alt,
+      caption: row.caption,
+      id: row.id,
+      storageKey: row.storageKey,
+      takenAt: row.takenAt?.toISOString() ?? null,
+      thumbnailKey: row.thumbnailKey,
+    }));
+  });
+
+const locationItemSchema = z.object({
+  id: z.string().min(1),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
+const applyPhotoLocationsInput = z.object({
+  items: z.array(locationItemSchema).min(1).max(100),
+});
+
+export const applyPhotoLocations = createServerFn({ method: "POST" })
+  .validator(applyPhotoLocationsInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = drizzle(env.DB, { schema });
+    const [first, ...rest] = data.items.map((item) => {
+      const condition = and(eq(photos.id, item.id), eq(photos.userId, userId), missingLocation);
+      return db
+        .update(photos)
+        .set({ latitude: item.latitude, longitude: item.longitude })
+        .where(condition)
+        .returning({ id: photos.id });
+    });
+    if (!first) {
+      return { error: "EMPTY", success: false } as const;
+    }
+    const results = await db.batch([first, ...rest]);
+    return { success: true, updated: results.flat().length } as const;
   });
 
 const updatePhotoInput = z.object({
@@ -171,7 +237,7 @@ export const updatePhoto = createServerFn({ method: "POST" })
   .validator(updatePhotoInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const [existing] = await db
       .select({ id: photos.id })
       .from(photos)
@@ -198,7 +264,7 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string().min(1) }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    const db = getDb(env.DB);
+    const db = drizzle(env.DB, { schema });
     const [photo] = await db
       .select({ storageKey: photos.storageKey, thumbnailKey: photos.thumbnailKey })
       .from(photos)

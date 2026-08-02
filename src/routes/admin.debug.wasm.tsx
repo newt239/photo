@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Anchor, Button, FileInput, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
-import { countTopLevelKeys, createJsonParserWorker } from "#/lib/json-parser.ts";
+import type { CountKeysRequest, CountKeysResponse } from "#/lib/json-parser.ts";
 
 const DebugWasmPage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -18,11 +18,32 @@ const DebugWasmPage = () => {
     setRunning(true);
     setResult(null);
     setErrorMessage(null);
-    const worker = createJsonParserWorker();
+    const worker = new Worker(new URL("../workers/json-parser.worker.ts", import.meta.url), {
+      type: "module",
+    });
     try {
       const text = await file.text();
       const startedAt = performance.now();
-      const count = await countTopLevelKeys(worker, text);
+      const count = await new Promise<number>((resolve, reject) => {
+        const handleMessage = (event: MessageEvent<CountKeysResponse>) => {
+          worker.removeEventListener("error", handleError);
+          if (event.data.ok) {
+            resolve(event.data.value);
+          } else {
+            reject(new Error(event.data.error));
+          }
+        };
+        const handleError = (event: ErrorEvent) => {
+          worker.removeEventListener("message", handleMessage);
+          reject(new Error(event.message));
+        };
+
+        worker.addEventListener("message", handleMessage, { once: true });
+        worker.addEventListener("error", handleError, { once: true });
+
+        const request: CountKeysRequest = { payload: text, type: "countKeys" };
+        worker.postMessage(request);
+      });
       setResult({ count, elapsedMs: performance.now() - startedAt });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));

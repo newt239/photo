@@ -4,27 +4,23 @@ import { Link } from "@tanstack/react-router";
 import classes from "./PhotoCard.module.css";
 
 export type PhotoCardData = {
-  readonly id: string;
-  readonly caption: string | null;
-  readonly alt: string | null;
-  readonly storageKey: string;
-  readonly thumbnailKey: string | null;
-  readonly width: number;
-  readonly height: number;
-};
-
-export const photoImageUrl = (key: string): string => {
-  const m = /^users\/([^/]+)\/photos\/([^/]+)\/(.+)$/.exec(key);
-  return m ? `/api/i/${m[1]}/${m[2]}/${m[3]}` : "";
+  id: string;
+  caption: string | null;
+  alt: string | null;
+  storageKey: string;
+  thumbnailKey: string | null;
+  width: number;
+  height: number;
 };
 
 type PhotoCardProps = {
-  readonly photo: PhotoCardData;
-  readonly albumSlug?: string;
+  photo: PhotoCardData;
+  albumSlug?: string;
 };
 
-export const PhotoCard = ({ photo, albumSlug }: Readonly<PhotoCardProps>) => {
-  const src = photoImageUrl(photo.thumbnailKey ?? photo.storageKey);
+export const PhotoCard = ({ photo, albumSlug }: PhotoCardProps) => {
+  const key = photo.thumbnailKey ?? photo.storageKey;
+  const src = `/api/i/${key.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
   const card = (
     <Card withBorder radius="md" padding={0} className={classes.card}>
       <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
