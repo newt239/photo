@@ -23,6 +23,15 @@
 .collapsed {
   width: auto;
   max-width: min(calc(100vw - 2rem), 22rem);
+  appearance: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.collapsed:focus-visible {
+  outline: 2px solid var(--public-fg);
+  outline-offset: 2px;
 }
 
 .info {
@@ -169,6 +178,27 @@
 
   .collapsed {
     left: auto;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .segmented {
+    width: 100%;
+  }
+
+  .segment {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 0.5rem;
+    white-space: nowrap;
   }
 }
 

@@ -12,17 +12,11 @@ body {
   --public-surface: #0b0b0d;
   --public-fg: rgba(255, 255, 255, 0.94);
   --public-fg-muted: rgba(255, 255, 255, 0.58);
-  --public-glass-bg: rgba(18, 18, 22, 0.55);
-  --public-glass-hover: rgba(255, 255, 255, 0.16);
-  --public-glass-subtle: rgba(255, 255, 255, 0.08);
-  --public-glass-border: rgba(255, 255, 255, 0.14);
-  --public-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --public-glass-bg: rgba(18, 18, 22, 0.78);
+  --public-glass-hover: rgba(255, 255, 255, 0.2);
+  --public-glass-subtle: rgba(255, 255, 255, 0.12);
+  --public-glass-border: rgba(255, 255, 255, 0.18);
+  --public-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
   --public-glass-blur: blur(16px) saturate(160%);
-  --public-touch-size: 1.75rem;
-}
-
-@media (pointer: coarse), (max-width: 30rem) {
-  :root {
-    --public-touch-size: 2.75rem;
-  }
+  --public-touch-size: 2.75rem;
 }

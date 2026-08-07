@@ -25,33 +25,38 @@ export const PublicAlbumControls = ({
 }: PublicAlbumControlsProps) => {
   const [minimized, setMinimized] = useState(false);
   const [maxSize, setMaxSize] = useState(1);
+  const [mobile, setMobile] = useState(false);
 
   // 画面幅はブラウザ API でしか取得できないため resize を監視して最大列数を求める
   useEffect(() => {
-    const update = () => setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160)));
+    const update = () => {
+      setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160)));
+      setMobile(window.innerWidth <= 480);
+    };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
 
   const current = Math.min(size, maxSize);
+  const showSize = !mobile && mode === "photo" && maxSize > 1;
 
   if (minimized) {
     return (
-      <div className={`${classes.panel} ${classes.collapsed}`}>
+      <button
+        type="button"
+        className={`${classes.panel} ${classes.collapsed}`}
+        onClick={() => setMinimized(false)}
+        aria-expanded={false}
+        aria-label="アルバムの情報を開く"
+      >
         <div className={classes.heading}>
           <div className={classes.title}>{title ?? "(無題)"}</div>
-          <button
-            type="button"
-            className={classes.iconButton}
-            onClick={() => setMinimized(false)}
-            aria-expanded={false}
-            aria-label="アルバムの情報を開く"
-          >
+          <span className={classes.iconButton} aria-hidden>
             <InfoIcon size={16} />
-          </button>
+          </span>
         </div>
-      </div>
+      </button>
     );
   }
 
@@ -73,7 +78,7 @@ export const PublicAlbumControls = ({
         {description && <div className={classes.description}>{description}</div>}
       </div>
 
-      {(hasGeotagged || (mode === "photo" && maxSize > 1)) && (
+      {(hasGeotagged || showSize) && (
         <div className={classes.row}>
           {hasGeotagged && (
             <div className={classes.segmented}>
@@ -96,7 +101,7 @@ export const PublicAlbumControls = ({
             </div>
           )}
 
-          {mode === "photo" && maxSize > 1 && (
+          {showSize && (
             <div className={classes.sizeControl}>
               <button
                 type="button"
