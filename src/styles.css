@@ -21,7 +21,7 @@ body {
   --public-touch-size: 1.75rem;
 }
 
-@media (pointer: coarse), (max-width: 30rem) {
+@media (max-width: 30rem) {
   :root {
     --public-touch-size: 2.75rem;
   }
