@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
@@ -20,6 +21,8 @@ type PhotoLightboxProps = {
 
 export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLightboxProps) => {
   const [zoom, setZoom] = useState(1);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
   const photo = index === null ? undefined : photos[index];
 
   // Esc と左右キーでの操作を受け取るため window にイベントを登録する
@@ -72,6 +75,19 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
     onIndexChange((index + delta + photos.length) % photos.length);
   };
 
+  const changeZoom = (next: number) => {
+    const stage = stageRef.current;
+    if (!stage) {
+      setZoom(next);
+      return;
+    }
+    const centerX = (stage.scrollLeft + stage.clientWidth / 2) / stage.scrollWidth;
+    const centerY = (stage.scrollTop + stage.clientHeight / 2) / stage.scrollHeight;
+    flushSync(() => setZoom(next));
+    stage.scrollLeft = centerX * stage.scrollWidth - stage.clientWidth / 2;
+    stage.scrollTop = centerY * stage.scrollHeight - stage.clientHeight / 2;
+  };
+
   return (
     <div className={classes.overlay} role="dialog" aria-modal="true" aria-label="写真を表示">
       <button
@@ -84,7 +100,36 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
         <XIcon size={18} />
       </button>
 
-      <div className={classes.stage}>
+      <div
+        ref={stageRef}
+        className={classes.stage}
+        onPointerDown={(event) => {
+          if (zoom <= 1 || event.pointerType !== "mouse") {
+            return;
+          }
+          event.currentTarget.setPointerCapture(event.pointerId);
+          dragRef.current = {
+            left: event.currentTarget.scrollLeft,
+            top: event.currentTarget.scrollTop,
+            x: event.clientX,
+            y: event.clientY,
+          };
+        }}
+        onPointerMove={(event) => {
+          const drag = dragRef.current;
+          if (!drag) {
+            return;
+          }
+          event.currentTarget.scrollLeft = drag.left - (event.clientX - drag.x);
+          event.currentTarget.scrollTop = drag.top - (event.clientY - drag.y);
+        }}
+        onPointerUp={() => {
+          dragRef.current = null;
+        }}
+        onPointerCancel={() => {
+          dragRef.current = null;
+        }}
+      >
         <div
           className={classes.canvas}
           style={{ height: `${zoom * 100}%`, width: `${zoom * 100}%` }}
@@ -127,11 +172,11 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
             </button>
           </div>
 
-          <div className={classes.group}>
+          <div className={`${classes.group} ${classes.zoomGroup}`}>
             <button
               type="button"
               className={classes.iconButton}
-              onClick={() => setZoom((z) => Math.max(1, z - 0.5))}
+              onClick={() => changeZoom(Math.max(1, zoom - 0.5))}
               disabled={zoom <= 1}
               aria-label="縮小する"
             >
@@ -141,7 +186,7 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
             <button
               type="button"
               className={classes.iconButton}
-              onClick={() => setZoom((z) => Math.min(4, z + 0.5))}
+              onClick={() => changeZoom(Math.min(4, zoom + 0.5))}
               disabled={zoom >= 4}
               aria-label="拡大する"
             >

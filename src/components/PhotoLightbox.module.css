@@ -12,14 +12,14 @@
 
 .close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: calc(1rem + env(safe-area-inset-top));
+  right: calc(1rem + env(safe-area-inset-right));
   z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: max(2.25rem, var(--public-touch-size));
+  height: max(2.25rem, var(--public-touch-size));
   padding: 0;
   border: 1px solid var(--public-glass-border);
   border-radius: 999px;
@@ -30,14 +30,11 @@
   cursor: pointer;
 }
 
-.close:hover {
-  background: var(--public-glass-hover);
-}
-
 .stage {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .canvas {
@@ -63,7 +60,8 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem 1.5rem;
-  margin: 0 1rem 1rem;
+  margin: 0 calc(1rem + env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom))
+    calc(1rem + env(safe-area-inset-left));
   padding: 0.75rem 1rem;
   border: 1px solid var(--public-glass-border);
   border-radius: 1.125rem;
@@ -76,10 +74,27 @@
 .caption,
 .captionEmpty {
   margin: 0;
-  flex: 1;
-  min-width: 12rem;
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-height: 6rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: 0.875rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
+  scrollbar-color: var(--public-glass-hover) transparent;
+}
+
+.caption::-webkit-scrollbar,
+.captionEmpty::-webkit-scrollbar {
+  width: 4px;
+}
+
+.caption::-webkit-scrollbar-thumb,
+.captionEmpty::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--public-glass-hover);
 }
 
 .captionEmpty {
@@ -102,21 +117,19 @@
 .button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
-  padding: 0.35rem 0.75rem;
+  min-height: var(--public-touch-size);
+  padding: 0 0.85rem;
   border: 0;
   border-radius: 999px;
   background: var(--public-glass-subtle);
   color: var(--public-fg);
   font: inherit;
   font-size: 0.8125rem;
+  white-space: nowrap;
   cursor: pointer;
   transition: background 150ms ease;
-}
-
-.button:hover:not(:disabled),
-.iconButton:hover:not(:disabled) {
-  background: var(--public-glass-hover);
 }
 
 .button:disabled,
@@ -129,8 +142,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--public-touch-size);
+  height: var(--public-touch-size);
   padding: 0;
   border: 0;
   border-radius: 999px;
@@ -146,4 +159,39 @@
   color: var(--public-fg-muted);
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+.close:focus-visible,
+.button:focus-visible,
+.iconButton:focus-visible {
+  outline: 2px solid var(--public-fg);
+  outline-offset: 2px;
+}
+
+@media (max-width: 30rem) {
+  .actions {
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .group {
+    justify-content: space-between;
+  }
+
+  .zoomGroup {
+    order: -1;
+  }
+}
+
+@media (hover: hover) {
+  .close:hover {
+    background: var(--public-glass-hover);
+  }
+
+  .button:hover:not(:disabled),
+  .iconButton:hover:not(:disabled) {
+    background: var(--public-glass-hover);
+  }
 }

@@ -7,6 +7,12 @@
   background: var(--public-surface);
 }
 
+@media (max-width: 30rem) {
+  .gallery {
+    padding-bottom: calc(9rem + env(safe-area-inset-bottom));
+  }
+}
+
 .column {
   flex: 1 1 0;
   min-width: 0;
@@ -31,7 +37,11 @@
   transition: opacity 200ms ease;
 }
 
-.item:hover img,
+.item:focus-visible {
+  outline: 2px solid var(--public-fg);
+  outline-offset: -4px;
+}
+
 .item:focus-visible img {
   opacity: 0.72;
 }
@@ -54,7 +64,16 @@
   pointer-events: none;
 }
 
-.item:hover .caption,
 .item:focus-visible .caption {
   opacity: 1;
+}
+
+@media (hover: hover) {
+  .item:hover img {
+    opacity: 0.72;
+  }
+
+  .item:hover .caption {
+    opacity: 1;
+  }
 }

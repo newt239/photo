@@ -8,24 +8,61 @@
   font-family: inherit;
 }
 
-.map :global(.leaflet-bar) {
+.map :global(.leaflet-top.leaflet-left) {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+}
+
+.map :global(.leaflet-control-zoom.leaflet-bar) {
   border: 1px solid var(--public-glass-border);
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: var(--public-glass-shadow);
-}
-
-.map :global(.leaflet-bar a) {
-  border: 0;
   background: var(--public-glass-bg);
   backdrop-filter: var(--public-glass-blur);
   -webkit-backdrop-filter: var(--public-glass-blur);
-  color: var(--public-fg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
-.map :global(.leaflet-bar a:hover) {
-  background: var(--public-glass-hover);
+.map :global(.leaflet-control-zoom.leaflet-bar a) {
+  width: max(2rem, var(--public-touch-size));
+  height: max(2rem, var(--public-touch-size));
+  line-height: max(2rem, var(--public-touch-size));
+  border: 0;
+  background: transparent;
   color: var(--public-fg);
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-indent: 0;
+  transition: background 150ms ease;
+}
+
+.map :global(.leaflet-control-zoom.leaflet-bar a:first-child),
+.map :global(.leaflet-control-zoom.leaflet-bar a:last-child) {
+  border-radius: 0;
+}
+
+.map :global(.leaflet-control-zoom.leaflet-bar a + a) {
+  border-top: 1px solid var(--public-glass-border);
+}
+
+.map :global(.leaflet-control-zoom.leaflet-bar a:focus-visible) {
+  outline: 2px solid var(--public-fg);
+  outline-offset: -3px;
+}
+
+.map :global(.leaflet-control-zoom.leaflet-bar a.leaflet-disabled) {
+  background: transparent;
+  color: var(--public-fg-muted);
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .map :global(.leaflet-control-zoom.leaflet-bar a:hover:not(.leaflet-disabled)) {
+    background: var(--public-glass-hover);
+    color: var(--public-fg);
+  }
 }
 
 .map :global(.leaflet-tooltip) {
@@ -62,6 +99,8 @@
   transition: transform 150ms ease;
 }
 
-.map :global(.leaflet-marker-pane) .pin:hover img {
-  transform: scale(1.1);
+@media (hover: hover) {
+  .map :global(.leaflet-marker-pane) .pin:hover img {
+    transform: scale(1.1);
+  }
 }
