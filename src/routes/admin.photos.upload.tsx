@@ -1,13 +1,13 @@
-import { Anchor, Paper, Stack, Title } from "@mantine/core";
+import { Button, Paper, Stack, Title } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { UploadDropzone } from "#/components/UploadDropzone.tsx";
 
 const PhotosUploadPage = () => (
   <Stack p="xl" gap="md" maw={900} mx="auto">
-    <Anchor component={Link} to="/admin" size="sm">
+    <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
       ← ホーム
-    </Anchor>
+    </Button>
     <Title order={2}>写真をアップロード</Title>
     <Paper withBorder radius="md" p="lg">
       <UploadDropzone />

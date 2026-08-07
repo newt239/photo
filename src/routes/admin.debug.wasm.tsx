@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Anchor, Button, FileInput, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Button, FileInput, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import type { CountKeysRequest, CountKeysResponse } from "#/lib/json-parser.ts";
@@ -55,9 +55,9 @@ const DebugWasmPage = () => {
 
   return (
     <Stack p="xl" gap="md" maw={680} mx="auto">
-      <Anchor component={Link} to="/admin" size="sm">
+      <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
         ← ホーム
-      </Anchor>
+      </Button>
       <Title order={2}>WASM 動作確認</Title>
       <Paper withBorder radius="md" p="lg">
         <Stack gap="md">

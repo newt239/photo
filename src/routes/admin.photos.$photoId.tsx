@@ -1,4 +1,4 @@
-import { Anchor } from "@mantine/core";
+import { Button } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { PhotoDetailView } from "#/components/PhotoDetailView.tsx";
@@ -12,9 +12,9 @@ const PhotoDetailPage = () => {
     <PhotoDetailView
       photo={photo}
       backLink={
-        <Anchor component={Link} to="/admin/photos" size="sm">
+        <Button component={Link} to="/admin/photos" variant="subtle" size="xs" w="fit-content">
           ← 写真一覧に戻る
-        </Anchor>
+        </Button>
       }
     />
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Anchor, Button, Group, Paper, Stack, Tabs, Text, Title } from "@mantine/core";
+import { Button, Group, Paper, Stack, Tabs, Text, Title } from "@mantine/core";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 
 import { PhotoPicker, type PhotoPickerItem } from "#/components/PhotoPicker.tsx";
@@ -55,12 +55,14 @@ const AlbumAddPhotosPage = () => {
 
   return (
     <Stack p="xl" gap="md" maw={1200} mx="auto">
-      <Anchor
-        size="sm"
+      <Button
+        variant="subtle"
+        size="xs"
+        w="fit-content"
         renderRoot={(props) => <Link {...props} to="/admin/albums/$slug" params={{ slug }} />}
       >
         ← アルバムに戻る
-      </Anchor>
+      </Button>
       <Stack gap={4}>
         <Title order={2}>写真を追加する</Title>
         <Text size="sm" c="dimmed">

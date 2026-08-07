@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import {
-  Anchor,
   Button,
   Group,
   Paper,
@@ -48,9 +47,9 @@ const NewAlbumPage = () => {
 
   return (
     <Stack p="xl" gap="md" maw={680} mx="auto">
-      <Anchor component={Link} to="/admin" size="sm">
+      <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
         ← ホーム
-      </Anchor>
+      </Button>
       <Title order={2}>新しいアルバム</Title>
       <Paper withBorder radius="md" p="lg">
         <form onSubmit={handleSubmit}>
