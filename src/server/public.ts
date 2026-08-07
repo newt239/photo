@@ -78,6 +78,8 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
         caption: photos.caption,
         height: photos.height,
         id: photos.id,
+        latitude: photos.latitude,
+        longitude: photos.longitude,
         storageKey: photos.storageKey,
         thumbnailKey: photos.thumbnailKey,
         width: photos.width,
