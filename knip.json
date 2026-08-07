@@ -8,6 +8,6 @@
   ],
   "ignore": ["drizzle.config.ts", "crates/**"],
   "ignoreBinaries": ["wasm-pack"],
-  "ignoreDependencies": ["lucide-react", "cloudflare"],
+  "ignoreDependencies": ["cloudflare"],
   "drizzle": false
 }
