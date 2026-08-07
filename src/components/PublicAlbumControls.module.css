@@ -200,7 +200,8 @@
   }
 
   .collapsed {
-    left: auto;
+    left: calc(1rem + env(safe-area-inset-left));
+    max-width: none;
   }
 }
 
