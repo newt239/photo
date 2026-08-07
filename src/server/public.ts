@@ -11,6 +11,13 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
   const db = drizzle(env.DB, { schema });
   const rows = await db
     .select({
+      coverHeight: sql<number | null>`(
+          SELECT p.height FROM album_photos ap
+          JOIN photos p ON p.id = ap.photo_id
+          WHERE ap.album_id = ${albums}.id
+          ORDER BY ap.sort_order ASC, ap.added_at ASC
+          LIMIT 1
+        )`.as("cover_height"),
       coverStorageKey: sql<string | null>`(
           SELECT p.storage_key FROM album_photos ap
           JOIN photos p ON p.id = ap.photo_id
@@ -25,6 +32,13 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
           ORDER BY ap.sort_order ASC, ap.added_at ASC
           LIMIT 1
         )`.as("cover_thumbnail_key"),
+      coverWidth: sql<number | null>`(
+          SELECT p.width FROM album_photos ap
+          JOIN photos p ON p.id = ap.photo_id
+          WHERE ap.album_id = ${albums}.id
+          ORDER BY ap.sort_order ASC, ap.added_at ASC
+          LIMIT 1
+        )`.as("cover_width"),
       createdAt: albums.createdAt,
       description: albums.description,
       id: albums.id,
