@@ -42,7 +42,7 @@ const putToR2 = async (url: string, body: Blob, contentType: string) => {
   }
 };
 
-export const UploadDropzone = ({ onComplete }: { onComplete?: () => void }) => {
+export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[]) => void }) => {
   const [items, setItems] = useState<UploadState[]>([]);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
@@ -55,7 +55,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: () => void }) => {
     const contentType = file.type.toLowerCase();
     if (!ACCEPTED_MIME.includes(contentType as (typeof ACCEPTED_MIME)[number])) {
       updateItem(id, { error: `非対応の形式: ${contentType}`, status: "error" });
-      return;
+      return null;
     }
     try {
       updateItem(id, { progress: 5, status: "preparing" });
@@ -100,9 +100,11 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: () => void }) => {
       });
 
       updateItem(id, { photoId: prep.photoId, progress: 100, status: "done" });
+      return prep.photoId;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       updateItem(id, { error: message, status: "error" });
+      return null;
     }
   };
 
@@ -121,13 +123,17 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: () => void }) => {
     setItems((prev) => [...prev, ...batch.map((b) => b.item)]);
     setBusy(true);
     try {
+      const uploadedIds: string[] = [];
       for (const { file, item } of batch) {
         // 進捗表示と負荷抑制のため意図的に 1 件ずつ逐次アップロードする
         // eslint-disable-next-line no-await-in-loop
-        await uploadOne(file, item.id);
+        const photoId = await uploadOne(file, item.id);
+        if (photoId) {
+          uploadedIds.push(photoId);
+        }
       }
       await router.invalidate();
-      onComplete?.();
+      onComplete?.(uploadedIds);
     } finally {
       setBusy(false);
     }

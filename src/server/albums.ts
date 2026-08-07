@@ -134,7 +134,7 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
       .where(and(eq(albums.id, data.albumId), eq(albums.userId, userId)))
       .limit(1);
     if (!album) {
-      throw new Error("ALBUM_NOT_FOUND");
+      return { error: "アルバムが見つかりません", success: false } as const;
     }
 
     const ownedPhotos = await db
@@ -142,14 +142,18 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
       .from(photos)
       .where(and(eq(photos.userId, userId), inArray(photos.id, data.photoIds)));
     if (ownedPhotos.length !== data.photoIds.length) {
-      throw new Error("FORBIDDEN");
+      return { error: "追加できない写真が含まれています", success: false } as const;
     }
 
     const rows = data.photoIds.map((photoId) => ({
       albumId: data.albumId,
       photoId,
     }));
-    await db.insert(albumPhotos).values(rows).onConflictDoNothing();
+    const inserted = await db
+      .insert(albumPhotos)
+      .values(rows)
+      .onConflictDoNothing()
+      .returning({ photoId: albumPhotos.photoId });
 
-    return { inserted: rows.length };
+    return { inserted: inserted.length, success: true } as const;
   });

@@ -24,6 +24,7 @@ import { Route as AdminPhotosIndexRouteImport } from './routes/admin.photos.inde
 import { Route as AdminPhotosPhotoIdRouteImport } from './routes/admin.photos.$photoId'
 import { Route as AdminPhotosGeotagRouteImport } from './routes/admin.photos.geotag'
 import { Route as AdminPhotosUploadRouteImport } from './routes/admin.photos.upload'
+import { Route as AdminAlbumsSlugAddRouteImport } from './routes/admin.albums_.$slug.add'
 import { Route as AdminAlbumsSlugPhotosPhotoIdRouteImport } from './routes/admin.albums_.$slug.photos.$photoId'
 import { Route as ApiIUserIdPhotoIdFileRouteImport } from './routes/api/i.$userId.$photoId.$file'
 
@@ -102,6 +103,11 @@ const AdminPhotosUploadRoute = AdminPhotosUploadRouteImport.update({
   path: '/photos/upload',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAlbumsSlugAddRoute = AdminAlbumsSlugAddRouteImport.update({
+  id: '/albums_/$slug/add',
+  path: '/albums/$slug/add',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAlbumsSlugPhotosPhotoIdRoute =
   AdminAlbumsSlugPhotosPhotoIdRouteImport.update({
     id: '/albums_/$slug/photos/$photoId',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
   '/admin/albums/': typeof AdminAlbumsIndexRoute
   '/admin/photos/': typeof AdminPhotosIndexRoute
+  '/admin/albums/$slug/add': typeof AdminAlbumsSlugAddRoute
   '/admin/albums/$slug/photos/$photoId': typeof AdminAlbumsSlugPhotosPhotoIdRoute
   '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
   '/admin/albums': typeof AdminAlbumsIndexRoute
   '/admin/photos': typeof AdminPhotosIndexRoute
+  '/admin/albums/$slug/add': typeof AdminAlbumsSlugAddRoute
   '/admin/albums/$slug/photos/$photoId': typeof AdminAlbumsSlugPhotosPhotoIdRoute
   '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
   '/admin/albums/': typeof AdminAlbumsIndexRoute
   '/admin/photos/': typeof AdminPhotosIndexRoute
+  '/admin/albums_/$slug/add': typeof AdminAlbumsSlugAddRoute
   '/admin/albums_/$slug/photos/$photoId': typeof AdminAlbumsSlugPhotosPhotoIdRoute
   '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/admin/photos/upload'
     | '/admin/albums/'
     | '/admin/photos/'
+    | '/admin/albums/$slug/add'
     | '/admin/albums/$slug/photos/$photoId'
     | '/api/i/$userId/$photoId/$file'
   fileRoutesByTo: FileRoutesByTo
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin/photos/upload'
     | '/admin/albums'
     | '/admin/photos'
+    | '/admin/albums/$slug/add'
     | '/admin/albums/$slug/photos/$photoId'
     | '/api/i/$userId/$photoId/$file'
   id:
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/admin/photos/upload'
     | '/admin/albums/'
     | '/admin/photos/'
+    | '/admin/albums_/$slug/add'
     | '/admin/albums_/$slug/photos/$photoId'
     | '/api/i/$userId/$photoId/$file'
   fileRoutesById: FileRoutesById
@@ -346,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPhotosUploadRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/albums_/$slug/add': {
+      id: '/admin/albums_/$slug/add'
+      path: '/albums/$slug/add'
+      fullPath: '/admin/albums/$slug/add'
+      preLoaderRoute: typeof AdminAlbumsSlugAddRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/albums_/$slug/photos/$photoId': {
       id: '/admin/albums_/$slug/photos/$photoId'
       path: '/albums/$slug/photos/$photoId'
@@ -374,6 +393,7 @@ interface AdminRouteChildren {
   AdminPhotosUploadRoute: typeof AdminPhotosUploadRoute
   AdminAlbumsIndexRoute: typeof AdminAlbumsIndexRoute
   AdminPhotosIndexRoute: typeof AdminPhotosIndexRoute
+  AdminAlbumsSlugAddRoute: typeof AdminAlbumsSlugAddRoute
   AdminAlbumsSlugPhotosPhotoIdRoute: typeof AdminAlbumsSlugPhotosPhotoIdRoute
 }
 
@@ -388,6 +408,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPhotosUploadRoute: AdminPhotosUploadRoute,
   AdminAlbumsIndexRoute: AdminAlbumsIndexRoute,
   AdminPhotosIndexRoute: AdminPhotosIndexRoute,
+  AdminAlbumsSlugAddRoute: AdminAlbumsSlugAddRoute,
   AdminAlbumsSlugPhotosPhotoIdRoute: AdminAlbumsSlugPhotosPhotoIdRoute,
 }
 
