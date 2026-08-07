@@ -1,12 +1,29 @@
 import { useState } from "react";
 
-import { Button, Group, Paper, Progress, Stack, Table, Text, Textarea } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Modal,
+  Paper,
+  Progress,
+  Stack,
+  Table,
+  Text,
+  Textarea,
+  UnstyledButton,
+} from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useRouter } from "@tanstack/react-router";
-import { CopyIcon, EraserIcon, SaveIcon } from "lucide-react";
+import { EraserIcon, SaveIcon, SparklesIcon } from "lucide-react";
 
 import { extractExif, generateThumbnail, probeDimensions } from "#/lib/image.ts";
-import { createPhotoUpload, finalizePhoto, updatePhoto } from "#/server/photos.ts";
+import {
+  createPhotoUpload,
+  finalizePhoto,
+  generatePhotoDraft,
+  updatePhoto,
+} from "#/server/photos.ts";
 
 const ACCEPTED_MIME = [
   "image/jpeg",
@@ -29,6 +46,7 @@ type UploadState = {
   caption: string;
   alt: string;
   saved?: boolean;
+  generating?: "caption" | "alt";
 };
 
 const putToR2 = async (url: string, body: Blob, contentType: string) => {
@@ -45,12 +63,13 @@ const putToR2 = async (url: string, body: Blob, contentType: string) => {
 export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[]) => void }) => {
   const [items, setItems] = useState<UploadState[]>([]);
   const [busy, setBusy] = useState(false);
-  const [bulkCaption, setBulkCaption] = useState("");
-  const [bulkAlt, setBulkAlt] = useState("");
+  const [generatingField, setGeneratingField] = useState<"caption" | "alt" | null>(null);
   const [savingAll, setSavingAll] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const router = useRouter();
   const editableCount = items.filter((it) => it.status === "done" && it.photoId).length;
   const unsavedCount = items.filter((it) => it.status === "done" && it.photoId && !it.saved).length;
+  const preview = items.find((it) => it.id === previewId);
 
   const updateItem = (id: string, patch: Partial<UploadState>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -144,19 +163,50 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     }
   };
 
-  const applyToAll = () => {
-    setItems((prev) =>
-      prev.map((it) =>
-        it.status === "done" && it.photoId
-          ? {
-              ...it,
-              alt: bulkAlt.trim() ? bulkAlt : it.alt,
-              caption: bulkCaption.trim() ? bulkCaption : it.caption,
-              saved: false,
-            }
-          : it,
-      ),
+  const generateOne = async (id: string, photoId: string, field: "caption" | "alt") => {
+    updateItem(id, { error: undefined, generating: field });
+    try {
+      const result = await generatePhotoDraft({ data: { fields: [field], id: photoId } });
+      if (result.success) {
+        updateItem(id, {
+          generating: undefined,
+          saved: false,
+          ...(field === "caption" ? { caption: result.caption ?? "" } : { alt: result.alt ?? "" }),
+        });
+      } else {
+        updateItem(id, { error: result.error, generating: undefined });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      updateItem(id, { error: message, generating: undefined });
+    }
+  };
+
+  const generateAll = async (field: "caption" | "alt") => {
+    const queue = items.flatMap((it) =>
+      it.status === "done" && it.photoId ? [{ id: it.id, photoId: it.photoId }] : [],
     );
+    if (queue.length === 0 || generatingField) {
+      return;
+    }
+    setGeneratingField(field);
+    try {
+      await Promise.all(
+        Array.from({ length: 3 }, async () => {
+          for (;;) {
+            const target = queue.shift();
+            if (!target) {
+              return;
+            }
+            // AI の同時実行を 3 件までに抑えるためキューから 1 件ずつ取り出して処理する
+            // eslint-disable-next-line no-await-in-loop
+            await generateOne(target.id, target.photoId, field);
+          }
+        }),
+      );
+    } finally {
+      setGeneratingField(null);
+    }
   };
 
   const saveAll = async () => {
@@ -222,153 +272,246 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
         </Group>
       </Dropzone>
 
-      {editableCount > 0 && (
+      {items.length > 0 && (
         <Paper withBorder p="md" radius="md">
           <Stack gap="sm">
-            <Text size="sm" fw={600}>
-              まとめて入力する
-            </Text>
-            <Textarea
-              label="キャプション"
-              value={bulkCaption}
-              onChange={(e) => setBulkCaption(e.currentTarget.value)}
-              autosize
-              minRows={1}
-              maxLength={2000}
-            />
-            <Textarea
-              label="代替テキスト"
-              value={bulkAlt}
-              onChange={(e) => setBulkAlt(e.currentTarget.value)}
-              autosize
-              minRows={1}
-              maxLength={500}
-            />
             <Group justify="space-between" gap="sm">
-              <Text size="xs" c="dimmed">
-                入力した項目だけを全ての写真に反映します
-              </Text>
-              <Button
-                variant="default"
-                size="xs"
-                leftSection={<CopyIcon size={14} />}
-                onClick={applyToAll}
-                disabled={savingAll || (!bulkCaption.trim() && !bulkAlt.trim())}
-              >
-                すべてに適用する
-              </Button>
+              <Group gap="sm">
+                <Text size="xs" c="dimmed">
+                  写真をクリックすると大きく表示します
+                </Text>
+                {unsavedCount > 0 && (
+                  <Text size="xs" c="dimmed">
+                    未保存の写真が {unsavedCount} 件あります
+                  </Text>
+                )}
+              </Group>
+              <Group gap="sm">
+                <Button
+                  variant="default"
+                  leftSection={<EraserIcon size={16} />}
+                  onClick={() => setItems([])}
+                  disabled={busy || savingAll || generatingField !== null}
+                >
+                  履歴を消去する
+                </Button>
+                <Button
+                  leftSection={<SaveIcon size={16} />}
+                  onClick={() => {
+                    void saveAll();
+                  }}
+                  loading={savingAll}
+                  disabled={generatingField !== null || unsavedCount === 0}
+                >
+                  保存する
+                </Button>
+              </Group>
             </Group>
+            <Table.ScrollContainer minWidth={720}>
+              <Table verticalSpacing="sm" horizontalSpacing="md">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th w={72}>写真</Table.Th>
+                    <Table.Th w={200}>ファイル</Table.Th>
+                    <Table.Th>
+                      <Group gap="xs" wrap="nowrap" justify="space-between">
+                        キャプション
+                        <Button
+                          size="compact-xs"
+                          variant="light"
+                          leftSection={<SparklesIcon size={12} />}
+                          onClick={() => {
+                            void generateAll("caption");
+                          }}
+                          loading={generatingField === "caption"}
+                          disabled={
+                            busy || savingAll || generatingField === "alt" || editableCount === 0
+                          }
+                        >
+                          まとめて生成する
+                        </Button>
+                      </Group>
+                    </Table.Th>
+                    <Table.Th>
+                      <Group gap="xs" wrap="nowrap" justify="space-between">
+                        代替テキスト
+                        <Button
+                          size="compact-xs"
+                          variant="light"
+                          leftSection={<SparklesIcon size={12} />}
+                          onClick={() => {
+                            void generateAll("alt");
+                          }}
+                          loading={generatingField === "alt"}
+                          disabled={
+                            busy ||
+                            savingAll ||
+                            generatingField === "caption" ||
+                            editableCount === 0
+                          }
+                        >
+                          まとめて生成する
+                        </Button>
+                      </Group>
+                    </Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {items.map((it) => {
+                    const { photoId } = it;
+                    const editable = it.status === "done" && Boolean(photoId);
+                    return (
+                      <Table.Tr key={it.id}>
+                        <Table.Td>
+                          {it.thumbUrl && (
+                            <UnstyledButton
+                              onClick={() => setPreviewId(it.id)}
+                              aria-label={`${it.name} を大きく表示する`}
+                              style={{ cursor: "zoom-in", display: "block" }}
+                            >
+                              <img
+                                src={it.thumbUrl}
+                                alt={it.name}
+                                width={56}
+                                height={56}
+                                style={{ borderRadius: 6, display: "block", objectFit: "cover" }}
+                              />
+                            </UnstyledButton>
+                          )}
+                        </Table.Td>
+                        <Table.Td>
+                          <Stack gap={4}>
+                            <Text size="sm" truncate maw={180}>
+                              {it.name}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {STATUS_LABEL[it.status]}
+                            </Text>
+                            {it.status !== "done" && (
+                              <Progress
+                                value={it.progress}
+                                color={it.status === "error" ? "red" : undefined}
+                              />
+                            )}
+                            {it.generating && (
+                              <Text size="xs" c="blue">
+                                AIで生成中
+                              </Text>
+                            )}
+                            {it.saved && !it.generating && (
+                              <Text size="xs" c="teal">
+                                保存しました
+                              </Text>
+                            )}
+                            {it.error && (
+                              <Text size="xs" c="red">
+                                {it.error}
+                              </Text>
+                            )}
+                          </Stack>
+                        </Table.Td>
+                        <Table.Td>
+                          <Textarea
+                            value={it.caption}
+                            onChange={(e) =>
+                              updateItem(it.id, { caption: e.currentTarget.value, saved: false })
+                            }
+                            disabled={!editable || it.generating === "caption"}
+                            autosize
+                            minRows={1}
+                            maxLength={2000}
+                            rightSection={
+                              <ActionIcon
+                                variant="subtle"
+                                size="sm"
+                                aria-label="キャプションをAIで生成する"
+                                onClick={() => {
+                                  if (photoId) {
+                                    void generateOne(it.id, photoId, "caption");
+                                  }
+                                }}
+                                loading={it.generating === "caption"}
+                                disabled={
+                                  !editable || generatingField !== null || it.generating === "alt"
+                                }
+                              >
+                                <SparklesIcon size={14} />
+                              </ActionIcon>
+                            }
+                            rightSectionPointerEvents="all"
+                            rightSectionProps={{
+                              style: { alignItems: "flex-start", paddingTop: 4 },
+                            }}
+                          />
+                        </Table.Td>
+                        <Table.Td>
+                          <Textarea
+                            value={it.alt}
+                            onChange={(e) =>
+                              updateItem(it.id, { alt: e.currentTarget.value, saved: false })
+                            }
+                            disabled={!editable || it.generating === "alt"}
+                            autosize
+                            minRows={1}
+                            maxLength={500}
+                            rightSection={
+                              <ActionIcon
+                                variant="subtle"
+                                size="sm"
+                                aria-label="代替テキストをAIで生成する"
+                                onClick={() => {
+                                  if (photoId) {
+                                    void generateOne(it.id, photoId, "alt");
+                                  }
+                                }}
+                                loading={it.generating === "alt"}
+                                disabled={
+                                  !editable ||
+                                  generatingField !== null ||
+                                  it.generating === "caption"
+                                }
+                              >
+                                <SparklesIcon size={14} />
+                              </ActionIcon>
+                            }
+                            rightSectionPointerEvents="all"
+                            rightSectionProps={{
+                              style: { alignItems: "flex-start", paddingTop: 4 },
+                            }}
+                          />
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
+            </Table.ScrollContainer>
           </Stack>
         </Paper>
       )}
 
-      {items.length > 0 && (
-        <Paper withBorder p="md" radius="md">
-          <Table.ScrollContainer minWidth={720}>
-            <Table verticalSpacing="sm" horizontalSpacing="md">
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th w={72} />
-                  <Table.Th w={200}>ファイル</Table.Th>
-                  <Table.Th>キャプション</Table.Th>
-                  <Table.Th>代替テキスト</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {items.map((it) => {
-                  const editable = it.status === "done" && Boolean(it.photoId);
-                  return (
-                    <Table.Tr key={it.id}>
-                      <Table.Td>
-                        {it.thumbUrl && (
-                          <img
-                            src={it.thumbUrl}
-                            alt={it.name}
-                            width={56}
-                            height={56}
-                            style={{ borderRadius: 6, objectFit: "cover" }}
-                          />
-                        )}
-                      </Table.Td>
-                      <Table.Td>
-                        <Stack gap={4}>
-                          <Text size="sm" truncate maw={180}>
-                            {it.name}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            {STATUS_LABEL[it.status]}
-                          </Text>
-                          {it.status !== "done" && (
-                            <Progress
-                              value={it.progress}
-                              color={it.status === "error" ? "red" : undefined}
-                            />
-                          )}
-                          {it.saved && (
-                            <Text size="xs" c="teal">
-                              保存しました
-                            </Text>
-                          )}
-                          {it.error && (
-                            <Text size="xs" c="red">
-                              {it.error}
-                            </Text>
-                          )}
-                        </Stack>
-                      </Table.Td>
-                      <Table.Td>
-                        <Textarea
-                          value={it.caption}
-                          onChange={(e) =>
-                            updateItem(it.id, { caption: e.currentTarget.value, saved: false })
-                          }
-                          disabled={!editable}
-                          autosize
-                          minRows={1}
-                          maxLength={2000}
-                        />
-                      </Table.Td>
-                      <Table.Td>
-                        <Textarea
-                          value={it.alt}
-                          onChange={(e) =>
-                            updateItem(it.id, { alt: e.currentTarget.value, saved: false })
-                          }
-                          disabled={!editable}
-                          autosize
-                          minRows={1}
-                          maxLength={500}
-                        />
-                      </Table.Td>
-                    </Table.Tr>
-                  );
-                })}
-              </Table.Tbody>
-            </Table>
-          </Table.ScrollContainer>
-        </Paper>
-      )}
-
-      <Group justify="flex-end" gap="sm">
-        <Button
-          variant="default"
-          leftSection={<EraserIcon size={16} />}
-          onClick={() => setItems([])}
-          disabled={busy || savingAll || items.length === 0}
-        >
-          履歴を消去する
-        </Button>
-        <Button
-          leftSection={<SaveIcon size={16} />}
-          onClick={() => {
-            void saveAll();
-          }}
-          loading={savingAll}
-          disabled={unsavedCount === 0}
-        >
-          {unsavedCount > 0 ? `${unsavedCount} 件をまとめて保存する` : "まとめて保存する"}
-        </Button>
-      </Group>
+      <Modal
+        opened={preview !== undefined}
+        onClose={() => setPreviewId(null)}
+        title={preview?.name}
+        size="xl"
+        centered
+      >
+        {preview?.thumbUrl && (
+          <img
+            src={preview.thumbUrl}
+            alt={preview.name}
+            style={{
+              borderRadius: 8,
+              display: "block",
+              height: "auto",
+              margin: "0 auto",
+              maxHeight: "75vh",
+              maxWidth: "100%",
+            }}
+          />
+        )}
+      </Modal>
     </Stack>
   );
 };
