@@ -21,7 +21,7 @@ const PublicAlbumPage = () => {
 export const Route = createFileRoute("/albums/$slug")({
   component: PublicAlbumPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | Photo` }],
+    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string } }): Promise<PublicAlbum> => {
     const result = await getPublicAlbumBySlug({ data: { slug: params.slug } });
