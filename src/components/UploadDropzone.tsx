@@ -27,7 +27,6 @@ type UploadState = {
   thumbUrl?: string;
   caption: string;
   alt: string;
-  rowSaving?: boolean;
   saved?: boolean;
 };
 
@@ -45,7 +44,11 @@ const putToR2 = async (url: string, body: Blob, contentType: string) => {
 export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[]) => void }) => {
   const [items, setItems] = useState<UploadState[]>([]);
   const [busy, setBusy] = useState(false);
+  const [bulkCaption, setBulkCaption] = useState("");
+  const [bulkAlt, setBulkAlt] = useState("");
+  const [savingAll, setSavingAll] = useState(false);
   const router = useRouter();
+  const editableCount = items.filter((it) => it.status === "done" && it.photoId).length;
 
   const updateItem = (id: string, patch: Partial<UploadState>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -139,27 +142,56 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     }
   };
 
-  const saveRow = async (item: UploadState) => {
-    if (!item.photoId || item.rowSaving) {
+  const applyToAll = () => {
+    setItems((prev) =>
+      prev.map((it) =>
+        it.status === "done" && it.photoId
+          ? {
+              ...it,
+              alt: bulkAlt.trim() ? bulkAlt : it.alt,
+              caption: bulkCaption.trim() ? bulkCaption : it.caption,
+              saved: false,
+            }
+          : it,
+      ),
+    );
+  };
+
+  const saveAll = async () => {
+    const targets = items.flatMap((it) =>
+      it.status === "done" && it.photoId
+        ? [{ alt: it.alt, caption: it.caption, id: it.id, photoId: it.photoId }]
+        : [],
+    );
+    if (targets.length === 0 || savingAll) {
       return;
     }
-    updateItem(item.id, { error: undefined, rowSaving: true, saved: false });
+    setSavingAll(true);
     try {
-      const result = await updatePhoto({
-        data: {
-          alt: item.alt.trim() || null,
-          caption: item.caption.trim() || null,
-          id: item.photoId,
-        },
-      });
-      if (result.success) {
-        updateItem(item.id, { rowSaving: false, saved: true });
-      } else {
-        updateItem(item.id, { error: result.error, rowSaving: false });
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      updateItem(item.id, { error: message, rowSaving: false });
+      await Promise.all(
+        targets.map(async (target) => {
+          updateItem(target.id, { error: undefined, saved: false });
+          try {
+            const result = await updatePhoto({
+              data: {
+                alt: target.alt.trim() || null,
+                caption: target.caption.trim() || null,
+                id: target.photoId,
+              },
+            });
+            if (result.success) {
+              updateItem(target.id, { saved: true });
+            } else {
+              updateItem(target.id, { error: result.error });
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            updateItem(target.id, { error: message });
+          }
+        }),
+      );
+    } finally {
+      setSavingAll(false);
     }
   };
 
@@ -188,6 +220,45 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
         </Group>
       </Dropzone>
 
+      {editableCount > 0 && (
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>
+              まとめて入力する
+            </Text>
+            <Textarea
+              label="キャプション"
+              value={bulkCaption}
+              onChange={(e) => setBulkCaption(e.currentTarget.value)}
+              autosize
+              minRows={1}
+              maxLength={2000}
+            />
+            <Textarea
+              label="代替テキスト"
+              value={bulkAlt}
+              onChange={(e) => setBulkAlt(e.currentTarget.value)}
+              autosize
+              minRows={1}
+              maxLength={500}
+            />
+            <Group justify="space-between" gap="sm">
+              <Text size="xs" c="dimmed">
+                入力した項目だけを全ての写真に反映します
+              </Text>
+              <Button
+                variant="default"
+                size="xs"
+                onClick={applyToAll}
+                disabled={savingAll || (!bulkCaption.trim() && !bulkAlt.trim())}
+              >
+                すべてに適用する
+              </Button>
+            </Group>
+          </Stack>
+        </Paper>
+      )}
+
       {items.length > 0 && (
         <Paper withBorder p="md" radius="md">
           <Table.ScrollContainer minWidth={720}>
@@ -198,7 +269,6 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                   <Table.Th w={200}>ファイル</Table.Th>
                   <Table.Th>キャプション</Table.Th>
                   <Table.Th>代替テキスト</Table.Th>
-                  <Table.Th w={100} />
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -231,6 +301,11 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                               color={it.status === "error" ? "red" : undefined}
                             />
                           )}
+                          {it.saved && (
+                            <Text size="xs" c="teal">
+                              保存しました
+                            </Text>
+                          )}
                           {it.error && (
                             <Text size="xs" c="red">
                               {it.error}
@@ -262,18 +337,6 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                           maxLength={500}
                         />
                       </Table.Td>
-                      <Table.Td>
-                        <Button
-                          size="xs"
-                          onClick={() => {
-                            void saveRow(it);
-                          }}
-                          loading={it.rowSaving}
-                          disabled={!editable}
-                        >
-                          {it.saved ? "保存済み" : "保存する"}
-                        </Button>
-                      </Table.Td>
                     </Table.Tr>
                   );
                 })}
@@ -283,13 +346,22 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
         </Paper>
       )}
 
-      <Group justify="flex-end">
+      <Group justify="flex-end" gap="sm">
         <Button
           variant="default"
           onClick={() => setItems([])}
-          disabled={busy || items.length === 0}
+          disabled={busy || savingAll || items.length === 0}
         >
-          履歴をクリア
+          履歴を消去する
+        </Button>
+        <Button
+          onClick={() => {
+            void saveAll();
+          }}
+          loading={savingAll}
+          disabled={editableCount === 0}
+        >
+          {editableCount > 0 ? `${editableCount} 件をまとめて保存する` : "まとめて保存する"}
         </Button>
       </Group>
     </Stack>
