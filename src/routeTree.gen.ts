@@ -10,31 +10,31 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
-import { Route as AlbumsSlugRouteImport } from './routes/albums.$slug'
-import { Route as LoginSplatRouteImport } from './routes/login.$'
-import { Route as RegisterSplatRouteImport } from './routes/register.$'
-import { Route as AdminAlbumsIndexRouteImport } from './routes/admin.albums.index'
-import { Route as AdminAlbumsSlugRouteImport } from './routes/admin.albums.$slug'
-import { Route as AdminAlbumsNewRouteImport } from './routes/admin.albums.new'
-import { Route as AdminPhotosPhotoIdRouteImport } from './routes/admin.photos.$photoId'
-import { Route as AdminPhotosGeotagRouteImport } from './routes/admin.photos.geotag'
-import { Route as AdminPhotosUploadRouteImport } from './routes/admin.photos.upload'
-import { Route as AlbumsSlugIndexRouteImport } from './routes/albums.$slug.index'
-import { Route as AlbumsSlugMapRouteImport } from './routes/albums.$slug.map'
-import { Route as AdminAlbumsSlugAddRouteImport } from './routes/admin.albums_.$slug.add'
-import { Route as AdminAlbumsSlugSettingsRouteImport } from './routes/admin.albums_.$slug.settings'
-import { Route as AdminAlbumsSlugPhotosPhotoIdRouteImport } from './routes/admin.albums_.$slug.photos.$photoId'
-import { Route as ApiIUserIdPhotoIdFileRouteImport } from './routes/api/i.$userId.$photoId.$file'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AlbumsSlugRouteRouteImport } from './routes/albums/$slug/route'
+import { Route as LoginSplatRouteImport } from './routes/login/$'
+import { Route as RegisterSplatRouteImport } from './routes/register/$'
+import { Route as AdminAlbumsIndexRouteImport } from './routes/admin/albums/index'
+import { Route as AdminAlbumsSlugRouteImport } from './routes/admin/albums/$slug'
+import { Route as AdminAlbumsNewRouteImport } from './routes/admin/albums/new'
+import { Route as AdminPhotosPhotoIdRouteImport } from './routes/admin/photos/$photoId'
+import { Route as AdminPhotosGeotagRouteImport } from './routes/admin/photos/geotag'
+import { Route as AdminPhotosUploadRouteImport } from './routes/admin/photos/upload'
+import { Route as AlbumsSlugIndexRouteImport } from './routes/albums/$slug/index'
+import { Route as AlbumsSlugMapRouteImport } from './routes/albums/$slug/map'
+import { Route as AdminAlbumsSlugAddRouteImport } from './routes/admin/albums_/$slug/add'
+import { Route as AdminAlbumsSlugSettingsRouteImport } from './routes/admin/albums_/$slug/settings'
+import { Route as AdminAlbumsSlugPhotosPhotoIdRouteImport } from './routes/admin/albums_/$slug/photos/$photoId'
+import { Route as ApiIUserIdPhotoIdFileRouteImport } from './routes/api/i/$userId/$photoId/$file'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
+const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => rootRouteImport,
@@ -42,14 +42,14 @@ const AdminRoute = AdminRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
-const AlbumsSlugRoute = AlbumsSlugRouteImport.update({
+const AlbumsSlugRouteRoute = AlbumsSlugRouteRouteImport.update({
   id: '/albums/$slug',
   path: '/albums/$slug',
   getParentRoute: () => rootRouteImport,
@@ -67,58 +67,58 @@ const RegisterSplatRoute = RegisterSplatRouteImport.update({
 const AdminAlbumsIndexRoute = AdminAlbumsIndexRouteImport.update({
   id: '/albums/',
   path: '/albums/',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAlbumsSlugRoute = AdminAlbumsSlugRouteImport.update({
   id: '/albums/$slug',
   path: '/albums/$slug',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAlbumsNewRoute = AdminAlbumsNewRouteImport.update({
   id: '/albums/new',
   path: '/albums/new',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminPhotosPhotoIdRoute = AdminPhotosPhotoIdRouteImport.update({
   id: '/photos/$photoId',
   path: '/photos/$photoId',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminPhotosGeotagRoute = AdminPhotosGeotagRouteImport.update({
   id: '/photos/geotag',
   path: '/photos/geotag',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminPhotosUploadRoute = AdminPhotosUploadRouteImport.update({
   id: '/photos/upload',
   path: '/photos/upload',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AlbumsSlugIndexRoute = AlbumsSlugIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AlbumsSlugRoute,
+  getParentRoute: () => AlbumsSlugRouteRoute,
 } as any)
 const AlbumsSlugMapRoute = AlbumsSlugMapRouteImport.update({
   id: '/map',
   path: '/map',
-  getParentRoute: () => AlbumsSlugRoute,
+  getParentRoute: () => AlbumsSlugRouteRoute,
 } as any)
 const AdminAlbumsSlugAddRoute = AdminAlbumsSlugAddRouteImport.update({
   id: '/albums_/$slug/add',
   path: '/albums/$slug/add',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAlbumsSlugSettingsRoute = AdminAlbumsSlugSettingsRouteImport.update({
   id: '/albums_/$slug/settings',
   path: '/albums/$slug/settings',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAlbumsSlugPhotosPhotoIdRoute =
   AdminAlbumsSlugPhotosPhotoIdRouteImport.update({
     id: '/albums_/$slug/photos/$photoId',
     path: '/albums/$slug/photos/$photoId',
-    getParentRoute: () => AdminRoute,
+    getParentRoute: () => AdminRouteRoute,
   } as any)
 const ApiIUserIdPhotoIdFileRoute = ApiIUserIdPhotoIdFileRouteImport.update({
   id: '/api/i/$userId/$photoId/$file',
@@ -128,9 +128,9 @@ const ApiIUserIdPhotoIdFileRoute = ApiIUserIdPhotoIdFileRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
-  '/albums/$slug': typeof AlbumsSlugRouteWithChildren
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin/': typeof AdminIndexRoute
@@ -169,9 +169,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
-  '/albums/$slug': typeof AlbumsSlugRouteWithChildren
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin/': typeof AdminIndexRoute
@@ -193,8 +193,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/admin/settings'
     | '/albums/$slug'
+    | '/admin/settings'
     | '/login/$'
     | '/register/$'
     | '/admin/'
@@ -233,8 +233,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
-    | '/admin/settings'
     | '/albums/$slug'
+    | '/admin/settings'
     | '/login/$'
     | '/register/$'
     | '/admin/'
@@ -254,8 +254,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
-  AlbumsSlugRoute: typeof AlbumsSlugRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  AlbumsSlugRouteRoute: typeof AlbumsSlugRouteRouteWithChildren
   LoginSplatRoute: typeof LoginSplatRoute
   RegisterSplatRoute: typeof RegisterSplatRoute
   ApiIUserIdPhotoIdFileRoute: typeof ApiIUserIdPhotoIdFileRoute
@@ -274,7 +274,7 @@ declare module '@tanstack/react-router' {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -282,20 +282,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/albums/$slug': {
       id: '/albums/$slug'
       path: '/albums/$slug'
       fullPath: '/albums/$slug'
-      preLoaderRoute: typeof AlbumsSlugRouteImport
+      preLoaderRoute: typeof AlbumsSlugRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/$': {
@@ -317,77 +317,77 @@ declare module '@tanstack/react-router' {
       path: '/albums'
       fullPath: '/admin/albums/'
       preLoaderRoute: typeof AdminAlbumsIndexRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/albums/$slug': {
       id: '/admin/albums/$slug'
       path: '/albums/$slug'
       fullPath: '/admin/albums/$slug'
       preLoaderRoute: typeof AdminAlbumsSlugRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/albums/new': {
       id: '/admin/albums/new'
       path: '/albums/new'
       fullPath: '/admin/albums/new'
       preLoaderRoute: typeof AdminAlbumsNewRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/photos/$photoId': {
       id: '/admin/photos/$photoId'
       path: '/photos/$photoId'
       fullPath: '/admin/photos/$photoId'
       preLoaderRoute: typeof AdminPhotosPhotoIdRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/photos/geotag': {
       id: '/admin/photos/geotag'
       path: '/photos/geotag'
       fullPath: '/admin/photos/geotag'
       preLoaderRoute: typeof AdminPhotosGeotagRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/photos/upload': {
       id: '/admin/photos/upload'
       path: '/photos/upload'
       fullPath: '/admin/photos/upload'
       preLoaderRoute: typeof AdminPhotosUploadRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/albums/$slug/': {
       id: '/albums/$slug/'
       path: '/'
       fullPath: '/albums/$slug/'
       preLoaderRoute: typeof AlbumsSlugIndexRouteImport
-      parentRoute: typeof AlbumsSlugRoute
+      parentRoute: typeof AlbumsSlugRouteRoute
     }
     '/albums/$slug/map': {
       id: '/albums/$slug/map'
       path: '/map'
       fullPath: '/albums/$slug/map'
       preLoaderRoute: typeof AlbumsSlugMapRouteImport
-      parentRoute: typeof AlbumsSlugRoute
+      parentRoute: typeof AlbumsSlugRouteRoute
     }
     '/admin/albums_/$slug/add': {
       id: '/admin/albums_/$slug/add'
       path: '/albums/$slug/add'
       fullPath: '/admin/albums/$slug/add'
       preLoaderRoute: typeof AdminAlbumsSlugAddRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/albums_/$slug/settings': {
       id: '/admin/albums_/$slug/settings'
       path: '/albums/$slug/settings'
       fullPath: '/admin/albums/$slug/settings'
       preLoaderRoute: typeof AdminAlbumsSlugSettingsRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/albums_/$slug/photos/$photoId': {
       id: '/admin/albums_/$slug/photos/$photoId'
       path: '/albums/$slug/photos/$photoId'
       fullPath: '/admin/albums/$slug/photos/$photoId'
       preLoaderRoute: typeof AdminAlbumsSlugPhotosPhotoIdRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminRouteRoute
     }
     '/api/i/$userId/$photoId/$file': {
       id: '/api/i/$userId/$photoId/$file'
@@ -399,7 +399,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AdminRouteChildren {
+interface AdminRouteRouteChildren {
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlbumsSlugRoute: typeof AdminAlbumsSlugRoute
@@ -413,7 +413,7 @@ interface AdminRouteChildren {
   AdminAlbumsSlugPhotosPhotoIdRoute: typeof AdminAlbumsSlugPhotosPhotoIdRoute
 }
 
-const AdminRouteChildren: AdminRouteChildren = {
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlbumsSlugRoute: AdminAlbumsSlugRoute,
@@ -427,26 +427,28 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAlbumsSlugPhotosPhotoIdRoute: AdminAlbumsSlugPhotosPhotoIdRoute,
 }
 
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
 
-interface AlbumsSlugRouteChildren {
+interface AlbumsSlugRouteRouteChildren {
   AlbumsSlugMapRoute: typeof AlbumsSlugMapRoute
   AlbumsSlugIndexRoute: typeof AlbumsSlugIndexRoute
 }
 
-const AlbumsSlugRouteChildren: AlbumsSlugRouteChildren = {
+const AlbumsSlugRouteRouteChildren: AlbumsSlugRouteRouteChildren = {
   AlbumsSlugMapRoute: AlbumsSlugMapRoute,
   AlbumsSlugIndexRoute: AlbumsSlugIndexRoute,
 }
 
-const AlbumsSlugRouteWithChildren = AlbumsSlugRoute._addFileChildren(
-  AlbumsSlugRouteChildren,
+const AlbumsSlugRouteRouteWithChildren = AlbumsSlugRouteRoute._addFileChildren(
+  AlbumsSlugRouteRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
-  AlbumsSlugRoute: AlbumsSlugRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  AlbumsSlugRouteRoute: AlbumsSlugRouteRouteWithChildren,
   LoginSplatRoute: LoginSplatRoute,
   RegisterSplatRoute: RegisterSplatRoute,
   ApiIUserIdPhotoIdFileRoute: ApiIUserIdPhotoIdFileRoute,
