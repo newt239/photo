@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { Link, createFileRoute, useLoaderData, useRouter } from "@tanstack/react-router";
-import { GlobeIcon, LockIcon } from "lucide-react";
+import { ExternalLinkIcon, GlobeIcon, ImagePlusIcon, LockIcon, SettingsIcon } from "lucide-react";
 import { z } from "zod";
 
 import { PhotoBulkActions } from "#/components/PhotoBulkActions.tsx";
@@ -149,15 +149,33 @@ const AlbumDetailPage = () => {
             )}
           </Group>
           <Group gap="sm" wrap="nowrap">
+            <Tooltip label="公開ページを開く">
+              <ActionIcon
+                variant="default"
+                size="lg"
+                aria-label="公開ページを開く"
+                component="a"
+                href={`/albums/${encodeURIComponent(slug)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLinkIcon size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="設定する">
+              <ActionIcon
+                variant="default"
+                size="lg"
+                aria-label="設定する"
+                renderRoot={(props) => (
+                  <Link {...props} to="/admin/albums/$slug/settings" params={{ slug }} />
+                )}
+              >
+                <SettingsIcon size={18} />
+              </ActionIcon>
+            </Tooltip>
             <Button
-              variant="default"
-              renderRoot={(props) => (
-                <Link {...props} to="/admin/albums/$slug/settings" params={{ slug }} />
-              )}
-            >
-              設定する
-            </Button>
-            <Button
+              leftSection={<ImagePlusIcon size={16} />}
               renderRoot={(props) => (
                 <Link {...props} to="/admin/albums/$slug/add" params={{ slug }} />
               )}

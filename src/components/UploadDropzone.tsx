@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button, Group, Paper, Progress, Stack, Table, Text, Textarea } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useRouter } from "@tanstack/react-router";
+import { CopyIcon, EraserIcon, SaveIcon } from "lucide-react";
 
 import { extractExif, generateThumbnail, probeDimensions } from "#/lib/image.ts";
 import { createPhotoUpload, finalizePhoto, updatePhoto } from "#/server/photos.ts";
@@ -49,6 +50,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   const [savingAll, setSavingAll] = useState(false);
   const router = useRouter();
   const editableCount = items.filter((it) => it.status === "done" && it.photoId).length;
+  const unsavedCount = items.filter((it) => it.status === "done" && it.photoId && !it.saved).length;
 
   const updateItem = (id: string, patch: Partial<UploadState>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -159,7 +161,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
 
   const saveAll = async () => {
     const targets = items.flatMap((it) =>
-      it.status === "done" && it.photoId
+      it.status === "done" && it.photoId && !it.saved
         ? [{ alt: it.alt, caption: it.caption, id: it.id, photoId: it.photoId }]
         : [],
     );
@@ -249,6 +251,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
               <Button
                 variant="default"
                 size="xs"
+                leftSection={<CopyIcon size={14} />}
                 onClick={applyToAll}
                 disabled={savingAll || (!bulkCaption.trim() && !bulkAlt.trim())}
               >
@@ -349,19 +352,21 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       <Group justify="flex-end" gap="sm">
         <Button
           variant="default"
+          leftSection={<EraserIcon size={16} />}
           onClick={() => setItems([])}
           disabled={busy || savingAll || items.length === 0}
         >
           履歴を消去する
         </Button>
         <Button
+          leftSection={<SaveIcon size={16} />}
           onClick={() => {
             void saveAll();
           }}
           loading={savingAll}
-          disabled={editableCount === 0}
+          disabled={unsavedCount === 0}
         >
-          {editableCount > 0 ? `${editableCount} 件をまとめて保存する` : "まとめて保存する"}
+          {unsavedCount > 0 ? `${unsavedCount} 件をまとめて保存する` : "まとめて保存する"}
         </Button>
       </Group>
     </Stack>

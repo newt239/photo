@@ -14,6 +14,7 @@ import {
 import {
   CheckCheckIcon,
   EllipsisIcon,
+  FolderInputIcon,
   FolderMinusIcon,
   FolderPlusIcon,
   PlusIcon,
@@ -129,10 +130,16 @@ export const PhotoBulkActions = ({
             nothingFoundMessage="アルバムが見つかりません"
           />
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={() => setModal(null)} disabled={submitting}>
+            <Button
+              variant="default"
+              leftSection={<XIcon size={16} />}
+              onClick={() => setModal(null)}
+              disabled={submitting}
+            >
               キャンセルする
             </Button>
             <Button
+              leftSection={<FolderInputIcon size={16} />}
               loading={submitting}
               disabled={!albumId}
               onClick={() => {
@@ -165,10 +172,16 @@ export const PhotoBulkActions = ({
             作成したアルバムは非公開です。公開状態はアルバムの設定から変更できます。
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={() => setModal(null)} disabled={submitting}>
+            <Button
+              variant="default"
+              leftSection={<XIcon size={16} />}
+              onClick={() => setModal(null)}
+              disabled={submitting}
+            >
               キャンセルする
             </Button>
             <Button
+              leftSection={<PlusIcon size={16} />}
               loading={submitting}
               disabled={!title.trim()}
               onClick={() => {
@@ -195,11 +208,17 @@ export const PhotoBulkActions = ({
             写真が含まれているすべてのアルバムからも取り除かれます。
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={() => setModal(null)} disabled={submitting}>
+            <Button
+              variant="default"
+              leftSection={<XIcon size={16} />}
+              onClick={() => setModal(null)}
+              disabled={submitting}
+            >
               キャンセルする
             </Button>
             <Button
               color="red"
+              leftSection={<Trash2Icon size={16} />}
               loading={submitting}
               onClick={() => {
                 void onDelete().then(() => setModal(null));

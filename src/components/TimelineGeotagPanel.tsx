@@ -16,6 +16,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useRouter } from "@tanstack/react-router";
+import { MapPinIcon, SearchCheckIcon } from "lucide-react";
 
 import { matchTimeline, parseTimeline, type Timeline } from "#/lib/timeline.ts";
 import { applyPhotoLocations } from "#/server/photos.ts";
@@ -219,7 +220,12 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
           </Group>
 
           <Group justify="flex-end">
-            <Button onClick={handleParse} loading={parsing} disabled={!file || applying}>
+            <Button
+              leftSection={<SearchCheckIcon size={16} />}
+              onClick={handleParse}
+              loading={parsing}
+              disabled={!file || applying}
+            >
               照合する
             </Button>
           </Group>
@@ -328,7 +334,12 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
             </Grid>
           )}
           <Group justify="flex-end">
-            <Button onClick={handleApply} loading={applying} disabled={selected.length === 0}>
+            <Button
+              leftSection={<MapPinIcon size={16} />}
+              onClick={handleApply}
+              loading={applying}
+              disabled={selected.length === 0}
+            >
               選択した {selected.length} 件に適用する
             </Button>
           </Group>

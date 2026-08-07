@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Button, FileInput, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
+import { PlayIcon } from "lucide-react";
 
 import type { CountKeysRequest, CountKeysResponse } from "#/lib/json-parser.ts";
 
@@ -82,7 +83,12 @@ const DebugWasmPage = () => {
             </Text>
           )}
           <Group justify="flex-end">
-            <Button onClick={handleRun} loading={running} disabled={!file}>
+            <Button
+              leftSection={<PlayIcon size={16} />}
+              onClick={handleRun}
+              loading={running}
+              disabled={!file}
+            >
               解析する
             </Button>
           </Group>

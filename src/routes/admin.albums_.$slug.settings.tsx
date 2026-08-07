@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, GlobeIcon, LockIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 
 import { deleteAlbum, getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
 
@@ -34,6 +34,11 @@ const AlbumSettingsPage = () => {
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const [deletePhotos, setDeletePhotos] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const dirty =
+    title.trim() !== (album.title ?? "") ||
+    albumSlug.trim() !== album.slug ||
+    description.trim() !== (album.description ?? "") ||
+    visibility !== album.visibility;
 
   const handleDelete = async () => {
     if (deleting) {
@@ -135,19 +140,35 @@ const AlbumSettingsPage = () => {
             onChange={(e) => setAlbumSlug(e.currentTarget.value)}
             maxLength={200}
           />
-          <div>
-            <Text size="sm" fw={500} mb={4}>
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Text size="sm" fw={500}>
               公開状態
             </Text>
             <SegmentedControl
               value={visibility}
               onChange={(v) => setVisibility(v === "public" ? "public" : "private")}
               data={[
-                { label: "非公開", value: "private" },
-                { label: "公開", value: "public" },
+                {
+                  label: (
+                    <Group gap={6} wrap="nowrap" justify="center">
+                      <LockIcon size={14} />
+                      非公開
+                    </Group>
+                  ),
+                  value: "private",
+                },
+                {
+                  label: (
+                    <Group gap={6} wrap="nowrap" justify="center">
+                      <GlobeIcon size={14} />
+                      公開
+                    </Group>
+                  ),
+                  value: "public",
+                },
               ]}
             />
-          </div>
+          </Group>
           {errorMessage && (
             <Text size="sm" c="red">
               {errorMessage}
@@ -161,8 +182,9 @@ const AlbumSettingsPage = () => {
             )}
             <Button
               type="submit"
+              leftSection={<SaveIcon size={16} />}
               loading={submitting}
-              disabled={title.trim().length === 0 || albumSlug.trim().length === 0}
+              disabled={!dirty || title.trim().length === 0 || albumSlug.trim().length === 0}
             >
               保存する
             </Button>
@@ -172,17 +194,24 @@ const AlbumSettingsPage = () => {
 
       <Divider my="sm" />
 
-      <Stack gap="xs" align="flex-start">
-        <Title order={3} size="h4">
-          アルバムの削除
-        </Title>
-        <Text size="sm" c="dimmed">
-          削除したアルバムは元に戻せません
-        </Text>
-        <Button color="red" variant="outline" onClick={openDelete}>
+      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+        <Stack gap={2}>
+          <Text size="sm" fw={500}>
+            アルバムの削除
+          </Text>
+          <Text size="xs" c="dimmed">
+            削除したアルバムは元に戻せません
+          </Text>
+        </Stack>
+        <Button
+          color="red"
+          variant="outline"
+          leftSection={<Trash2Icon size={16} />}
+          onClick={openDelete}
+        >
           アルバムを削除する
         </Button>
-      </Stack>
+      </Group>
 
       <Modal opened={deleteOpened} onClose={closeDelete} title="アルバムを削除する" centered>
         <Stack gap="md">
@@ -197,10 +226,20 @@ const AlbumSettingsPage = () => {
             onChange={(e) => setDeletePhotos(e.currentTarget.checked)}
           />
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={closeDelete} disabled={deleting}>
+            <Button
+              variant="default"
+              leftSection={<XIcon size={16} />}
+              onClick={closeDelete}
+              disabled={deleting}
+            >
               キャンセルする
             </Button>
-            <Button color="red" loading={deleting} onClick={() => void handleDelete()}>
+            <Button
+              color="red"
+              leftSection={<Trash2Icon size={16} />}
+              loading={deleting}
+              onClick={() => void handleDelete()}
+            >
               削除する
             </Button>
           </Group>
