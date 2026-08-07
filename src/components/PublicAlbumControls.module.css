@@ -20,63 +20,25 @@
 }
 
 .collapsed {
-  position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 1100;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  width: auto;
   max-width: calc(100vw - 2rem);
 }
 
-.collapsedTitle {
-  color: var(--public-fg);
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.4;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.infoButton {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0;
-  border: 1px solid var(--public-glass-border);
-  border-radius: 999px;
-  background: var(--public-glass-bg);
-  backdrop-filter: var(--public-glass-blur);
-  -webkit-backdrop-filter: var(--public-glass-blur);
-  box-shadow: var(--public-glass-shadow);
-  color: var(--public-fg);
-  cursor: pointer;
-  transition: background 150ms ease;
-}
-
-.infoButton:hover {
-  background: var(--public-glass-hover);
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
 }
 
-.headingText {
+.title {
   flex: 1;
   min-width: 0;
-}
-
-.title {
   font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -86,7 +48,6 @@
 }
 
 .description {
-  margin-top: 0.25rem;
   font-size: 0.8125rem;
   color: var(--public-fg-muted);
   display: -webkit-box;
@@ -140,6 +101,7 @@
 }
 
 .iconButton {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

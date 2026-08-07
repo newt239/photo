@@ -13,7 +13,7 @@ import { getPublicAlbumBySlug } from "#/server/public.ts";
 type PublicAlbum = NonNullable<Awaited<ReturnType<typeof getPublicAlbumBySlug>>>;
 
 const PublicAlbumLayout = () => {
-  const { album } = Route.useLoaderData();
+  const { album, photos } = Route.useLoaderData();
   const { slug } = Route.useParams();
   const { size } = Route.useSearch();
   const navigate = useNavigate();
@@ -26,6 +26,7 @@ const PublicAlbumLayout = () => {
       <PublicAlbumControls
         title={album.title}
         description={album.description}
+        hasGeotagged={photos.some((p) => p.latitude !== null && p.longitude !== null)}
         mode={mode}
         size={size}
         onModeChange={(next) => {
