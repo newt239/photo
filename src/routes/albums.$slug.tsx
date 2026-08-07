@@ -1,28 +1,53 @@
-import { Text } from "@mantine/core";
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import leafletCss from "leaflet/dist/leaflet.css?url";
+import {
+  Outlet,
+  createFileRoute,
+  notFound,
+  useMatchRoute,
+  useNavigate,
+} from "@tanstack/react-router";
+import { z } from "zod";
 
-import { PublicAlbumGallery } from "#/components/PublicAlbumGallery.tsx";
+import { PublicAlbumControls } from "#/components/PublicAlbumControls.tsx";
 import { getPublicAlbumBySlug } from "#/server/public.ts";
 
 type PublicAlbum = NonNullable<Awaited<ReturnType<typeof getPublicAlbumBySlug>>>;
 
-const PublicAlbumPage = () => {
-  const { album, photos } = Route.useLoaderData();
-  if (photos.length === 0) {
-    return (
-      <Text c="dimmed" size="sm" p="xl">
-        このアルバムにはまだ写真がありません
-      </Text>
-    );
-  }
-  return <PublicAlbumGallery title={album.title} description={album.description} photos={photos} />;
+const PublicAlbumLayout = () => {
+  const { slug } = Route.useParams();
+  const { size } = Route.useSearch();
+  const navigate = useNavigate();
+  const matchRoute = useMatchRoute();
+  const mode = matchRoute({ params: { slug }, to: "/albums/$slug/map" }) ? "map" : "photo";
+
+  return (
+    <>
+      <Outlet />
+      <PublicAlbumControls
+        mode={mode}
+        size={size}
+        onModeChange={(next) => {
+          void navigate({
+            params: { slug },
+            search: (prev) => prev,
+            to: next === "map" ? "/albums/$slug/map" : "/albums/$slug",
+          });
+        }}
+        onSizeChange={(next) => {
+          void navigate({
+            params: { slug },
+            replace: true,
+            search: (prev) => ({ ...prev, size: next }),
+            to: "/albums/$slug",
+          });
+        }}
+      />
+    </>
+  );
 };
 
 export const Route = createFileRoute("/albums/$slug")({
-  component: PublicAlbumPage,
+  component: PublicAlbumLayout,
   head: ({ loaderData }) => ({
-    links: [{ href: leafletCss, rel: "stylesheet" }],
     meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string } }): Promise<PublicAlbum> => {
@@ -32,4 +57,5 @@ export const Route = createFileRoute("/albums/$slug")({
     }
     return result;
   },
+  validateSearch: z.object({ size: z.number().int().min(1).max(5).default(3) }),
 });

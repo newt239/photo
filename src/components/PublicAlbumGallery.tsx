@@ -1,10 +1,7 @@
 import { useState } from "react";
 
-import { SegmentedControl, Slider } from "@mantine/core";
-import { ZoomInIcon, ZoomOutIcon } from "lucide-react";
-
+import { PhotoLightbox } from "./PhotoLightbox";
 import classes from "./PublicAlbumGallery.module.css";
-import { PublicAlbumMap } from "./PublicAlbumMap";
 
 type PublicGalleryPhoto = {
   id: string;
@@ -14,79 +11,54 @@ type PublicGalleryPhoto = {
   thumbnailKey: string | null;
   width: number;
   height: number;
-  latitude: number | null;
-  longitude: number | null;
 };
 
 type PublicAlbumGalleryProps = {
   title: string | null;
   description: string | null;
   photos: PublicGalleryPhoto[];
+  size: number;
 };
 
-export const PublicAlbumGallery = ({ title, description, photos }: PublicAlbumGalleryProps) => {
-  const [mode, setMode] = useState("photo");
-  const [size, setSize] = useState(3);
+export const PublicAlbumGallery = ({
+  title,
+  description,
+  photos,
+  size,
+}: PublicAlbumGalleryProps) => {
+  const [index, setIndex] = useState<number | null>(null);
 
   return (
     <>
-      {mode === "map" ? (
-        <PublicAlbumMap photos={photos} />
-      ) : (
-        <>
-          <div className={classes.gallery} style={{ columnWidth: `${size * 160}px` }}>
-            {photos.map((p) => (
-              <a
-                key={p.id}
-                className={classes.item}
-                href={`/api/i/${p.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
-                  alt={p.alt ?? p.caption ?? ""}
-                  loading="lazy"
-                  style={{ aspectRatio: `${p.width} / ${p.height}` }}
-                />
-                {p.caption && <span className={classes.caption}>{p.caption}</span>}
-              </a>
-            ))}
-          </div>
-          <div className={classes.overlay}>
-            <div className={classes.overlayTitle}>{title ?? "(無題)"}</div>
-            {description && <div className={classes.overlayDescription}>{description}</div>}
-          </div>
-        </>
-      )}
-
-      <div className={classes.controls}>
-        <SegmentedControl
-          size="xs"
-          value={mode}
-          onChange={setMode}
-          data={[
-            { label: "写真", value: "photo" },
-            { label: "地図", value: "map" },
-          ]}
-        />
-        {mode === "photo" && (
-          <>
-            <ZoomOutIcon size={16} aria-hidden />
-            <Slider
-              className={classes.slider}
-              min={1}
-              max={5}
-              step={1}
-              value={size}
-              onChange={setSize}
-              label={null}
-              thumbLabel="表示サイズ"
+      <div className={classes.gallery} style={{ columnWidth: `${size * 160}px` }}>
+        {photos.map((p, i) => (
+          <button
+            key={p.id}
+            type="button"
+            className={classes.item}
+            onClick={() => setIndex(i)}
+            aria-label={p.caption ?? p.alt ?? "写真を拡大する"}
+          >
+            <img
+              src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
+              alt={p.alt ?? p.caption ?? ""}
+              loading="lazy"
+              style={{ aspectRatio: `${p.width} / ${p.height}` }}
             />
-            <ZoomInIcon size={16} aria-hidden />
-          </>
-        )}
+            {p.caption && <span className={classes.caption}>{p.caption}</span>}
+          </button>
+        ))}
       </div>
+      <div className={classes.overlay}>
+        <div className={classes.overlayTitle}>{title ?? "(無題)"}</div>
+        {description && <div className={classes.overlayDescription}>{description}</div>}
+      </div>
+      <PhotoLightbox
+        photos={photos}
+        index={index}
+        onClose={() => setIndex(null)}
+        onIndexChange={setIndex}
+      />
     </>
   );
 };

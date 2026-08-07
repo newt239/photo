@@ -8,18 +8,10 @@
   font-family: inherit;
 }
 
-.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100dvh;
-  color: var(--mantine-color-dimmed);
-  font-size: var(--mantine-font-size-sm);
-}
-
 .map :global(.leaflet-marker-pane) .pin {
   background: transparent;
   border: 0;
+  cursor: pointer;
 }
 
 .map :global(.leaflet-marker-pane) .pin img {
@@ -31,22 +23,4 @@
   border: 2px solid var(--mantine-color-white);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   background: var(--mantine-color-gray-1);
-}
-
-.popup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--mantine-spacing-xs);
-}
-
-.popup img {
-  display: block;
-  width: 220px;
-  height: auto;
-  border-radius: var(--mantine-radius-sm);
-}
-
-.popup span {
-  font-size: var(--mantine-font-size-sm);
-  line-height: 1.4;
 }

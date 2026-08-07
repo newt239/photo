@@ -8,6 +8,12 @@
   display: block;
   position: relative;
   break-inside: avoid;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  appearance: none;
+  cursor: pointer;
 }
 
 .item img {
@@ -76,25 +82,4 @@
   margin-top: 0.25em;
   font-size: clamp(0.875rem, 1.8vw, 1.5rem);
   line-height: 1.4;
-}
-
-.controls {
-  position: fixed;
-  top: var(--mantine-spacing-md);
-  right: var(--mantine-spacing-md);
-  z-index: 1100;
-  display: flex;
-  align-items: center;
-  gap: var(--mantine-spacing-sm);
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
-  border-radius: var(--mantine-radius-xl);
-  line-height: normal;
-  color: var(--mantine-color-text);
-  background: light-dark(rgba(255, 255, 255, 0.85), rgba(26, 27, 30, 0.85));
-  backdrop-filter: blur(8px);
-  box-shadow: var(--mantine-shadow-md);
-}
-
-.slider {
-  width: 96px;
 }
