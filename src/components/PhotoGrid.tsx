@@ -1,5 +1,7 @@
 import { Text } from "@mantine/core";
 
+import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
+
 import { PhotoCard, type PhotoCardData } from "./PhotoCard";
 import classes from "./PhotoGrid.module.css";
 
@@ -16,6 +18,8 @@ export const PhotoGrid = ({
   selectedPhotoIds?: Set<string>;
   onSelect?: (photoId: string) => void;
 }) => {
+  const { columns, ref } = useMasonryColumns(240);
+
   if (photos.length === 0) {
     return (
       <Text c="dimmed" size="sm">
@@ -24,15 +28,20 @@ export const PhotoGrid = ({
     );
   }
   return (
-    <div className={classes.masonry}>
-      {photos.map((p) => (
-        <div key={p.id} className={classes.item}>
-          <PhotoCard
-            photo={p}
-            albumSlug={albumSlug}
-            selected={selectedPhotoIds?.has(p.id)}
-            onSelect={onSelect}
-          />
+    <div className={classes.masonry} ref={ref}>
+      {Array.from({ length: columns }, (_, column) => (
+        <div key={column} className={classes.column}>
+          {photos.map((p, i) =>
+            i % columns === column ? (
+              <PhotoCard
+                key={p.id}
+                photo={p}
+                albumSlug={albumSlug}
+                selected={selectedPhotoIds?.has(p.id)}
+                onSelect={onSelect}
+              />
+            ) : null,
+          )}
         </div>
       ))}
     </div>

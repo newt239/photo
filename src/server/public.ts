@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { z } from "zod";
 
@@ -87,7 +87,7 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
       .from(albumPhotos)
       .innerJoin(photos, eq(albumPhotos.photoId, photos.id))
       .where(eq(albumPhotos.albumId, album.id))
-      .orderBy(albumPhotos.sortOrder, albumPhotos.addedAt);
+      .orderBy(sql`${photos}.taken_at IS NULL`, asc(photos.takenAt), asc(albumPhotos.addedAt));
 
     return { album, photos: photoRows };
   });
