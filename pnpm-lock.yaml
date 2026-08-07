@@ -32,9 +32,6 @@ importers:
       aws4fetch:
         specifier: 1.0.20
         version: 1.0.20
-      drizzle-kit:
-        specifier: 0.31.10
-        version: 0.31.10
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2
@@ -78,6 +75,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 6.0.5
         version: 6.0.5(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(sugarss@5.0.1(postcss@8.5.25))(tsx@4.23.1)(yaml@2.9.0))
+      drizzle-kit:
+        specifier: 0.31.10
+        version: 0.31.10
       knip:
         specifier: 6.29.0
         version: 6.29.0

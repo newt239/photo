@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "entry": ["src/start.ts!", "src/router.tsx!", "src/routes/**/*.{ts,tsx}!"],
+  "entry": ["src/routes/**/*.{ts,tsx}!"],
   "ignore": ["drizzle.config.ts"],
   "ignoreDependencies": ["cloudflare"],
   "drizzle": false
