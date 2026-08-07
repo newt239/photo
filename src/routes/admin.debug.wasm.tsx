@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { Button, FileInput, Group, Paper, Stack, Text, Title } from "@mantine/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import type { CountKeysRequest, CountKeysResponse } from "#/lib/json-parser.ts";
 
@@ -54,10 +54,7 @@ const DebugWasmPage = () => {
   };
 
   return (
-    <Stack p="xl" gap="md" maw={680} mx="auto">
-      <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
-        ← ホーム
-      </Button>
+    <Stack p="xl" gap="md">
       <Title order={2}>WASM 動作確認</Title>
       <Paper withBorder radius="md" p="lg">
         <Stack gap="md">
@@ -97,5 +94,5 @@ const DebugWasmPage = () => {
 
 export const Route = createFileRoute("/admin/debug/wasm")({
   component: DebugWasmPage,
-  head: () => ({ meta: [{ title: "WASM 動作確認 | Photo" }] }),
+  head: () => ({ meta: [{ title: "WASM 動作確認 | photos.newt239.dev" }] }),
 });

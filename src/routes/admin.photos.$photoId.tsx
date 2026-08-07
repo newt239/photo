@@ -12,7 +12,7 @@ const PhotoDetailPage = () => {
     <PhotoDetailView
       photo={photo}
       backLink={
-        <Button component={Link} to="/admin/photos" variant="subtle" size="xs" w="fit-content">
+        <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
           ← 写真一覧に戻る
         </Button>
       }
@@ -23,7 +23,7 @@ const PhotoDetailPage = () => {
 export const Route = createFileRoute("/admin/photos/$photoId")({
   component: PhotoDetailPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.caption ?? "写真"} | Photo` }],
+    meta: [{ title: `${loaderData?.caption ?? "写真"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { photoId: string } }): Promise<PhotoDetail> =>
     getPhoto({ data: { id: params.photoId } }),

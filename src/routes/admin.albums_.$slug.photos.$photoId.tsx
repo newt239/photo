@@ -29,7 +29,7 @@ const AlbumPhotoDetailPage = () => {
 export const Route = createFileRoute("/admin/albums_/$slug/photos/$photoId")({
   component: AlbumPhotoDetailPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.caption ?? "写真"} | Photo` }],
+    meta: [{ title: `${loaderData?.caption ?? "写真"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string; photoId: string } }): Promise<PhotoDetail> =>
     getPhoto({ data: { id: params.photoId } }),

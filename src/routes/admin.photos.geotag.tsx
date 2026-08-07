@@ -1,5 +1,5 @@
-import { Button, Stack, Text, Title } from "@mantine/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Stack, Text, Title } from "@mantine/core";
+import { createFileRoute } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
 import { TimelineGeotagPanel, type GeotagCandidate } from "#/components/TimelineGeotagPanel.tsx";
@@ -8,10 +8,7 @@ import { listPhotosMissingLocation } from "#/server/photos.ts";
 const PhotosGeotagPage = () => {
   const { photos } = Route.useLoaderData();
   return (
-    <Stack p="xl" gap="md" maw={1200} mx="auto">
-      <Button component={Link} to="/admin/photos" variant="subtle" size="xs" w="fit-content">
-        ← 写真
-      </Button>
+    <Stack p="xl" gap="md">
       <Title order={2}>位置情報の一括設定</Title>
       <Text c="dimmed" size="sm">
         Google マップのタイムラインからエクスポートした JSON
@@ -26,7 +23,7 @@ export const Route = createFileRoute("/admin/photos/geotag")({
   component: PhotosGeotagPage,
   head: () => ({
     links: [{ href: leafletCss, rel: "stylesheet" }],
-    meta: [{ title: "位置情報の一括設定 | Photo" }],
+    meta: [{ title: "位置情報の一括設定 | photos.newt239.dev" }],
   }),
   loader: async (): Promise<{ photos: GeotagCandidate[] }> => ({
     photos: await listPhotosMissingLocation({ data: {} }),
