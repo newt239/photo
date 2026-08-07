@@ -1,5 +1,6 @@
 import { Button, Stack, Text, Title } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
+import { HouseIcon } from "lucide-react";
 
 export const NotFound = () => (
   <Stack p="xl" gap="md" align="flex-start">
@@ -9,7 +10,11 @@ export const NotFound = () => (
         お探しのページは削除されたか、非公開になっている可能性があります
       </Text>
     </Stack>
-    <Button variant="default" renderRoot={(props) => <Link {...props} to="/" />}>
+    <Button
+      variant="default"
+      leftSection={<HouseIcon size={16} />}
+      renderRoot={(props) => <Link {...props} to="/" />}
+    >
       トップページに戻る
     </Button>
   </Stack>

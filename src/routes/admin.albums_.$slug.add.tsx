@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Button, Group, Paper, Stack, Tabs, Text, Title } from "@mantine/core";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 
 import { PhotoPicker, type PhotoPickerItem } from "#/components/PhotoPicker.tsx";
 import { UploadDropzone } from "#/components/UploadDropzone.tsx";
@@ -59,9 +60,10 @@ const AlbumAddPhotosPage = () => {
         variant="subtle"
         size="xs"
         w="fit-content"
+        leftSection={<ArrowLeftIcon size={14} />}
         renderRoot={(props) => <Link {...props} to="/admin/albums/$slug" params={{ slug }} />}
       >
-        ← アルバムに戻る
+        アルバムに戻る
       </Button>
       <Stack gap={4}>
         <Title order={2}>写真を追加する</Title>
@@ -127,6 +129,7 @@ const AlbumAddPhotosPage = () => {
               />
               <Group justify="flex-end">
                 <Button
+                  leftSection={<PlusIcon size={16} />}
                   onClick={() => {
                     void handleSubmit();
                   }}

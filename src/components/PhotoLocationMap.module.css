@@ -1,0 +1,8 @@
+.map {
+  width: 100%;
+  height: 200px;
+  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
+  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-8));
+  z-index: 0;
+}

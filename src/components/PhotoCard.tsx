@@ -11,6 +11,7 @@ export type PhotoCardData = {
   thumbnailKey: string | null;
   width: number;
   height: number;
+  takenAt: string | null;
 };
 
 type PhotoCardProps = {
@@ -29,30 +30,32 @@ export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: Phot
       {photo.caption && <span className={classes.caption}>{photo.caption}</span>}
     </div>
   );
-  if (onSelect) {
-    return (
-      <label className={classes.selectable} data-selected={selected || undefined}>
+  const link =
+    albumSlug === undefined ? (
+      <Link to="/admin/photos/$photoId" params={{ photoId: photo.id }} className={classes.link}>
         {thumb}
-        <Checkbox
-          className={classes.check}
-          checked={selected}
-          onChange={() => onSelect(photo.id)}
-          aria-label={photo.caption ?? photo.alt ?? "この写真を選択する"}
-        />
-      </label>
+      </Link>
+    ) : (
+      <Link
+        to="/admin/albums/$slug/photos/$photoId"
+        params={{ photoId: photo.id, slug: albumSlug }}
+        className={classes.link}
+      >
+        {thumb}
+      </Link>
     );
+  if (!onSelect) {
+    return link;
   }
-  return albumSlug === undefined ? (
-    <Link to="/admin/photos/$photoId" params={{ photoId: photo.id }} className={classes.link}>
-      {thumb}
-    </Link>
-  ) : (
-    <Link
-      to="/admin/albums/$slug/photos/$photoId"
-      params={{ photoId: photo.id, slug: albumSlug }}
-      className={classes.link}
-    >
-      {thumb}
-    </Link>
+  return (
+    <div className={classes.card} data-selected={selected || undefined}>
+      {link}
+      <Checkbox
+        className={classes.check}
+        checked={selected}
+        onChange={() => onSelect(photo.id)}
+        aria-label={photo.caption ?? photo.alt ?? "この写真を選択する"}
+      />
+    </div>
   );
 };

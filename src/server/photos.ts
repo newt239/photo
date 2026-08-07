@@ -1,12 +1,12 @@
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
-import { photos } from "#/db/schema.ts";
+import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { ensureUserRow, requireUserId } from "#/lib/auth.ts";
 import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
 
@@ -137,18 +137,46 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     return { id: data.photoId };
   });
 
+const listMyPhotosInput = z.object({
+  limit: z.number().int().positive().max(200).optional(),
+  order: z.enum(["asc", "desc"]).default("desc"),
+});
+
 export const listMyPhotos = createServerFn({ method: "GET" })
-  .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
+  .validator(listMyPhotosInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
+    const direction = data.order === "asc" ? asc : desc;
     const rows = await db
-      .select()
+      .select({
+        alt: photos.alt,
+        caption: photos.caption,
+        height: photos.height,
+        id: photos.id,
+        storageKey: photos.storageKey,
+        takenAt: photos.takenAt,
+        thumbnailKey: photos.thumbnailKey,
+        width: photos.width,
+      })
       .from(photos)
       .where(eq(photos.userId, userId))
-      .orderBy(desc(photos.uploadedAt))
+      .orderBy(
+        sql`${photos}.taken_at IS NULL`,
+        direction(photos.takenAt),
+        direction(photos.uploadedAt),
+      )
       .limit(data.limit ?? 200);
-    return rows;
+    return rows.map((row) => ({
+      alt: row.alt,
+      caption: row.caption,
+      height: row.height,
+      id: row.id,
+      storageKey: row.storageKey,
+      takenAt: row.takenAt?.toISOString() ?? null,
+      thumbnailKey: row.thumbnailKey,
+      width: row.width,
+    }));
   });
 
 export const getPhoto = createServerFn({ method: "GET" })
@@ -164,7 +192,56 @@ export const getPhoto = createServerFn({ method: "GET" })
     if (!row) {
       throw new Error("NOT_FOUND");
     }
-    return row;
+    const albumRows = await db
+      .select({
+        id: albums.id,
+        slug: albums.slug,
+        title: albums.title,
+        visibility: albums.visibility,
+      })
+      .from(albumPhotos)
+      .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
+      .where(and(eq(albumPhotos.photoId, data.id), eq(albums.userId, userId)))
+      .orderBy(albums.createdAt);
+    return { ...row, albums: albumRows };
+  });
+
+const getPhotoNeighborsInput = z.object({
+  albumSlug: z.string().min(1).nullable().optional(),
+  id: z.string().min(1),
+});
+
+export const getPhotoNeighbors = createServerFn({ method: "GET" })
+  .validator(getPhotoNeighborsInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = drizzle(env.DB, { schema });
+    const orderBy = [
+      sql`${photos}.taken_at IS NULL`,
+      desc(photos.takenAt),
+      desc(photos.uploadedAt),
+    ];
+    const rows = data.albumSlug
+      ? await db
+          .select({ id: photos.id })
+          .from(albumPhotos)
+          .innerJoin(photos, eq(albumPhotos.photoId, photos.id))
+          .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
+          .where(and(eq(albums.slug, data.albumSlug), eq(albums.userId, userId)))
+          .orderBy(...orderBy)
+      : await db
+          .select({ id: photos.id })
+          .from(photos)
+          .where(eq(photos.userId, userId))
+          .orderBy(...orderBy);
+    const index = rows.findIndex((row) => row.id === data.id);
+    if (index === -1) {
+      return { nextId: null, previousId: null };
+    }
+    return {
+      nextId: rows[index + 1]?.id ?? null,
+      previousId: rows[index - 1]?.id ?? null,
+    };
   });
 
 const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
@@ -251,6 +328,31 @@ export const updatePhoto = createServerFn({ method: "POST" })
       .set({ alt: data.alt, caption: data.caption })
       .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
     return { id: data.id, success: true } as const;
+  });
+
+const updatePhotoVisibilityInput = z.object({
+  id: z.string().min(1),
+  visibility: z.enum(["public", "private"]),
+});
+
+export const updatePhotoVisibility = createServerFn({ method: "POST" })
+  .validator(updatePhotoVisibilityInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = drizzle(env.DB, { schema });
+    const [existing] = await db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
+      .limit(1);
+    if (!existing) {
+      return { error: "NOT_FOUND", success: false } as const;
+    }
+    await db
+      .update(photos)
+      .set({ visibility: data.visibility })
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
+    return { success: true, visibility: data.visibility } as const;
   });
 
 export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photoIds: string[]) => {

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import { deleteOwnedPhotos } from "#/server/photos.ts";
 
 const createAlbumInput = z.object({
   description: z.string().max(2000).nullable().optional(),
+  slug: z.string().max(200).nullable().optional(),
   title: z.string().min(1).max(200),
   visibility: z.enum(["public", "private"]).default("private"),
 });
@@ -23,13 +24,27 @@ export const createAlbum = createServerFn({ method: "POST" })
     await ensureUserRow(userId);
     const db = drizzle(env.DB, { schema });
     const id = nanoid();
+    const requested = data.slug?.trim() ?? "";
+    if (requested) {
+      if (!/^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF-]+$/.test(requested)) {
+        return { error: "URL に使えない文字が含まれています", success: false } as const;
+      }
+      const [duplicate] = await db
+        .select({ id: albums.id })
+        .from(albums)
+        .where(eq(albums.slug, requested))
+        .limit(1);
+      if (duplicate) {
+        return { error: "この URL は既に使われています", success: false } as const;
+      }
+    }
     const normalized = data.title
       .normalize("NFKD")
       .replaceAll(/[\u0300-\u036F]/g, "")
       .toLowerCase()
       .replaceAll(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, "-")
       .replaceAll(/^-+|-+$/g, "");
-    const slug = `${normalized || "album"}-${nanoid(6)}`;
+    const slug = requested || `${normalized || "album"}-${nanoid(6)}`;
     await db.insert(albums).values({
       description: data.description ?? null,
       id,
@@ -38,7 +53,7 @@ export const createAlbum = createServerFn({ method: "POST" })
       userId,
       visibility: data.visibility,
     });
-    return { id, slug };
+    return { id, slug, success: true } as const;
   });
 
 const updateAlbumInput = z.object({
@@ -131,8 +146,13 @@ export const listMyAlbums = createServerFn({ method: "GET" })
     return rows;
   });
 
+const getAlbumBySlugInput = z.object({
+  order: z.enum(["asc", "desc"]).default("desc"),
+  slug: z.string().min(1),
+});
+
 export const getAlbumBySlug = createServerFn({ method: "GET" })
-  .validator(z.object({ slug: z.string().min(1) }))
+  .validator(getAlbumBySlugInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
@@ -145,27 +165,40 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
       throw new Error("NOT_FOUND");
     }
 
+    const direction = data.order === "asc" ? asc : desc;
     const photoRows = await db
       .select({
-        addedAt: albumPhotos.addedAt,
         alt: photos.alt,
         caption: photos.caption,
         height: photos.height,
         id: photos.id,
-        mimeType: photos.mimeType,
-        sortOrder: albumPhotos.sortOrder,
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
         thumbnailKey: photos.thumbnailKey,
-        uploadedAt: photos.uploadedAt,
         width: photos.width,
       })
       .from(albumPhotos)
       .innerJoin(photos, eq(albumPhotos.photoId, photos.id))
       .where(eq(albumPhotos.albumId, album.id))
-      .orderBy(albumPhotos.sortOrder, albumPhotos.addedAt);
+      .orderBy(
+        sql`${photos}.taken_at IS NULL`,
+        direction(photos.takenAt),
+        direction(albumPhotos.addedAt),
+      );
 
-    return { album, photos: photoRows };
+    return {
+      album,
+      photos: photoRows.map((row) => ({
+        alt: row.alt,
+        caption: row.caption,
+        height: row.height,
+        id: row.id,
+        storageKey: row.storageKey,
+        takenAt: row.takenAt?.toISOString() ?? null,
+        thumbnailKey: row.thumbnailKey,
+        width: row.width,
+      })),
+    };
   });
 
 const addPhotosInput = z.object({

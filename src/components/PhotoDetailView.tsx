@@ -1,20 +1,32 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import {
+  ActionIcon,
   Anchor,
-  Badge,
   Button,
   Card,
   Group,
-  SimpleGrid,
+  SegmentedControl,
   Stack,
   Text,
   Textarea,
   Title,
 } from "@mantine/core";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ExpandIcon,
+  GlobeIcon,
+  LockIcon,
+  SaveIcon,
+  SparklesIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from "lucide-react";
 
-import { generatePhotoDraft, updatePhoto } from "#/server/photos.ts";
+import { PhotoLocationMap } from "#/components/PhotoLocationMap.tsx";
+import { generatePhotoDraft, updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
 
@@ -40,6 +52,7 @@ type PhotoDetailData = {
   latitude: number | null;
   longitude: number | null;
   altitude: number | null;
+  albums: { id: string; slug: string; title: string | null; visibility: "public" | "private" }[];
 };
 
 type InfoRow = { label: string; value: string };
@@ -79,9 +92,11 @@ const renderInfoList = (rows: InfoRow[]) => (
 type Props = {
   photo: PhotoDetailData;
   backLink?: ReactNode;
+  previousLink?: ReactNode;
+  nextLink?: ReactNode;
 };
 
-export const PhotoDetailView = ({ photo, backLink }: Props) => {
+export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Props) => {
   const router = useRouter();
   const imageSrc = `/api/i/${photo.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
   const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
@@ -116,18 +131,45 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
     { label: "ファイルサイズ", value: fileSize },
     { label: "形式", value: photo.mimeType },
   ];
+  const takenAt = formatDateTime(photo.takenAt);
+  if (takenAt) {
+    fileRows.push({ label: "撮影日時", value: takenAt });
+  }
   const uploaded = formatDateTime(photo.uploadedAt);
   if (uploaded) {
     fileRows.push({ label: "アップロード日時", value: uploaded });
   }
-  const takenAt = formatDateTime(photo.takenAt);
-  const hasLocation = photo.latitude !== null && photo.longitude !== null;
 
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const panRef = useRef<{ left: number; top: number; x: number; y: number } | null>(null);
   const [caption, setCaption] = useState(photo.caption ?? "");
   const [alt, setAlt] = useState(photo.alt ?? "");
+  const [zoom, setZoom] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const dirty = caption.trim() !== (photo.caption ?? "") || alt.trim() !== (photo.alt ?? "");
+
+  const handleVisibility = async (visibility: "private" | "public") => {
+    if (switching || visibility === photo.visibility) {
+      return;
+    }
+    setSwitching(true);
+    setErrorMessage(null);
+    try {
+      const result = await updatePhotoVisibility({ data: { id: photo.id, visibility } });
+      if (result.success) {
+        await router.invalidate();
+      } else {
+        setErrorMessage(result.error);
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (generating) {
@@ -178,95 +220,246 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
 
   return (
     <Stack p="xl" gap="md">
-      {backLink && <Group wrap="nowrap">{backLink}</Group>}
-
-      <Stack gap="md">
-        <Group justify="flex-end">
-          <Badge variant="light">{photo.visibility === "public" ? "公開" : "非公開"}</Badge>
+      <Group justify="space-between" align="center" wrap="nowrap">
+        <div>{backLink}</div>
+        <Group gap="xs" wrap="nowrap">
+          {previousLink ?? (
+            <ActionIcon variant="default" disabled aria-label="前の写真">
+              <ChevronLeftIcon size={16} />
+            </ActionIcon>
+          )}
+          {nextLink ?? (
+            <ActionIcon variant="default" disabled aria-label="次の写真">
+              <ChevronRightIcon size={16} />
+            </ActionIcon>
+          )}
         </Group>
-        <Textarea
-          label="キャプション"
-          autosize
-          minRows={2}
-          value={caption}
-          onChange={(e) => setCaption(e.currentTarget.value)}
-          maxLength={2000}
-        />
-        <Textarea
-          label="代替テキスト"
-          autosize
-          minRows={2}
-          value={alt}
-          onChange={(e) => setAlt(e.currentTarget.value)}
-          maxLength={500}
-        />
-        {errorMessage && (
-          <Text size="sm" c="red">
-            {errorMessage}
-          </Text>
-        )}
-        <Group justify="space-between">
-          <Button
-            variant="light"
-            loading={generating}
-            disabled={submitting}
-            onClick={handleGenerate}
+      </Group>
+
+      <div className={classes.layout}>
+        <div className={classes.viewer}>
+          <div
+            ref={stageRef}
+            className={classes.stage}
+            data-pannable={zoom > 1 || undefined}
+            onPointerDown={(e) => {
+              const stage = stageRef.current;
+              if (!stage || zoom === 1 || e.pointerType !== "mouse") {
+                return;
+              }
+              panRef.current = {
+                left: stage.scrollLeft,
+                top: stage.scrollTop,
+                x: e.clientX,
+                y: e.clientY,
+              };
+              stage.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              const stage = stageRef.current;
+              const pan = panRef.current;
+              if (!stage || !pan) {
+                return;
+              }
+              stage.scrollLeft = pan.left - (e.clientX - pan.x);
+              stage.scrollTop = pan.top - (e.clientY - pan.y);
+            }}
+            onPointerUp={() => {
+              panRef.current = null;
+            }}
+            onPointerCancel={() => {
+              panRef.current = null;
+            }}
           >
-            AIで生成する
-          </Button>
-          <Button loading={submitting} disabled={generating} onClick={handleSubmit}>
-            保存する
-          </Button>
-        </Group>
-        {takenAt && (
-          <Text size="sm" c="dimmed">
-            撮影日時: {takenAt}
-          </Text>
-        )}
-      </Stack>
-
-      <div className={classes.frame} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
-        <img src={imageSrc} alt={alt || caption || ""} />
-      </div>
-
-      <SimpleGrid cols={{ base: 1, md: hasLocation ? 3 : 2 }} spacing="md">
-        {exifRows.length > 0 && (
-          <Card withBorder radius="md" padding="md">
-            <Stack gap="xs">
-              <Title order={4}>EXIF</Title>
-              {renderInfoList(exifRows)}
-            </Stack>
-          </Card>
-        )}
-        <Card withBorder radius="md" padding="md">
-          <Stack gap="xs">
-            <Title order={4}>ファイル情報</Title>
-            {renderInfoList(fileRows)}
-          </Stack>
-        </Card>
-        {photo.latitude !== null && photo.longitude !== null && (
-          <Card withBorder radius="md" padding="md">
-            <Stack gap="xs">
-              <Title order={4}>位置情報</Title>
-              {renderInfoList([
-                { label: "緯度", value: photo.latitude.toFixed(6) },
-                { label: "経度", value: photo.longitude.toFixed(6) },
-                ...(photo.altitude === null
-                  ? []
-                  : [{ label: "標高", value: `${photo.altitude.toFixed(1)} m` }]),
-              ])}
-              <Anchor
-                href={`https://www.google.com/maps?q=${photo.latitude},${photo.longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                size="sm"
+            <div
+              className={classes.canvas}
+              style={{ height: `${zoom * 100}%`, width: `${zoom * 100}%` }}
+            >
+              <img src={imageSrc} alt={alt || caption || ""} draggable={false} />
+            </div>
+          </div>
+          <Group className={classes.toolbar} gap="xs" justify="space-between" wrap="nowrap">
+            <Group gap="xs" wrap="nowrap">
+              <ActionIcon
+                variant="default"
+                onClick={() => setZoom((prev) => Math.max(1, prev - 0.5))}
+                disabled={zoom <= 1}
+                aria-label="縮小する"
               >
-                Google Maps で開く
-              </Anchor>
+                <ZoomOutIcon size={16} />
+              </ActionIcon>
+              <Text size="sm" c="dimmed" w={48} ta="center">
+                {Math.round(zoom * 100)}%
+              </Text>
+              <ActionIcon
+                variant="default"
+                onClick={() => setZoom((prev) => Math.min(4, prev + 0.5))}
+                disabled={zoom >= 4}
+                aria-label="拡大する"
+              >
+                <ZoomInIcon size={16} />
+              </ActionIcon>
+              <ActionIcon
+                variant="default"
+                onClick={() => setZoom(1)}
+                disabled={zoom === 1}
+                aria-label="全体を表示する"
+              >
+                <ExpandIcon size={16} />
+              </ActionIcon>
+            </Group>
+            <Anchor href={imageSrc} target="_blank" rel="noopener noreferrer" size="sm">
+              原寸で開く
+            </Anchor>
+          </Group>
+        </div>
+
+        <Stack gap="md" className={classes.side}>
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Text size="sm" fw={500}>
+              公開状態
+            </Text>
+            <SegmentedControl
+              value={photo.visibility}
+              onChange={(value) => {
+                void handleVisibility(value === "public" ? "public" : "private");
+              }}
+              disabled={switching}
+              data={[
+                {
+                  label: (
+                    <Group gap={6} wrap="nowrap" justify="center">
+                      <LockIcon size={14} />
+                      非公開
+                    </Group>
+                  ),
+                  value: "private",
+                },
+                {
+                  label: (
+                    <Group gap={6} wrap="nowrap" justify="center">
+                      <GlobeIcon size={14} />
+                      公開
+                    </Group>
+                  ),
+                  value: "public",
+                },
+              ]}
+            />
+          </Group>
+          <Textarea
+            label="キャプション"
+            autosize
+            minRows={2}
+            value={caption}
+            onChange={(e) => setCaption(e.currentTarget.value)}
+            maxLength={2000}
+          />
+          <Textarea
+            label="代替テキスト"
+            autosize
+            minRows={3}
+            value={alt}
+            onChange={(e) => setAlt(e.currentTarget.value)}
+            maxLength={500}
+          />
+          {errorMessage && (
+            <Text size="sm" c="red">
+              {errorMessage}
+            </Text>
+          )}
+          <Group justify="space-between">
+            <Button
+              variant="light"
+              leftSection={<SparklesIcon size={16} />}
+              loading={generating}
+              disabled={submitting}
+              onClick={handleGenerate}
+            >
+              AIで生成する
+            </Button>
+            <Button
+              leftSection={<SaveIcon size={16} />}
+              loading={submitting}
+              disabled={generating || !dirty}
+              onClick={handleSubmit}
+            >
+              保存する
+            </Button>
+          </Group>
+
+          {photo.latitude !== null && photo.longitude !== null && (
+            <Card withBorder radius="md" padding="md">
+              <Stack gap="xs">
+                <Title order={4}>位置情報</Title>
+                <PhotoLocationMap latitude={photo.latitude} longitude={photo.longitude} />
+                {renderInfoList([
+                  { label: "緯度", value: photo.latitude.toFixed(6) },
+                  { label: "経度", value: photo.longitude.toFixed(6) },
+                  ...(photo.altitude === null
+                    ? []
+                    : [{ label: "標高", value: `${photo.altitude.toFixed(1)} m` }]),
+                ])}
+                <Anchor
+                  href={`https://www.google.com/maps?q=${photo.latitude},${photo.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="sm"
+                >
+                  Google Maps で開く
+                </Anchor>
+              </Stack>
+            </Card>
+          )}
+
+          <Card withBorder radius="md" padding="md">
+            <Stack gap="xs">
+              <Title order={4}>ファイル情報</Title>
+              {renderInfoList(fileRows)}
             </Stack>
           </Card>
-        )}
-      </SimpleGrid>
+
+          {exifRows.length > 0 && (
+            <Card withBorder radius="md" padding="md">
+              <Stack gap="xs">
+                <Title order={4}>EXIF</Title>
+                {renderInfoList(exifRows)}
+              </Stack>
+            </Card>
+          )}
+
+          <Card withBorder radius="md" padding="md">
+            <Stack gap="xs">
+              <Title order={4}>アルバム</Title>
+              {photo.albums.length === 0 ? (
+                <Text size="sm" c="dimmed">
+                  どのアルバムにも入っていません
+                </Text>
+              ) : (
+                <Stack gap={6}>
+                  {photo.albums.map((album) => (
+                    <Group key={album.id} gap={6} wrap="nowrap">
+                      {album.visibility === "public" ? (
+                        <GlobeIcon size={14} color="var(--mantine-color-dimmed)" />
+                      ) : (
+                        <LockIcon size={14} color="var(--mantine-color-dimmed)" />
+                      )}
+                      <Anchor
+                        size="sm"
+                        renderRoot={(props) => (
+                          <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
+                        )}
+                      >
+                        {album.title ?? "(無題)"}
+                      </Anchor>
+                    </Group>
+                  ))}
+                </Stack>
+              )}
+            </Stack>
+          </Card>
+        </Stack>
+      </div>
     </Stack>
   );
 };
