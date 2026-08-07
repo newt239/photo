@@ -200,14 +200,15 @@
   }
 }
 
-@media (min-width: 21.5rem) and (max-width: 30rem) {
+@media (max-width: 30rem) {
   .actions {
     flex: 1 1 100%;
+    gap: 0.5rem;
     justify-content: space-between;
   }
 }
 
-@container (max-width: 20rem) {
+@container (max-width: 18rem) {
   .actions {
     flex: 1 1 auto;
     flex-direction: column;
