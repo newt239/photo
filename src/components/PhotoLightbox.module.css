@@ -55,6 +55,7 @@
 
 .footer {
   box-sizing: border-box;
+  container-type: inline-size;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -154,7 +155,8 @@
 }
 
 .counter {
-  min-width: 3rem;
+  flex: none;
+  min-width: 2.75rem;
   font-size: 0.75rem;
   color: var(--public-fg-muted);
   text-align: center;
@@ -168,7 +170,18 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 30rem) {
+@container (max-width: 26rem) {
+  .buttonLabel {
+    display: none;
+  }
+
+  .button {
+    min-width: var(--public-touch-size);
+    padding: 0;
+  }
+}
+
+@container (max-width: 20rem) {
   .actions {
     flex: 1 1 auto;
     flex-direction: column;

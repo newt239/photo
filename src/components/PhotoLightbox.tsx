@@ -154,9 +154,10 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
               className={classes.button}
               onClick={() => move(-1)}
               disabled={photos.length < 2}
+              aria-label="前の写真を表示する"
             >
               <ChevronLeftIcon size={14} />
-              前へ戻る
+              <span className={classes.buttonLabel}>前へ戻る</span>
             </button>
             <span className={classes.counter}>
               {index + 1} / {photos.length}
@@ -166,8 +167,9 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
               className={classes.button}
               onClick={() => move(1)}
               disabled={photos.length < 2}
+              aria-label="次の写真を表示する"
             >
-              次へ進む
+              <span className={classes.buttonLabel}>次へ進む</span>
               <ChevronRightIcon size={14} />
             </button>
           </div>
