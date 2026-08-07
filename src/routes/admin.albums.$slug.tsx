@@ -1,18 +1,12 @@
-import { useMemo, useState } from "react";
-
 import { Badge, Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
-import { AddPhotosToAlbumModal } from "#/components/AddPhotosToAlbumModal.tsx";
 import { PhotoCard } from "#/components/PhotoCard.tsx";
 import { getAlbumBySlug } from "#/server/albums.ts";
 
 const AlbumDetailPage = () => {
   const { album, photos } = Route.useLoaderData();
   const { slug } = Route.useParams();
-  const router = useRouter();
-  const [modalOpen, setModalOpen] = useState(false);
-  const existingIds = useMemo(() => new Set(photos.map((p) => p.id)), [photos]);
 
   return (
     <Stack p="xl" gap="md" maw={1200} mx="auto">
@@ -27,7 +21,13 @@ const AlbumDetailPage = () => {
               </Text>
             </Group>
           </Stack>
-          <Button onClick={() => setModalOpen(true)}>写真を追加</Button>
+          <Button
+            renderRoot={(props) => (
+              <Link {...props} to="/admin/albums/$slug/add" params={{ slug }} />
+            )}
+          >
+            写真を追加する
+          </Button>
         </Group>
         {album.description && (
           <Text size="sm" c="dimmed">
@@ -59,14 +59,6 @@ const AlbumDetailPage = () => {
           ))}
         </SimpleGrid>
       )}
-
-      <AddPhotosToAlbumModal
-        albumId={album.id}
-        opened={modalOpen}
-        onClose={() => setModalOpen(false)}
-        existingPhotoIds={existingIds}
-        onAdded={async () => router.invalidate()}
-      />
     </Stack>
   );
 };
