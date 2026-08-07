@@ -177,8 +177,8 @@
   }
 
   .collapsed {
-    left: calc(1rem + env(safe-area-inset-left));
-    max-width: none;
+    left: auto;
+    max-width: calc(100vw - 2rem);
   }
 
   .title {
