@@ -1,5 +1,6 @@
-import { Badge, Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { GlobeIcon, LockIcon } from "lucide-react";
 
 import { PhotoCard } from "#/components/PhotoCard.tsx";
 import { getAlbumBySlug } from "#/server/albums.ts";
@@ -9,25 +10,34 @@ const AlbumDetailPage = () => {
   const { slug } = Route.useParams();
 
   return (
-    <Stack p="xl" gap="md" maw={1200} mx="auto">
+    <Stack p="xl" gap="md">
       <Stack gap={4}>
         <Group justify="space-between" align="flex-start">
-          <Stack gap={4}>
+          <Group gap="xs" wrap="nowrap">
             <Title order={2}>{album.title ?? "(無題)"}</Title>
-            <Group gap="xs">
-              <Badge variant="light">{album.visibility === "public" ? "公開" : "非公開"}</Badge>
-              <Text size="sm" c="dimmed">
-                {photos.length} 枚
-              </Text>
-            </Group>
-          </Stack>
-          <Button
-            renderRoot={(props) => (
-              <Link {...props} to="/admin/albums/$slug/add" params={{ slug }} />
+            {album.visibility === "public" ? (
+              <GlobeIcon size={18} aria-label="公開" color="var(--mantine-color-dimmed)" />
+            ) : (
+              <LockIcon size={18} aria-label="非公開" color="var(--mantine-color-dimmed)" />
             )}
-          >
-            写真を追加する
-          </Button>
+          </Group>
+          <Group gap="sm" wrap="nowrap">
+            <Button
+              variant="default"
+              renderRoot={(props) => (
+                <Link {...props} to="/admin/albums/$slug/settings" params={{ slug }} />
+              )}
+            >
+              設定する
+            </Button>
+            <Button
+              renderRoot={(props) => (
+                <Link {...props} to="/admin/albums/$slug/add" params={{ slug }} />
+              )}
+            >
+              写真を追加する
+            </Button>
+          </Group>
         </Group>
         {album.description && (
           <Text size="sm" c="dimmed">
@@ -84,7 +94,7 @@ type AlbumDetail = {
 export const Route = createFileRoute("/admin/albums/$slug")({
   component: AlbumDetailPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | Photo` }],
+    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string } }): Promise<AlbumDetail> =>
     getAlbumBySlug({ data: { slug: params.slug } }),
