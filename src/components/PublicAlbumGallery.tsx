@@ -27,8 +27,8 @@ export const PublicAlbumGallery = ({
 }) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const { columns: maxColumns, ref } = useMasonryColumns(160);
-  const columns = Math.min(size, maxColumns);
+  const { columns: maxColumns, ref, width } = useMasonryColumns(160);
+  const columns = width > 0 && width <= 480 ? 2 : Math.min(size, maxColumns);
 
   const handleShare = async () => {
     const url = window.location.href;
