@@ -1,22 +1,32 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import {
   ActionIcon,
   Anchor,
-  Badge,
   Button,
   Card,
   Group,
+  SegmentedControl,
   Stack,
   Text,
   Textarea,
   Title,
 } from "@mantine/core";
-import { useRouter } from "@tanstack/react-router";
-import { ExpandIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { Link, useRouter } from "@tanstack/react-router";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ExpandIcon,
+  GlobeIcon,
+  LockIcon,
+  SaveIcon,
+  SparklesIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from "lucide-react";
 
 import { PhotoLocationMap } from "#/components/PhotoLocationMap.tsx";
-import { generatePhotoDraft, updatePhoto } from "#/server/photos.ts";
+import { generatePhotoDraft, updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
 
@@ -42,6 +52,7 @@ type PhotoDetailData = {
   latitude: number | null;
   longitude: number | null;
   altitude: number | null;
+  albums: { id: string; slug: string; title: string | null; visibility: "public" | "private" }[];
 };
 
 type InfoRow = { label: string; value: string };
@@ -81,9 +92,11 @@ const renderInfoList = (rows: InfoRow[]) => (
 type Props = {
   photo: PhotoDetailData;
   backLink?: ReactNode;
+  previousLink?: ReactNode;
+  nextLink?: ReactNode;
 };
 
-export const PhotoDetailView = ({ photo, backLink }: Props) => {
+export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Props) => {
   const router = useRouter();
   const imageSrc = `/api/i/${photo.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
   const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
@@ -118,18 +131,45 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
     { label: "ファイルサイズ", value: fileSize },
     { label: "形式", value: photo.mimeType },
   ];
+  const takenAt = formatDateTime(photo.takenAt);
+  if (takenAt) {
+    fileRows.push({ label: "撮影日時", value: takenAt });
+  }
   const uploaded = formatDateTime(photo.uploadedAt);
   if (uploaded) {
     fileRows.push({ label: "アップロード日時", value: uploaded });
   }
-  const takenAt = formatDateTime(photo.takenAt);
 
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const panRef = useRef<{ left: number; top: number; x: number; y: number } | null>(null);
   const [caption, setCaption] = useState(photo.caption ?? "");
   const [alt, setAlt] = useState(photo.alt ?? "");
   const [zoom, setZoom] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const dirty = caption.trim() !== (photo.caption ?? "") || alt.trim() !== (photo.alt ?? "");
+
+  const handleVisibility = async (visibility: "private" | "public") => {
+    if (switching || visibility === photo.visibility) {
+      return;
+    }
+    setSwitching(true);
+    setErrorMessage(null);
+    try {
+      const result = await updatePhotoVisibility({ data: { id: photo.id, visibility } });
+      if (result.success) {
+        await router.invalidate();
+      } else {
+        setErrorMessage(result.error);
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (generating) {
@@ -180,20 +220,63 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
 
   return (
     <Stack p="xl" gap="md">
-      {backLink && <Group wrap="nowrap">{backLink}</Group>}
+      <Group justify="space-between" align="center" wrap="nowrap">
+        <div>{backLink}</div>
+        <Group gap="xs" wrap="nowrap">
+          {previousLink ?? (
+            <ActionIcon variant="default" disabled aria-label="前の写真">
+              <ChevronLeftIcon size={16} />
+            </ActionIcon>
+          )}
+          {nextLink ?? (
+            <ActionIcon variant="default" disabled aria-label="次の写真">
+              <ChevronRightIcon size={16} />
+            </ActionIcon>
+          )}
+        </Group>
+      </Group>
 
       <div className={classes.layout}>
         <div className={classes.viewer}>
-          <div className={classes.stage}>
-            <button
-              type="button"
+          <div
+            ref={stageRef}
+            className={classes.stage}
+            data-pannable={zoom > 1 || undefined}
+            onPointerDown={(e) => {
+              const stage = stageRef.current;
+              if (!stage || zoom === 1 || e.pointerType !== "mouse") {
+                return;
+              }
+              panRef.current = {
+                left: stage.scrollLeft,
+                top: stage.scrollTop,
+                x: e.clientX,
+                y: e.clientY,
+              };
+              stage.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              const stage = stageRef.current;
+              const pan = panRef.current;
+              if (!stage || !pan) {
+                return;
+              }
+              stage.scrollLeft = pan.left - (e.clientX - pan.x);
+              stage.scrollTop = pan.top - (e.clientY - pan.y);
+            }}
+            onPointerUp={() => {
+              panRef.current = null;
+            }}
+            onPointerCancel={() => {
+              panRef.current = null;
+            }}
+          >
+            <div
               className={classes.canvas}
               style={{ height: `${zoom * 100}%`, width: `${zoom * 100}%` }}
-              onClick={() => setZoom((prev) => (prev >= 4 ? 1 : prev + 1))}
-              aria-label={zoom >= 4 ? "全体を表示する" : "拡大する"}
             >
-              <img src={imageSrc} alt={alt || caption || ""} />
-            </button>
+              <img src={imageSrc} alt={alt || caption || ""} draggable={false} />
+            </div>
           </div>
           <Group className={classes.toolbar} gap="xs" justify="space-between" wrap="nowrap">
             <Group gap="xs" wrap="nowrap">
@@ -231,14 +314,38 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
           </Group>
         </div>
 
-        <Stack gap="md">
-          <Group justify="space-between" wrap="nowrap">
-            <Badge variant="light">{photo.visibility === "public" ? "公開" : "非公開"}</Badge>
-            {takenAt && (
-              <Text size="sm" c="dimmed">
-                撮影日時: {takenAt}
-              </Text>
-            )}
+        <Stack gap="md" className={classes.side}>
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Text size="sm" fw={500}>
+              公開状態
+            </Text>
+            <SegmentedControl
+              value={photo.visibility}
+              onChange={(value) => {
+                void handleVisibility(value === "public" ? "public" : "private");
+              }}
+              disabled={switching}
+              data={[
+                {
+                  label: (
+                    <Group gap={6} wrap="nowrap" justify="center">
+                      <LockIcon size={14} />
+                      非公開
+                    </Group>
+                  ),
+                  value: "private",
+                },
+                {
+                  label: (
+                    <Group gap={6} wrap="nowrap" justify="center">
+                      <GlobeIcon size={14} />
+                      公開
+                    </Group>
+                  ),
+                  value: "public",
+                },
+              ]}
+            />
           </Group>
           <Textarea
             label="キャプション"
@@ -264,13 +371,19 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
           <Group justify="space-between">
             <Button
               variant="light"
+              leftSection={<SparklesIcon size={16} />}
               loading={generating}
               disabled={submitting}
               onClick={handleGenerate}
             >
               AIで生成する
             </Button>
-            <Button loading={submitting} disabled={generating} onClick={handleSubmit}>
+            <Button
+              leftSection={<SaveIcon size={16} />}
+              loading={submitting}
+              disabled={generating || !dirty}
+              onClick={handleSubmit}
+            >
               保存する
             </Button>
           </Group>
@@ -299,6 +412,13 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
             </Card>
           )}
 
+          <Card withBorder radius="md" padding="md">
+            <Stack gap="xs">
+              <Title order={4}>ファイル情報</Title>
+              {renderInfoList(fileRows)}
+            </Stack>
+          </Card>
+
           {exifRows.length > 0 && (
             <Card withBorder radius="md" padding="md">
               <Stack gap="xs">
@@ -310,8 +430,32 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
 
           <Card withBorder radius="md" padding="md">
             <Stack gap="xs">
-              <Title order={4}>ファイル情報</Title>
-              {renderInfoList(fileRows)}
+              <Title order={4}>アルバム</Title>
+              {photo.albums.length === 0 ? (
+                <Text size="sm" c="dimmed">
+                  どのアルバムにも入っていません
+                </Text>
+              ) : (
+                <Stack gap={6}>
+                  {photo.albums.map((album) => (
+                    <Group key={album.id} gap={6} wrap="nowrap">
+                      {album.visibility === "public" ? (
+                        <GlobeIcon size={14} color="var(--mantine-color-dimmed)" />
+                      ) : (
+                        <LockIcon size={14} color="var(--mantine-color-dimmed)" />
+                      )}
+                      <Anchor
+                        size="sm"
+                        renderRoot={(props) => (
+                          <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
+                        )}
+                      >
+                        {album.title ?? "(無題)"}
+                      </Anchor>
+                    </Group>
+                  ))}
+                </Stack>
+              )}
             </Stack>
           </Card>
         </Stack>
