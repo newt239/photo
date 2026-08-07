@@ -19,7 +19,6 @@ import { Route as RegisterSplatRouteImport } from './routes/register.$'
 import { Route as AdminAlbumsIndexRouteImport } from './routes/admin.albums.index'
 import { Route as AdminAlbumsSlugRouteImport } from './routes/admin.albums.$slug'
 import { Route as AdminAlbumsNewRouteImport } from './routes/admin.albums.new'
-import { Route as AdminDebugWasmRouteImport } from './routes/admin.debug.wasm'
 import { Route as AdminPhotosPhotoIdRouteImport } from './routes/admin.photos.$photoId'
 import { Route as AdminPhotosGeotagRouteImport } from './routes/admin.photos.geotag'
 import { Route as AdminPhotosUploadRouteImport } from './routes/admin.photos.upload'
@@ -80,11 +79,6 @@ const AdminAlbumsNewRoute = AdminAlbumsNewRouteImport.update({
   path: '/albums/new',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDebugWasmRoute = AdminDebugWasmRouteImport.update({
-  id: '/debug/wasm',
-  path: '/debug/wasm',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminPhotosPhotoIdRoute = AdminPhotosPhotoIdRouteImport.update({
   id: '/photos/$photoId',
   path: '/photos/$photoId',
@@ -142,7 +136,6 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/albums/$slug': typeof AdminAlbumsSlugRoute
   '/admin/albums/new': typeof AdminAlbumsNewRoute
-  '/admin/debug/wasm': typeof AdminDebugWasmRoute
   '/admin/photos/$photoId': typeof AdminPhotosPhotoIdRoute
   '/admin/photos/geotag': typeof AdminPhotosGeotagRoute
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
@@ -162,7 +155,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/albums/$slug': typeof AdminAlbumsSlugRoute
   '/admin/albums/new': typeof AdminAlbumsNewRoute
-  '/admin/debug/wasm': typeof AdminDebugWasmRoute
   '/admin/photos/$photoId': typeof AdminPhotosPhotoIdRoute
   '/admin/photos/geotag': typeof AdminPhotosGeotagRoute
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
@@ -185,7 +177,6 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/albums/$slug': typeof AdminAlbumsSlugRoute
   '/admin/albums/new': typeof AdminAlbumsNewRoute
-  '/admin/debug/wasm': typeof AdminDebugWasmRoute
   '/admin/photos/$photoId': typeof AdminPhotosPhotoIdRoute
   '/admin/photos/geotag': typeof AdminPhotosGeotagRoute
   '/admin/photos/upload': typeof AdminPhotosUploadRoute
@@ -209,7 +200,6 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/albums/$slug'
     | '/admin/albums/new'
-    | '/admin/debug/wasm'
     | '/admin/photos/$photoId'
     | '/admin/photos/geotag'
     | '/admin/photos/upload'
@@ -229,7 +219,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/albums/$slug'
     | '/admin/albums/new'
-    | '/admin/debug/wasm'
     | '/admin/photos/$photoId'
     | '/admin/photos/geotag'
     | '/admin/photos/upload'
@@ -251,7 +240,6 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/albums/$slug'
     | '/admin/albums/new'
-    | '/admin/debug/wasm'
     | '/admin/photos/$photoId'
     | '/admin/photos/geotag'
     | '/admin/photos/upload'
@@ -345,13 +333,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlbumsNewRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/debug/wasm': {
-      id: '/admin/debug/wasm'
-      path: '/debug/wasm'
-      fullPath: '/admin/debug/wasm'
-      preLoaderRoute: typeof AdminDebugWasmRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/photos/$photoId': {
       id: '/admin/photos/$photoId'
       path: '/photos/$photoId'
@@ -423,7 +404,6 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlbumsSlugRoute: typeof AdminAlbumsSlugRoute
   AdminAlbumsNewRoute: typeof AdminAlbumsNewRoute
-  AdminDebugWasmRoute: typeof AdminDebugWasmRoute
   AdminPhotosPhotoIdRoute: typeof AdminPhotosPhotoIdRoute
   AdminPhotosGeotagRoute: typeof AdminPhotosGeotagRoute
   AdminPhotosUploadRoute: typeof AdminPhotosUploadRoute
@@ -438,7 +418,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminAlbumsSlugRoute: AdminAlbumsSlugRoute,
   AdminAlbumsNewRoute: AdminAlbumsNewRoute,
-  AdminDebugWasmRoute: AdminDebugWasmRoute,
   AdminPhotosPhotoIdRoute: AdminPhotosPhotoIdRoute,
   AdminPhotosGeotagRoute: AdminPhotosGeotagRoute,
   AdminPhotosUploadRoute: AdminPhotosUploadRoute,
