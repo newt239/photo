@@ -38,20 +38,20 @@ export const PublicAlbumControls = ({
 
   if (minimized) {
     return (
-      <div className={`${classes.panel} ${classes.collapsed}`}>
+      <button
+        type="button"
+        className={`${classes.panel} ${classes.collapsed}`}
+        onClick={() => setMinimized(false)}
+        aria-expanded={false}
+        aria-label="アルバムの情報を開く"
+      >
         <div className={classes.heading}>
           <div className={classes.title}>{title ?? "(無題)"}</div>
-          <button
-            type="button"
-            className={classes.iconButton}
-            onClick={() => setMinimized(false)}
-            aria-expanded={false}
-            aria-label="アルバムの情報を開く"
-          >
+          <span className={classes.iconButton} aria-hidden>
             <InfoIcon size={16} />
-          </button>
+          </span>
         </div>
-      </div>
+      </button>
     );
   }
 
