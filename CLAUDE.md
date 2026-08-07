@@ -77,29 +77,35 @@ TanStack Start は RSC を使いません。full-document SSR + hydration + serv
 
 ```bash
 src/
-├── routes/                 # TanStack Router の file-based routes（フラットなドット記法）
+├── routes/                 # TanStack Router の file-based routes（ディレクトリ記法）
 │   ├── __root.tsx          # ルートドキュメント（HTML シェル）
-│   ├── admin.*.tsx         # 管理画面（要ログイン）
-│   ├── albums.$slug.tsx    # 公開アルバムページ
+│   ├── admin/              # 管理画面（要ログイン）
+│   │   ├── route.tsx       # /admin のレイアウト（Outlet を持つ）
+│   │   ├── albums/         # /admin/albums 配下
+│   │   └── albums_/        # /admin/albums/$slug にネストさせない画面
+│   ├── albums/$slug/       # 公開アルバムページ
 │   └── api/                # API ルート（画像配信など）
 ├── router.tsx              # ルーターの生成（getRouter）
 ├── routeTree.gen.ts        # 自動生成（編集禁止）
-├── components/             # コンポーネント（PascalCase。CSS Modules を併置）
-├── server/                 # server functions（createServerFn）
+├── components/             # コンポーネント（PascalCase のディレクトリ）
+├── providers/              # アプリ全体を包む Provider（Clerk など）
+├── server/                 # server functions（createServerFn）とサーバー専用処理
 ├── db/                     # Drizzle スキーマと DB クライアント
-├── integrations/           # 外部サービス連携（Clerk など）
-├── lib/                    # グローバルユーティリティ
+├── lib/                    # 複数ファイルから使う関数・定数
 └── env.ts                  # 環境変数のバリデーション（@t3-oss/env-core）
 ```
 
-- コンポーネントの名前・ファイル名は PascalCase（例: `PhotoCard.tsx`）で命名し、`components/` 直下にフラットに配置してください。コンポーネントごとのディレクトリやバレル `index.ts` は作成しないでください。
-- コンポーネント固有のスタイルは同名の CSS Module（例: `PhotoCard.module.css`）に記述してください。
+- ルートはドット記法ではなくディレクトリで階層を表現してください。`<Outlet />` を持つレイアウトは `route.tsx`、末尾に `_` が付いたセグメント（例: `albums_/`）は親レイアウトにネストさせない非ネストルートです。`createFileRoute` の引数はディレクトリ構成と一致させてください。
+- コンポーネントは PascalCase のディレクトリを作り、その下に `index.tsx` と CSS Module を置いてください（例: `components/PhotoCard/index.tsx` と `components/PhotoCard/PhotoCard.module.css`）。`index.tsx` 以外に再エクスポートだけのバレルファイルを作ってはなりません。
+- コンポーネント固有のスタイルはコンポーネント名の CSS Module（例: `PhotoCard.module.css`）に記述してください。
+- `src/lib` はクライアントからも読み込まれます。`cloudflare:workers` の `env` や Clerk のサーバー API を使う処理は `src/server` に置いてください。
 
 ### インポートとパスエイリアス
 
 - 同階層でないモジュールをインポートする場合は、**相対パスではなくパスエイリアスを使用してください**。
-- プロジェクトでは `#/` が `src/` にマップされています。例: `#/lib/slug` → `src/lib/slug`。
-- **同一ディレクトリ内**のインポートでは相対パス（`./PhotoCard` など）を使用して構いません。
+- プロジェクトでは `#/` が `src/` にマップされています。例: `#/lib/format.ts` → `src/lib/format.ts`。
+- コンポーネントは `#/components/PhotoCard` のようにディレクトリを指定してインポートしてください。
+- **同一ディレクトリ内**のインポートでは相対パス（`./PhotoCard.module.css` など）を使用して構いません。
 
 ## 不変条件（絶対に破らないこと）
 
