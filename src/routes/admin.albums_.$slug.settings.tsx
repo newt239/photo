@@ -3,7 +3,10 @@ import { useState } from "react";
 import {
   ActionIcon,
   Button,
+  Checkbox,
+  Divider,
   Group,
+  Modal,
   SegmentedControl,
   Stack,
   Text,
@@ -11,13 +14,14 @@ import {
   Textarea,
   Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "lucide-react";
 
-import { getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
+import { deleteAlbum, getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
 
 const AlbumSettingsPage = () => {
-  const { album } = Route.useLoaderData();
+  const { album, photoCount } = Route.useLoaderData();
   const { slug } = Route.useParams();
   const router = useRouter();
   const [title, setTitle] = useState(album.title ?? "");
@@ -27,6 +31,32 @@ const AlbumSettingsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+  const [deletePhotos, setDeletePhotos] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (deleting) {
+      return;
+    }
+    setDeleting(true);
+    setErrorMessage(null);
+    try {
+      const result = await deleteAlbum({ data: { deletePhotos, id: album.id } });
+      if (result.success) {
+        await router.navigate({ to: "/admin/albums" });
+        await router.invalidate();
+      } else {
+        setErrorMessage(result.error);
+        closeDelete();
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+      closeDelete();
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +169,43 @@ const AlbumSettingsPage = () => {
           </Group>
         </Stack>
       </form>
+
+      <Divider my="sm" />
+
+      <Stack gap="xs" align="flex-start">
+        <Title order={3} size="h4">
+          アルバムの削除
+        </Title>
+        <Text size="sm" c="dimmed">
+          削除したアルバムは元に戻せません
+        </Text>
+        <Button color="red" variant="outline" onClick={openDelete}>
+          アルバムを削除する
+        </Button>
+      </Stack>
+
+      <Modal opened={deleteOpened} onClose={closeDelete} title="アルバムを削除する" centered>
+        <Stack gap="md">
+          <Text size="sm">
+            「{album.title ?? "(無題)"}」を削除します。この操作は取り消せません。
+          </Text>
+          <Checkbox
+            label={`アルバム内の写真 ${photoCount} 枚も削除する`}
+            description="削除した写真は他のアルバムからも取り除かれます。チェックしない場合、写真はアルバムから外れるだけで残ります"
+            checked={deletePhotos}
+            disabled={photoCount === 0 || deleting}
+            onChange={(e) => setDeletePhotos(e.currentTarget.checked)}
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={closeDelete} disabled={deleting}>
+              キャンセルする
+            </Button>
+            <Button color="red" loading={deleting} onClick={() => void handleDelete()}>
+              削除する
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 };
@@ -151,6 +218,7 @@ type AlbumSettings = {
     description: string | null;
     visibility: "public" | "private";
   };
+  photoCount: number;
 };
 
 export const Route = createFileRoute("/admin/albums_/$slug/settings")({
@@ -159,7 +227,7 @@ export const Route = createFileRoute("/admin/albums_/$slug/settings")({
     meta: [{ title: `設定 | ${loaderData?.album.title ?? "アルバム"}` }],
   }),
   loader: async ({ params }: { params: { slug: string } }): Promise<AlbumSettings> => {
-    const { album } = await getAlbumBySlug({ data: { slug: params.slug } });
+    const { album, photos } = await getAlbumBySlug({ data: { slug: params.slug } });
     return {
       album: {
         description: album.description,
@@ -168,6 +236,7 @@ export const Route = createFileRoute("/admin/albums_/$slug/settings")({
         title: album.title,
         visibility: album.visibility,
       },
+      photoCount: photos.length,
     };
   },
   shouldReload: true,

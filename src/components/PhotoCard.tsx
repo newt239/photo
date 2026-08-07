@@ -1,3 +1,4 @@
+import { Checkbox } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 
 import classes from "./PhotoCard.module.css";
@@ -15,9 +16,11 @@ export type PhotoCardData = {
 type PhotoCardProps = {
   photo: PhotoCardData;
   albumSlug?: string;
+  selected?: boolean;
+  onSelect?: (photoId: string) => void;
 };
 
-export const PhotoCard = ({ photo, albumSlug }: PhotoCardProps) => {
+export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: PhotoCardProps) => {
   const key = photo.thumbnailKey ?? photo.storageKey;
   const src = `/api/i/${key.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
   const thumb = (
@@ -26,6 +29,19 @@ export const PhotoCard = ({ photo, albumSlug }: PhotoCardProps) => {
       {photo.caption && <span className={classes.caption}>{photo.caption}</span>}
     </div>
   );
+  if (onSelect) {
+    return (
+      <label className={classes.selectable} data-selected={selected || undefined}>
+        {thumb}
+        <Checkbox
+          className={classes.check}
+          checked={selected}
+          onChange={() => onSelect(photo.id)}
+          aria-label={photo.caption ?? photo.alt ?? "この写真を選択する"}
+        />
+      </label>
+    );
+  }
   return albumSlug === undefined ? (
     <Link to="/admin/photos/$photoId" params={{ photoId: photo.id }} className={classes.link}>
       {thumb}

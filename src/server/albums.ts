@@ -8,6 +8,7 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { ensureUserRow, requireUserId } from "#/lib/auth.ts";
+import { deleteOwnedPhotos } from "#/server/photos.ts";
 
 const createAlbumInput = z.object({
   description: z.string().max(2000).nullable().optional(),
@@ -206,4 +207,70 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
       .returning({ photoId: albumPhotos.photoId });
 
     return { inserted: inserted.length, success: true } as const;
+  });
+
+const removePhotosInput = z.object({
+  albumId: z.string().min(1),
+  photoIds: z.array(z.string().min(1)).min(1).max(500),
+});
+
+export const removePhotosFromAlbum = createServerFn({ method: "POST" })
+  .validator(removePhotosInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = drizzle(env.DB, { schema });
+
+    const [album] = await db
+      .select({ id: albums.id })
+      .from(albums)
+      .where(and(eq(albums.id, data.albumId), eq(albums.userId, userId)))
+      .limit(1);
+    if (!album) {
+      return { error: "アルバムが見つかりません", success: false } as const;
+    }
+
+    const removed = await db
+      .delete(albumPhotos)
+      .where(and(eq(albumPhotos.albumId, album.id), inArray(albumPhotos.photoId, data.photoIds)))
+      .returning({ photoId: albumPhotos.photoId });
+
+    return { removed: removed.length, success: true } as const;
+  });
+
+const deleteAlbumInput = z.object({
+  deletePhotos: z.boolean(),
+  id: z.string().min(1),
+});
+
+export const deleteAlbum = createServerFn({ method: "POST" })
+  .validator(deleteAlbumInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = drizzle(env.DB, { schema });
+
+    const [album] = await db
+      .select({ id: albums.id })
+      .from(albums)
+      .where(and(eq(albums.id, data.id), eq(albums.userId, userId)))
+      .limit(1);
+    if (!album) {
+      return { error: "アルバムが見つかりません", success: false } as const;
+    }
+
+    let deletedPhotos = 0;
+    if (data.deletePhotos) {
+      const photoIds = await db
+        .select({ id: albumPhotos.photoId })
+        .from(albumPhotos)
+        .where(eq(albumPhotos.albumId, album.id));
+      deletedPhotos = await deleteOwnedPhotos(
+        userId,
+        photoIds.map((row) => row.id),
+      );
+    }
+
+    await db.delete(albumPhotos).where(eq(albumPhotos.albumId, album.id));
+    await db.delete(albums).where(and(eq(albums.id, album.id), eq(albums.userId, userId)));
+
+    return { deletedPhotos, success: true } as const;
   });

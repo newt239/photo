@@ -1,13 +1,66 @@
-import { Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+
+import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { GlobeIcon, LockIcon } from "lucide-react";
 
-import { PhotoCard } from "#/components/PhotoCard.tsx";
-import { getAlbumBySlug } from "#/server/albums.ts";
+import { PhotoBulkActions } from "#/components/PhotoBulkActions.tsx";
+import { PhotoGrid } from "#/components/PhotoGrid.tsx";
+import { getAlbumBySlug, removePhotosFromAlbum } from "#/server/albums.ts";
+import { deletePhotos } from "#/server/photos.ts";
 
 const AlbumDetailPage = () => {
   const { album, photos } = Route.useLoaderData();
   const { slug } = Route.useParams();
+  const router = useRouter();
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState(new Set<string>());
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const finishSelection = async () => {
+    setSelected(new Set());
+    setSelecting(false);
+    await router.invalidate();
+  };
+
+  const handleRemove = async () => {
+    if (selected.size === 0 || submitting) {
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await removePhotosFromAlbum({
+        data: { albumId: album.id, photoIds: [...selected] },
+      });
+      if (result.success) {
+        await finishSelection();
+      } else {
+        setError(result.error);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (selected.size === 0 || submitting) {
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await deletePhotos({ data: { ids: [...selected] } });
+      if (result.success) {
+        await finishSelection();
+      } else {
+        setError(result.error);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Stack p="xl" gap="md">
@@ -21,23 +74,45 @@ const AlbumDetailPage = () => {
               <LockIcon size={18} aria-label="非公開" color="var(--mantine-color-dimmed)" />
             )}
           </Group>
-          <Group gap="sm" wrap="nowrap">
-            <Button
-              variant="default"
-              renderRoot={(props) => (
-                <Link {...props} to="/admin/albums/$slug/settings" params={{ slug }} />
-              )}
-            >
-              設定する
-            </Button>
-            <Button
-              renderRoot={(props) => (
-                <Link {...props} to="/admin/albums/$slug/add" params={{ slug }} />
-              )}
-            >
-              写真を追加する
-            </Button>
-          </Group>
+          {selecting ? (
+            <PhotoBulkActions
+              selectedCount={selected.size}
+              submitting={submitting}
+              onSelectAll={() => setSelected(new Set(photos.map((p) => p.id)))}
+              onCancel={() => {
+                setSelecting(false);
+                setSelected(new Set());
+                setError(null);
+              }}
+              onDelete={handleDelete}
+              onRemoveFromAlbum={handleRemove}
+            />
+          ) : (
+            <Group gap="sm" wrap="nowrap">
+              <Button
+                variant="default"
+                onClick={() => setSelecting(true)}
+                disabled={photos.length === 0}
+              >
+                選択する
+              </Button>
+              <Button
+                variant="default"
+                renderRoot={(props) => (
+                  <Link {...props} to="/admin/albums/$slug/settings" params={{ slug }} />
+                )}
+              >
+                設定する
+              </Button>
+              <Button
+                renderRoot={(props) => (
+                  <Link {...props} to="/admin/albums/$slug/add" params={{ slug }} />
+                )}
+              >
+                写真を追加する
+              </Button>
+            </Group>
+          )}
         </Group>
         {album.description && (
           <Text size="sm" c="dimmed">
@@ -46,29 +121,32 @@ const AlbumDetailPage = () => {
         )}
       </Stack>
 
-      {photos.length === 0 ? (
-        <Text c="dimmed" size="sm">
-          このアルバムにはまだ写真がありません
+      {error && (
+        <Text size="sm" c="red">
+          {error}
         </Text>
-      ) : (
-        <SimpleGrid cols={{ base: 2, md: 4, sm: 3 }} spacing="md">
-          {photos.map((p) => (
-            <PhotoCard
-              key={p.id}
-              albumSlug={slug}
-              photo={{
-                alt: p.alt,
-                caption: p.caption,
-                height: p.height,
-                id: p.id,
-                storageKey: p.storageKey,
-                thumbnailKey: p.thumbnailKey,
-                width: p.width,
-              }}
-            />
-          ))}
-        </SimpleGrid>
       )}
+
+      <PhotoGrid
+        photos={photos}
+        albumSlug={slug}
+        emptyMessage="このアルバムにはまだ写真がありません"
+        selectedPhotoIds={selected}
+        onSelect={
+          selecting
+            ? (photoId) =>
+                setSelected((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(photoId)) {
+                    next.delete(photoId);
+                  } else {
+                    next.add(photoId);
+                  }
+                  return next;
+                })
+            : undefined
+        }
+      />
     </Stack>
   );
 };
