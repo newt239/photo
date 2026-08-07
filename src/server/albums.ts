@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
-import { ensureUserRow, requireUserId } from "#/lib/auth.ts";
+import { ensureUserRow, requireUserId } from "#/server/auth.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
 
 const createAlbumInput = z.object({

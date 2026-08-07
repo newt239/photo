@@ -18,7 +18,7 @@ export type Timeline = {
   visits: TimelineVisit[];
 };
 
-export type TimelineMatch = {
+type TimelineMatch = {
   latitude: number;
   longitude: number;
   diffMs: number;

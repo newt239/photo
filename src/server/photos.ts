@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
-import { ensureUserRow, requireUserId } from "#/lib/auth.ts";
+import { ensureUserRow, requireUserId } from "#/server/auth.ts";
 import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
 
 const ALLOWED_MIME = [
