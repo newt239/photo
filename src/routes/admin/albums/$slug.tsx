@@ -1,22 +1,11 @@
-import { useState } from "react";
-
 import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { Link, createFileRoute, useLoaderData, useRouter } from "@tanstack/react-router";
+import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { ExternalLinkIcon, ImagePlusIcon, SettingsIcon } from "lucide-react";
 import { z } from "zod";
 
-import { PhotoBulkActions } from "#/components/PhotoBulkActions";
-import { PhotoGrid } from "#/components/PhotoGrid";
-import { PhotoTable } from "#/components/PhotoTable";
-import { PhotoViewControls } from "#/components/PhotoViewControls";
+import { PhotoLibrary } from "#/components/PhotoLibrary";
 import { VisibilityIcon } from "#/components/VisibilityIcon";
-import {
-  addPhotosToAlbum,
-  createAlbum,
-  getAlbumBySlug,
-  removePhotosFromAlbum,
-} from "#/server/albums.ts";
-import { deletePhotos } from "#/server/photos.ts";
+import { getAlbumBySlug } from "#/server/albums.ts";
 
 import type { PhotoCardData } from "#/components/PhotoCard";
 
@@ -26,116 +15,6 @@ const AlbumDetailPage = () => {
   const { slug } = Route.useParams();
   const { order, view } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const router = useRouter();
-  const [selected, setSelected] = useState(new Set<string>());
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-
-  const toggle = (photoId: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(photoId)) {
-        next.delete(photoId);
-      } else {
-        next.add(photoId);
-      }
-      return next;
-    });
-  };
-
-  const handleRemove = async () => {
-    if (selected.size === 0 || submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const result = await removePhotosFromAlbum({
-        data: { albumId: album.id, photoIds: [...selected] },
-      });
-      if (result.success) {
-        setSelected(new Set());
-        setNotice(`${result.removed} 枚をアルバムから外しました`);
-        await router.invalidate();
-      } else {
-        setError(result.error);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (selected.size === 0 || submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const result = await deletePhotos({ data: { ids: [...selected] } });
-      if (result.success) {
-        setSelected(new Set());
-        setNotice(`${result.deleted} 枚を削除しました`);
-        await router.invalidate();
-      } else {
-        setError(result.error);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleAddToAlbum = async (albumId: string) => {
-    if (selected.size === 0 || submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const result = await addPhotosToAlbum({ data: { albumId, photoIds: [...selected] } });
-      if (result.success) {
-        setSelected(new Set());
-        setNotice(`${result.inserted} 枚を別のアルバムに追加しました`);
-        await router.invalidate();
-      } else {
-        setError(result.error);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleCreateAlbum = async (title: string) => {
-    if (selected.size === 0 || submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const created = await createAlbum({ data: { title } });
-      if (!created.success) {
-        setError(created.error);
-        return;
-      }
-      const result = await addPhotosToAlbum({
-        data: { albumId: created.id, photoIds: [...selected] },
-      });
-      if (result.success) {
-        setSelected(new Set());
-        await router.navigate({ params: { slug: created.slug }, to: "/admin/albums/$slug" });
-        await router.invalidate();
-      } else {
-        setError(result.error);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <Stack p="xl" gap="md">
@@ -188,63 +67,20 @@ const AlbumDetailPage = () => {
         )}
       </Stack>
 
-      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-        <PhotoViewControls
-          order={order}
-          view={view}
-          onOrderChange={(next) => {
-            void navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
-          }}
-          onViewChange={(next) => {
-            void navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
-          }}
-        />
-        {selected.size > 0 && (
-          <PhotoBulkActions
-            selectedCount={selected.size}
-            submitting={submitting}
-            albums={albums.filter((a) => a.id !== album.id)}
-            onSelectAll={() => setSelected(new Set(photos.map((p) => p.id)))}
-            onCancel={() => {
-              setSelected(new Set());
-              setError(null);
-            }}
-            onDelete={handleDelete}
-            onAddToAlbum={handleAddToAlbum}
-            onCreateAlbum={handleCreateAlbum}
-            onRemoveFromAlbum={handleRemove}
-          />
-        )}
-      </Group>
-
-      {error && (
-        <Text size="sm" c="red">
-          {error}
-        </Text>
-      )}
-      {notice && (
-        <Text size="sm" c="dimmed">
-          {notice}
-        </Text>
-      )}
-
-      {view === "table" ? (
-        <PhotoTable
-          photos={photos}
-          albumSlug={slug}
-          emptyMessage="このアルバムにはまだ写真がありません"
-          selectedPhotoIds={selected}
-          onSelect={toggle}
-        />
-      ) : (
-        <PhotoGrid
-          photos={photos}
-          albumSlug={slug}
-          emptyMessage="このアルバムにはまだ写真がありません"
-          selectedPhotoIds={selected}
-          onSelect={toggle}
-        />
-      )}
+      <PhotoLibrary
+        photos={photos}
+        albums={albums}
+        order={order}
+        view={view}
+        onOrderChange={(next) => {
+          void navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
+        }}
+        onViewChange={(next) => {
+          void navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
+        }}
+        album={{ id: album.id, slug }}
+        emptyMessage="このアルバムにはまだ写真がありません"
+      />
     </Stack>
   );
 };
