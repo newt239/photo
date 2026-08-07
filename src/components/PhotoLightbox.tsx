@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 
 import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
@@ -20,10 +19,82 @@ type PhotoLightboxProps = {
 };
 
 export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLightboxProps) => {
-  const [zoom, setZoom] = useState(1);
+  const [view, setView] = useState({ scale: 1, x: 0, y: 0 });
+  const viewRef = useRef({ scale: 1, x: 0, y: 0 });
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{
+    distance: number;
+    midX: number;
+    midY: number;
+    scale: number;
+    x: number;
+    y: number;
+  } | null>(null);
+  const panRef = useRef<{ pointerX: number; pointerY: number; x: number; y: number } | null>(null);
   const photo = index === null ? undefined : photos[index];
+
+  const commit = (scale: number, x: number, y: number) => {
+    const stage = stageRef.current;
+    const clamped = Math.min(4, Math.max(0.25, scale));
+    const maxX = stage ? Math.max(0, (stage.clientWidth * (clamped - 1)) / 2) : 0;
+    const maxY = stage ? Math.max(0, (stage.clientHeight * (clamped - 1)) / 2) : 0;
+    const next = {
+      scale: clamped,
+      x: Math.min(maxX, Math.max(-maxX, x)),
+      y: Math.min(maxY, Math.max(-maxY, y)),
+    };
+    viewRef.current = next;
+    setView(next);
+  };
+
+  const zoomTo = (scale: number, anchor?: { x: number; y: number }) => {
+    const stage = stageRef.current;
+    const { current } = viewRef;
+    if (!stage) {
+      commit(scale, current.x, current.y);
+      return;
+    }
+    const rect = stage.getBoundingClientRect();
+    const anchorX = anchor ? anchor.x - rect.left - rect.width / 2 : 0;
+    const anchorY = anchor ? anchor.y - rect.top - rect.height / 2 : 0;
+    const next = Math.min(4, Math.max(0.25, scale));
+    commit(
+      next,
+      anchorX - ((anchorX - current.x) / current.scale) * next,
+      anchorY - ((anchorY - current.y) / current.scale) * next,
+    );
+  };
+
+  const startPinch = () => {
+    const points = [...pointersRef.current.values()];
+    const [a, b] = points;
+    if (!a || !b) {
+      return;
+    }
+    const { current } = viewRef;
+    pinchRef.current = {
+      distance: Math.hypot(a.x - b.x, a.y - b.y),
+      midX: (a.x + b.x) / 2,
+      midY: (a.y + b.y) / 2,
+      scale: current.scale,
+      x: current.x,
+      y: current.y,
+    };
+    panRef.current = null;
+  };
+
+  const endPointer = (event: React.PointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(event.pointerId);
+    if (pointersRef.current.size < 2) {
+      pinchRef.current = null;
+    }
+    const [remaining] = [...pointersRef.current.values()];
+    const { current } = viewRef;
+    panRef.current = remaining
+      ? { pointerX: remaining.x, pointerY: remaining.y, x: current.x, y: current.y }
+      : null;
+  };
 
   // Esc と左右キーでの操作を受け取るため window にイベントを登録する
   useEffect(() => {
@@ -32,7 +103,7 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
         return;
       }
       if (event.key === "Escape") {
-        setZoom(1);
+        commit(1, 0, 0);
         onClose();
         return;
       }
@@ -46,7 +117,7 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
       if (delta === 0) {
         return;
       }
-      setZoom(1);
+      commit(1, 0, 0);
       onIndexChange((index + delta + photos.length) % photos.length);
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -61,31 +132,32 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
     };
   }, [index]);
 
+  // React の onWheel は passive で登録され preventDefault が効かないため直接登録する
+  useEffect(() => {
+    const stage = stageRef.current;
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      zoomTo(viewRef.current.scale * Math.exp(-event.deltaY / 300), {
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
+    stage?.addEventListener("wheel", handleWheel, { passive: false });
+    return () => stage?.removeEventListener("wheel", handleWheel);
+  }, [index]);
+
   if (index === null || !photo) {
     return null;
   }
 
   const handleClose = () => {
-    setZoom(1);
+    commit(1, 0, 0);
     onClose();
   };
 
   const move = (delta: number) => {
-    setZoom(1);
+    commit(1, 0, 0);
     onIndexChange((index + delta + photos.length) % photos.length);
-  };
-
-  const changeZoom = (next: number) => {
-    const stage = stageRef.current;
-    if (!stage) {
-      setZoom(next);
-      return;
-    }
-    const centerX = (stage.scrollLeft + stage.clientWidth / 2) / stage.scrollWidth;
-    const centerY = (stage.scrollTop + stage.clientHeight / 2) / stage.scrollHeight;
-    flushSync(() => setZoom(next));
-    stage.scrollLeft = centerX * stage.scrollWidth - stage.clientWidth / 2;
-    stage.scrollTop = centerY * stage.scrollHeight - stage.clientHeight / 2;
   };
 
   return (
@@ -104,40 +176,68 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
         ref={stageRef}
         className={classes.stage}
         onPointerDown={(event) => {
-          if (zoom <= 1 || event.pointerType !== "mouse") {
+          event.currentTarget.setPointerCapture(event.pointerId);
+          pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          if (pointersRef.current.size >= 2) {
+            startPinch();
             return;
           }
-          event.currentTarget.setPointerCapture(event.pointerId);
-          dragRef.current = {
-            left: event.currentTarget.scrollLeft,
-            top: event.currentTarget.scrollTop,
-            x: event.clientX,
-            y: event.clientY,
+          const { current } = viewRef;
+          panRef.current = {
+            pointerX: event.clientX,
+            pointerY: event.clientY,
+            x: current.x,
+            y: current.y,
           };
         }}
         onPointerMove={(event) => {
-          const drag = dragRef.current;
-          if (!drag) {
+          const pointers = pointersRef.current;
+          if (!pointers.has(event.pointerId)) {
             return;
           }
-          event.currentTarget.scrollLeft = drag.left - (event.clientX - drag.x);
-          event.currentTarget.scrollTop = drag.top - (event.clientY - drag.y);
+          pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          const stage = stageRef.current;
+          const pinch = pinchRef.current;
+          if (pinch && stage) {
+            const [a, b] = [...pointers.values()];
+            if (!a || !b) {
+              return;
+            }
+            const rect = stage.getBoundingClientRect();
+            const scale = Math.min(
+              4,
+              Math.max(0.25, (pinch.scale * Math.hypot(a.x - b.x, a.y - b.y)) / pinch.distance),
+            );
+            const originX = (pinch.midX - rect.left - rect.width / 2 - pinch.x) / pinch.scale;
+            const originY = (pinch.midY - rect.top - rect.height / 2 - pinch.y) / pinch.scale;
+            commit(
+              scale,
+              (a.x + b.x) / 2 - rect.left - rect.width / 2 - originX * scale,
+              (a.y + b.y) / 2 - rect.top - rect.height / 2 - originY * scale,
+            );
+            return;
+          }
+          const pan = panRef.current;
+          if (pan) {
+            commit(
+              viewRef.current.scale,
+              pan.x + (event.clientX - pan.pointerX),
+              pan.y + (event.clientY - pan.pointerY),
+            );
+          }
         }}
-        onPointerUp={() => {
-          dragRef.current = null;
-        }}
-        onPointerCancel={() => {
-          dragRef.current = null;
-        }}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
       >
         <div
           className={classes.canvas}
-          style={{ height: `${zoom * 100}%`, width: `${zoom * 100}%` }}
+          style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}
         >
           <img
             className={classes.image}
             src={`/api/i/${photo.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
             alt={photo.alt ?? photo.caption ?? ""}
+            draggable={false}
           />
         </div>
       </div>
@@ -178,18 +278,25 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
             <button
               type="button"
               className={classes.iconButton}
-              onClick={() => changeZoom(Math.max(1, zoom - 0.5))}
-              disabled={zoom <= 1}
+              onClick={() => zoomTo(view.scale / 1.5)}
+              disabled={view.scale <= 0.25}
               aria-label="縮小する"
             >
               <ZoomOutIcon size={16} />
             </button>
-            <span className={classes.counter}>{Math.round(zoom * 100)}%</span>
+            <button
+              type="button"
+              className={classes.zoomReset}
+              onClick={() => commit(1, 0, 0)}
+              aria-label="等倍に戻す"
+            >
+              {Math.round(view.scale * 100)}%
+            </button>
             <button
               type="button"
               className={classes.iconButton}
-              onClick={() => changeZoom(Math.min(4, zoom + 0.5))}
-              disabled={zoom >= 4}
+              onClick={() => zoomTo(view.scale * 1.5)}
+              disabled={view.scale >= 4}
               aria-label="拡大する"
             >
               <ZoomInIcon size={16} />
