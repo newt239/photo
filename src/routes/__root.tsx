@@ -3,8 +3,8 @@ import mantineCoreCss from "@mantine/core/styles.css?url";
 import mantineDropzoneCss from "@mantine/dropzone/styles.css?url";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 
-import ClerkProvider from "#/integrations/clerk/provider.tsx";
 import { cookieColorSchemeManager } from "#/lib/color-scheme.ts";
+import { ClerkProvider } from "#/providers/ClerkProvider.tsx";
 import { getColorSchemeCookie } from "#/server/color-scheme.ts";
 import appCss from "#/styles.css?url";
 
