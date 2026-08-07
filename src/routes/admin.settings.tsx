@@ -1,4 +1,4 @@
-import { Anchor, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { ProfileSection } from "#/components/ProfileSection.tsx";
@@ -7,9 +7,9 @@ import { ThemeSection } from "#/components/ThemeSection.tsx";
 
 const SettingsPage = () => (
   <Stack p="xl" gap="lg" maw={680} mx="auto">
-    <Anchor component={Link} to="/admin" size="sm">
+    <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
       ← ホーム
-    </Anchor>
+    </Button>
     <Title order={2}>設定</Title>
 
     <Paper withBorder radius="md" p="lg">
