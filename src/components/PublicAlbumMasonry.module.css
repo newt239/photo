@@ -1,5 +1,5 @@
 .gallery {
-  column-count: 1;
+  column-count: 2;
   column-gap: 0;
   width: 100%;
   line-height: 0;
@@ -7,13 +7,13 @@
 
 @media (min-width: $mantine-breakpoint-xs) {
   .gallery {
-    column-count: 2;
+    column-count: 3;
   }
 }
 
 @media (min-width: $mantine-breakpoint-sm) {
   .gallery {
-    column-count: 3;
+    column-count: 4;
   }
 }
 
