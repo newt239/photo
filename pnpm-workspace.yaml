@@ -9,3 +9,7 @@ allowBuilds:
   workerd: true
 saveExact: true
 minimumReleaseAge: 10080
+# セキュリティ修正の取り込みを Cooldown で遅らせないための例外。
+# js-yaml@4.3.1 は GHSA-5p4m-2wfm-xmqj (high) の修正版。
+minimumReleaseAgeExclude:
+  - js-yaml@4.3.1
