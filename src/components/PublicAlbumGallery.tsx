@@ -23,7 +23,8 @@ export const PublicAlbumGallery = ({
   size: number;
 }) => {
   const [index, setIndex] = useState<number | null>(null);
-  const { columns, ref } = useMasonryColumns(size * 160);
+  const { columns: maxColumns, ref } = useMasonryColumns(160);
+  const columns = Math.min(size, maxColumns);
 
   return (
     <>

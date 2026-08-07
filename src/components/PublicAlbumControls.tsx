@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ChevronDownIcon, InfoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
@@ -24,6 +24,17 @@ export const PublicAlbumControls = ({
   onSizeChange,
 }: PublicAlbumControlsProps) => {
   const [minimized, setMinimized] = useState(false);
+  const [maxSize, setMaxSize] = useState(1);
+
+  // 画面幅はブラウザ API でしか取得できないため resize を監視して最大列数を求める
+  useEffect(() => {
+    const update = () => setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160)));
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const current = Math.min(size, maxSize);
 
   if (minimized) {
     return (
@@ -62,7 +73,7 @@ export const PublicAlbumControls = ({
         {description && <div className={classes.description}>{description}</div>}
       </div>
 
-      {(hasGeotagged || mode === "photo") && (
+      {(hasGeotagged || (mode === "photo" && maxSize > 1)) && (
         <div className={classes.row}>
           {hasGeotagged && (
             <div className={classes.segmented}>
@@ -85,13 +96,13 @@ export const PublicAlbumControls = ({
             </div>
           )}
 
-          {mode === "photo" && (
+          {mode === "photo" && maxSize > 1 && (
             <div className={classes.sizeControl}>
               <button
                 type="button"
                 className={classes.iconButton}
-                onClick={() => onSizeChange(size - 1)}
-                disabled={size <= 1}
+                onClick={() => onSizeChange(current + 1)}
+                disabled={current >= maxSize}
                 aria-label="表示を小さくする"
               >
                 <ZoomOutIcon size={16} />
@@ -100,17 +111,17 @@ export const PublicAlbumControls = ({
                 className={classes.slider}
                 type="range"
                 min={1}
-                max={5}
+                max={maxSize}
                 step={1}
-                value={size}
-                onChange={(e) => onSizeChange(Number(e.currentTarget.value))}
+                value={maxSize + 1 - current}
+                onChange={(e) => onSizeChange(maxSize + 1 - Number(e.currentTarget.value))}
                 aria-label="表示サイズ"
               />
               <button
                 type="button"
                 className={classes.iconButton}
-                onClick={() => onSizeChange(size + 1)}
-                disabled={size >= 5}
+                onClick={() => onSizeChange(current - 1)}
+                disabled={current <= 1}
                 aria-label="表示を大きくする"
               >
                 <ZoomInIcon size={16} />
