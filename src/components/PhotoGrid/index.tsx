@@ -1,8 +1,8 @@
 import { Text } from "@mantine/core";
 
+import { PhotoCard, type PhotoCardData } from "#/components/PhotoCard";
 import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
 
-import { PhotoCard, type PhotoCardData } from "./PhotoCard";
 import classes from "./PhotoGrid.module.css";
 
 export const PhotoGrid = ({

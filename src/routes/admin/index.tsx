@@ -4,14 +4,14 @@ import { Group, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute, useLoaderData, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { PhotoBulkActions } from "#/components/PhotoBulkActions.tsx";
-import { PhotoGrid } from "#/components/PhotoGrid.tsx";
-import { PhotoTable } from "#/components/PhotoTable.tsx";
-import { PhotoViewControls } from "#/components/PhotoViewControls.tsx";
+import { PhotoBulkActions } from "#/components/PhotoBulkActions";
+import { PhotoGrid } from "#/components/PhotoGrid";
+import { PhotoTable } from "#/components/PhotoTable";
+import { PhotoViewControls } from "#/components/PhotoViewControls";
 import { addPhotosToAlbum, createAlbum } from "#/server/albums.ts";
 import { deletePhotos, listMyPhotos } from "#/server/photos.ts";
 
-import type { PhotoCardData } from "#/components/PhotoCard.tsx";
+import type { PhotoCardData } from "#/components/PhotoCard";
 
 const AdminIndexPage = () => {
   const { photos } = Route.useLoaderData();

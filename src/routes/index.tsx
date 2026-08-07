@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PublicAlbumMasonry, type PublicAlbumData } from "#/components/PublicAlbumMasonry.tsx";
-import { PublicNotice } from "#/components/PublicNotice.tsx";
+import { PublicAlbumMasonry, type PublicAlbumData } from "#/components/PublicAlbumMasonry";
+import { PublicNotice } from "#/components/PublicNotice";
 import { listPublicAlbums } from "#/server/public.ts";
 
 const IndexPage = () => {

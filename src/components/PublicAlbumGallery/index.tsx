@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { LayoutGridIcon, Share2Icon } from "lucide-react";
 
+import { PhotoLightbox } from "#/components/PhotoLightbox";
 import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
 
-import { PhotoLightbox } from "./PhotoLightbox";
 import classes from "./PublicAlbumGallery.module.css";
 
 type PublicGalleryPhoto = {

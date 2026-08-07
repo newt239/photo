@@ -5,10 +5,10 @@ import { Link, createFileRoute, useLoaderData, useRouter } from "@tanstack/react
 import { ExternalLinkIcon, GlobeIcon, ImagePlusIcon, LockIcon, SettingsIcon } from "lucide-react";
 import { z } from "zod";
 
-import { PhotoBulkActions } from "#/components/PhotoBulkActions.tsx";
-import { PhotoGrid } from "#/components/PhotoGrid.tsx";
-import { PhotoTable } from "#/components/PhotoTable.tsx";
-import { PhotoViewControls } from "#/components/PhotoViewControls.tsx";
+import { PhotoBulkActions } from "#/components/PhotoBulkActions";
+import { PhotoGrid } from "#/components/PhotoGrid";
+import { PhotoTable } from "#/components/PhotoTable";
+import { PhotoViewControls } from "#/components/PhotoViewControls";
 import {
   addPhotosToAlbum,
   createAlbum,
@@ -17,7 +17,7 @@ import {
 } from "#/server/albums.ts";
 import { deletePhotos } from "#/server/photos.ts";
 
-import type { PhotoCardData } from "#/components/PhotoCard.tsx";
+import type { PhotoCardData } from "#/components/PhotoCard";
 
 const AlbumDetailPage = () => {
   const { album, photos } = Route.useLoaderData();

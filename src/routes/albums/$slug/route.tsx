@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { PublicAlbumControls } from "#/components/PublicAlbumControls.tsx";
+import { PublicAlbumControls } from "#/components/PublicAlbumControls";
 import { getPublicAlbumBySlug } from "#/server/public.ts";
 
 type PublicAlbum = NonNullable<Awaited<ReturnType<typeof getPublicAlbumBySlug>>>;

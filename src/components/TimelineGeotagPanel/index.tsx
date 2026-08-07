@@ -18,10 +18,9 @@ import {
 import { useRouter } from "@tanstack/react-router";
 import { MapPinIcon, SearchCheckIcon } from "lucide-react";
 
+import { TimelineMatchMap } from "#/components/TimelineMatchMap";
 import { matchTimeline, parseTimeline, type Timeline } from "#/lib/timeline.ts";
 import { applyPhotoLocations } from "#/server/photos.ts";
-
-import { TimelineMatchMap } from "./TimelineMatchMap.tsx";
 
 export type GeotagCandidate = {
   id: string;

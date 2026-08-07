@@ -1,7 +1,7 @@
 import { createFileRoute, useLoaderData, useSearch } from "@tanstack/react-router";
 
-import { PublicAlbumGallery } from "#/components/PublicAlbumGallery.tsx";
-import { PublicNotice } from "#/components/PublicNotice.tsx";
+import { PublicAlbumGallery } from "#/components/PublicAlbumGallery";
+import { PublicNotice } from "#/components/PublicNotice";
 
 const PublicAlbumIndexPage = () => {
   const { photos } = useLoaderData({ from: "/albums/$slug" });

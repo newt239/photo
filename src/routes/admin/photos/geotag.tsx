@@ -2,7 +2,7 @@ import { Stack, Text, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
-import { TimelineGeotagPanel, type GeotagCandidate } from "#/components/TimelineGeotagPanel.tsx";
+import { TimelineGeotagPanel, type GeotagCandidate } from "#/components/TimelineGeotagPanel";
 import { listPhotosMissingLocation } from "#/server/photos.ts";
 
 const PhotosGeotagPage = () => {

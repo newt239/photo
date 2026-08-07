@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import classes from "./PhotoTable.module.css";
 
-import type { PhotoCardData } from "./PhotoCard";
+import type { PhotoCardData } from "#/components/PhotoCard";
 
 type PhotoTableProps = {
   photos: PhotoCardData[];

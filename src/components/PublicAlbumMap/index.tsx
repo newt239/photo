@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { PhotoLightbox } from "./PhotoLightbox";
+import { PhotoLightbox } from "#/components/PhotoLightbox";
+
 import classes from "./PublicAlbumMap.module.css";
 
 import type * as Leaflet from "leaflet";

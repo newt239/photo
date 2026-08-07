@@ -25,7 +25,7 @@ import {
   ZoomOutIcon,
 } from "lucide-react";
 
-import { PhotoLocationMap } from "#/components/PhotoLocationMap.tsx";
+import { PhotoLocationMap } from "#/components/PhotoLocationMap";
 import { generatePhotoDraft, updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";

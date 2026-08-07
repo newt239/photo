@@ -1,8 +1,8 @@
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
-import { PublicAlbumMap } from "#/components/PublicAlbumMap.tsx";
-import { PublicNotice } from "#/components/PublicNotice.tsx";
+import { PublicAlbumMap } from "#/components/PublicAlbumMap";
+import { PublicNotice } from "#/components/PublicNotice";
 
 const PublicAlbumMapPage = () => {
   const { photos } = useLoaderData({ from: "/albums/$slug" });

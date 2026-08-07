@@ -1,9 +1,9 @@
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ProfileSection } from "#/components/ProfileSection.tsx";
-import { SignOutButton } from "#/components/SignOutButton.tsx";
-import { ThemeSection } from "#/components/ThemeSection.tsx";
+import { ProfileSection } from "#/components/ProfileSection";
+import { SignOutButton } from "#/components/SignOutButton";
+import { ThemeSection } from "#/components/ThemeSection";
 
 const SettingsPage = () => (
   <Stack p="xl" gap="xl">
