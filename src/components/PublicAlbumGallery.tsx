@@ -1,3 +1,6 @@
+import { useState } from "react";
+
+import { PhotoLightbox } from "./PhotoLightbox";
 import classes from "./PublicAlbumGallery.module.css";
 
 type PublicGalleryPhoto = {
@@ -10,36 +13,42 @@ type PublicGalleryPhoto = {
   height: number;
 };
 
-type PublicAlbumGalleryProps = {
-  title: string | null;
-  description: string | null;
+export const PublicAlbumGallery = ({
+  photos,
+  size,
+}: {
   photos: PublicGalleryPhoto[];
-};
+  size: number;
+}) => {
+  const [index, setIndex] = useState<number | null>(null);
 
-export const PublicAlbumGallery = ({ title, description, photos }: PublicAlbumGalleryProps) => (
-  <>
-    <div className={classes.gallery}>
-      {photos.map((p) => (
-        <a
-          key={p.id}
-          className={classes.item}
-          href={`/api/i/${p.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img
-            src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
-            alt={p.alt ?? p.caption ?? ""}
-            loading="lazy"
-            style={{ aspectRatio: `${p.width} / ${p.height}` }}
-          />
-          {p.caption && <span className={classes.caption}>{p.caption}</span>}
-        </a>
-      ))}
-    </div>
-    <div className={classes.overlay}>
-      <div className={classes.overlayTitle}>{title ?? "(無題)"}</div>
-      {description && <div className={classes.overlayDescription}>{description}</div>}
-    </div>
-  </>
-);
+  return (
+    <>
+      <div className={classes.gallery} style={{ columnWidth: `${size * 160}px` }}>
+        {photos.map((p, i) => (
+          <button
+            key={p.id}
+            type="button"
+            className={classes.item}
+            onClick={() => setIndex(i)}
+            aria-label={p.caption ?? p.alt ?? "写真を拡大する"}
+          >
+            <img
+              src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
+              alt={p.alt ?? p.caption ?? ""}
+              loading="lazy"
+              style={{ aspectRatio: `${p.width} / ${p.height}` }}
+            />
+            {p.caption && <span className={classes.caption}>{p.caption}</span>}
+          </button>
+        ))}
+      </div>
+      <PhotoLightbox
+        photos={photos}
+        index={index}
+        onClose={() => setIndex(null)}
+        onIndexChange={setIndex}
+      />
+    </>
+  );
+};

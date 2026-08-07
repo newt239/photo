@@ -1,17 +1,13 @@
-import { Text } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PublicAlbumMasonry, type PublicAlbumData } from "#/components/PublicAlbumMasonry.tsx";
+import { PublicNotice } from "#/components/PublicNotice.tsx";
 import { listPublicAlbums } from "#/server/public.ts";
 
 const IndexPage = () => {
   const { albums } = Route.useLoaderData();
   if (albums.length === 0) {
-    return (
-      <Text c="dimmed" size="sm" p="xl">
-        公開アルバムはまだありません
-      </Text>
-    );
+    return <PublicNotice>公開アルバムはまだありません</PublicNotice>;
   }
   return <PublicAlbumMasonry albums={albums} />;
 };

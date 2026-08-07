@@ -1,6 +1,6 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq, isNull, or } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -251,6 +251,42 @@ export const updatePhoto = createServerFn({ method: "POST" })
       .set({ alt: data.alt, caption: data.caption })
       .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
     return { id: data.id, success: true } as const;
+  });
+
+export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photoIds: string[]) => {
+  if (photoIds.length === 0) {
+    return 0;
+  }
+  const db = drizzle(env.DB, { schema });
+  const rows = await db
+    .select({ id: photos.id, storageKey: photos.storageKey, thumbnailKey: photos.thumbnailKey })
+    .from(photos)
+    .where(and(eq(photos.userId, userId), inArray(photos.id, photoIds)));
+  if (rows.length === 0) {
+    return 0;
+  }
+  const deletableIds = rows.map((row) => row.id);
+  const storageKeys = rows.flatMap((row) =>
+    row.thumbnailKey ? [row.storageKey, row.thumbnailKey] : [row.storageKey],
+  );
+  await db.delete(photos).where(and(eq(photos.userId, userId), inArray(photos.id, deletableIds)));
+  await env.MY_BUCKET.delete(storageKeys);
+  return rows.length;
+});
+
+const deletePhotosInput = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(200),
+});
+
+export const deletePhotos = createServerFn({ method: "POST" })
+  .validator(deletePhotosInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const deleted = await deleteOwnedPhotos(userId, data.ids);
+    if (deleted === 0) {
+      return { error: "削除できる写真がありません", success: false } as const;
+    }
+    return { deleted, success: true } as const;
   });
 
 const draftSchema = z

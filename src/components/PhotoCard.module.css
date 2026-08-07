@@ -55,3 +55,25 @@
 .link:focus-visible .caption {
   opacity: 1;
 }
+
+.selectable {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.selectable[data-selected] .thumb {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.selectable[data-selected] .thumb img {
+  opacity: 0.6;
+}
+
+.check {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+}
