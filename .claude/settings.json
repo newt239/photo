@@ -11,9 +11,7 @@
     ],
     "deny": [
       "Bash(git reset:*)",
-      "Bash(git checkout:*)",
       "Bash(git rebase:*)",
-      "Bash(git reset:*)",
       "Read(.env)",
       "Read(*.env)",
       "Read(.env.*)",
@@ -30,6 +28,7 @@
       "Bash(bat *.env*)"
     ],
     "ask": [
+      "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",

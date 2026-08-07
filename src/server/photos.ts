@@ -398,8 +398,28 @@ const draftSchema = z
   })
   .partial();
 
+const generatePhotoDraftInput = z.object({
+  fields: z
+    .array(z.enum(["caption", "alt"]))
+    .min(1)
+    .default(["caption", "alt"]),
+  id: z.string().min(1),
+});
+
+const captionInstruction =
+  "caption は写真に写っているものを一言で表す30文字以内の短い説明にしてください。1文だけとし、句点は付けず、宣伝的な言い回しや主観的な評価は使わないでください。";
+
+const altInstruction =
+  "alt はスクリーンリーダー利用者が視覚情報なしで内容を理解できる代替テキストです。次のルールに従ってください。" +
+  "1文目は必ず「◯◯の写真」「◯◯のスクリーンショット」「◯◯の画像」のいずれかで始める。実写なら写真、PCやスマホの画面キャプチャならスクリーンショット、イラストや図解やCGなど上記以外なら画像とする。" +
+  "続けて3〜5文程度で、構図や主要な要素を平易な日本語で説明的に描写する。専門用語や難しい言い回しは避ける。" +
+  "投稿者が伝えたいであろう主題に関係する情報だけを書き、写っているものを網羅的に列挙しない。" +
+  "「美しい」「素晴らしい」などの主観的評価や、「◯◯のように見えます」などの曖昧な推測表現は避ける。" +
+  "人物は中立的に「人物」と表現し、性別や年齢などの属性は主題に明確に関係する場合のみ言及する。" +
+  "スクリーンショットや文字が主要な情報となる画像では、説明の後に改行を入れて画像内のテキストを読みやすく書き起こす。ただしOSのステータスバーやブラウザのUIなど主題に関係しないUI要素は書き起こさない。";
+
 export const generatePhotoDraft = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string().min(1) }))
+  .validator(generatePhotoDraftInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
@@ -423,25 +443,17 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
     }
     const dataUri = `data:${obj.httpMetadata?.contentType ?? "image/jpeg"};base64,${btoa(binary)}`;
 
+    const wantsCaption = data.fields.includes("caption");
+    const wantsAlt = data.fields.includes("alt");
+    const jsonShape = data.fields.map((field) => `"${field}": "..."`).join(", ");
+    const instruction = `あなたは写真管理アプリのアシスタントです。画像を見て日本語で ${data.fields.join(" と ")} を生成します。出力は必ず次のJSON形式のみとし、前後に文章を付けないでください: {${jsonShape}}。${wantsCaption ? captionInstruction : ""}${wantsAlt ? altInstruction : ""}`;
+
     const result = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", {
       max_tokens: 512,
       messages: [
         {
           content: [
-            {
-              text:
-                "あなたは写真管理アプリのアシスタントです。画像を見て日本語で caption と alt を生成します。" +
-                '出力は必ず次のJSON形式のみとし、前後に文章を付けないでください: {"caption": "...", "alt": "..."}。' +
-                "caption は写真に写っているものを一言で表す30文字以内の短い説明にしてください。1文だけとし、句点は付けず、宣伝的な言い回しや主観的な評価は使わないでください。" +
-                "alt はスクリーンリーダー利用者が視覚情報なしで内容を理解できる代替テキストです。次のルールに従ってください。" +
-                "1文目は必ず「◯◯の写真」「◯◯のスクリーンショット」「◯◯の画像」のいずれかで始める。実写なら写真、PCやスマホの画面キャプチャならスクリーンショット、イラストや図解やCGなど上記以外なら画像とする。" +
-                "続けて3〜5文程度で、構図や主要な要素を平易な日本語で説明的に描写する。専門用語や難しい言い回しは避ける。" +
-                "投稿者が伝えたいであろう主題に関係する情報だけを書き、写っているものを網羅的に列挙しない。" +
-                "「美しい」「素晴らしい」などの主観的評価や、「◯◯のように見えます」などの曖昧な推測表現は避ける。" +
-                "人物は中立的に「人物」と表現し、性別や年齢などの属性は主題に明確に関係する場合のみ言及する。" +
-                "スクリーンショットや文字が主要な情報となる画像では、説明の後に改行を入れて画像内のテキストを読みやすく書き起こす。ただしOSのステータスバーやブラウザのUIなど主題に関係しないUI要素は書き起こさない。",
-              type: "text",
-            },
+            { text: instruction, type: "text" },
             { image_url: { url: dataUri }, type: "image_url" },
           ],
           role: "user",
@@ -459,8 +471,16 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
       caption = parsedCaption ?? "";
       alt = parsedAlt ?? "";
     } else if (typeof response === "string") {
-      caption = response.trim();
+      if (wantsCaption) {
+        caption = response.trim();
+      } else {
+        alt = response.trim();
+      }
     }
 
-    return { alt, caption, success: true } as const;
+    return {
+      alt: wantsAlt ? alt : null,
+      caption: wantsCaption ? caption : null,
+      success: true,
+    } as const;
   });

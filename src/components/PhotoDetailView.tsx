@@ -180,8 +180,8 @@ export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Pro
     try {
       const result = await generatePhotoDraft({ data: { id: photo.id } });
       if (result.success) {
-        setCaption(result.caption);
-        setAlt(result.alt);
+        setCaption(result.caption ?? "");
+        setAlt(result.alt ?? "");
       } else {
         setErrorMessage(result.error);
       }
