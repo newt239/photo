@@ -156,7 +156,7 @@ type AlbumAddPhotos = {
 export const Route = createFileRoute("/admin/albums_/$slug/add")({
   component: AlbumAddPhotosPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `写真を追加 | ${loaderData?.album.title ?? "アルバム"}` }],
+    meta: [{ title: `写真を追加 | ${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string } }): Promise<AlbumAddPhotos> => {
     const [detail, myPhotos] = await Promise.all([

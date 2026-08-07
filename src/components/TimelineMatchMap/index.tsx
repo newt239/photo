@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { DEFAULT_CENTER, DEFAULT_ZOOM, addOsmTileLayer } from "#/lib/leaflet.ts";
+
 import classes from "./TimelineMatchMap.module.css";
 
 import type * as Leaflet from "leaflet";
@@ -36,14 +38,8 @@ export const TimelineMatchMap = ({ points, focusedId }: Props) => {
       if (cancelled || !container) {
         return;
       }
-      map = new leaflet.Map(container).setView([35.681_2, 139.767_1], 4);
-      leaflet
-        .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-        })
-        .addTo(map);
+      map = new leaflet.Map(container).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+      addOsmTileLayer(leaflet, map);
       leafletRef.current = leaflet;
       layerRef.current = leaflet.layerGroup().addTo(map);
       mapRef.current = map;

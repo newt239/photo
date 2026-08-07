@@ -263,7 +263,7 @@ type AlbumSettings = {
 export const Route = createFileRoute("/admin/albums_/$slug/settings")({
   component: AlbumSettingsPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `設定 | ${loaderData?.album.title ?? "アルバム"}` }],
+    meta: [{ title: `設定 | ${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string } }): Promise<AlbumSettings> => {
     const { album, photos } = await getAlbumBySlug({ data: { slug: params.slug } });

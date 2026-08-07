@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { addOsmTileLayer } from "#/lib/leaflet.ts";
+
 import classes from "./PhotoLocationMap.module.css";
 
 import type * as Leaflet from "leaflet";
@@ -25,13 +27,7 @@ export const PhotoLocationMap = ({ latitude, longitude }: PhotoLocationMapProps)
         [latitude, longitude],
         14,
       );
-      leaflet
-        .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-        })
-        .addTo(map);
+      addOsmTileLayer(leaflet, map);
       leaflet
         .circleMarker([latitude, longitude], {
           color: "#228be6",

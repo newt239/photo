@@ -1,6 +1,9 @@
 import { Checkbox, Table, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 
+import { formatDateTime } from "#/lib/format.ts";
+import { photoImageUrl } from "#/lib/image-url.ts";
+
 import classes from "./PhotoTable.module.css";
 
 import type { PhotoCardData } from "#/components/PhotoCard";
@@ -42,7 +45,7 @@ export const PhotoTable = ({
         <Table.Tbody>
           {photos.map((p) => {
             const selected = selectedPhotoIds.has(p.id);
-            const src = `/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
+            const src = photoImageUrl(p.thumbnailKey ?? p.storageKey);
             const label = p.caption ?? "(キャプションなし)";
             return (
               <Table.Tr key={p.id} bg={selected ? "var(--mantine-color-blue-light)" : undefined}>
@@ -82,15 +85,7 @@ export const PhotoTable = ({
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm" c="dimmed">
-                    {p.takenAt
-                      ? new Date(p.takenAt).toLocaleString("ja-JP", {
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })
-                      : "—"}
+                    {formatDateTime(p.takenAt) ?? "—"}
                   </Text>
                 </Table.Td>
               </Table.Tr>

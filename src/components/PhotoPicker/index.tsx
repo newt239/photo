@@ -1,5 +1,7 @@
 import { Checkbox, SimpleGrid } from "@mantine/core";
 
+import { photoImageUrl } from "#/lib/image-url.ts";
+
 import classes from "./PhotoPicker.module.css";
 
 export type PhotoPickerItem = {
@@ -33,11 +35,7 @@ export const PhotoPicker = ({
           data-checked={checked || undefined}
           data-disabled={already || undefined}
         >
-          <img
-            src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
-            alt=""
-            loading="lazy"
-          />
+          <img src={photoImageUrl(p.thumbnailKey ?? p.storageKey)} alt="" loading="lazy" />
           <Checkbox
             className={classes.check}
             checked={already || checked}

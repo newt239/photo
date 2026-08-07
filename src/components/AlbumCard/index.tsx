@@ -2,6 +2,8 @@ import { Card, Group, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { GlobeIcon, LockIcon } from "lucide-react";
 
+import { photoImageUrl } from "#/lib/image-url.ts";
+
 import classes from "./AlbumCard.module.css";
 
 export type AlbumCardData = {
@@ -21,11 +23,7 @@ export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
       <Card withBorder radius="md" padding={0} className={classes.card}>
         <div className={classes.cover}>
           {coverKey ? (
-            <img
-              src={`/api/i/${coverKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
-              alt=""
-              loading="lazy"
-            />
+            <img src={photoImageUrl(coverKey)} alt="" loading="lazy" />
           ) : (
             <div className={classes.placeholder}>
               <Text size="xs" c="dimmed">

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { PhotoLightbox } from "#/components/PhotoLightbox";
+import { photoImageUrl } from "#/lib/image-url.ts";
+import { DEFAULT_CENTER, DEFAULT_ZOOM, addOsmTileLayer } from "#/lib/leaflet.ts";
 
 import classes from "./PublicAlbumMap.module.css";
 
@@ -29,18 +31,12 @@ export const PublicAlbumMap = ({ photos }: { photos: PublicAlbumMapPhoto[] }) =>
       if (cancelled || !container) {
         return;
       }
-      map = new leaflet.Map(container).setView([35.681_2, 139.767_1], 4);
-      leaflet
-        .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-        })
-        .addTo(map);
+      map = new leaflet.Map(container).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+      addOsmTileLayer(leaflet, map);
 
       for (const [position, photo] of photos.entries()) {
         const pin = document.createElement("img");
-        pin.src = `/api/i/${(photo.thumbnailKey ?? photo.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
+        pin.src = photoImageUrl(photo.thumbnailKey ?? photo.storageKey);
         pin.alt = "";
         const marker = leaflet
           .marker([photo.latitude, photo.longitude], {

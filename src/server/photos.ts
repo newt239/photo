@@ -7,24 +7,14 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { ensureUserRow, requireUserId } from "#/server/auth.ts";
 import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
 
-const ALLOWED_MIME = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/heic",
-  "image/heif",
-  "image/gif",
-] as const;
-
 const THUMB_MIME = "image/webp";
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 const createPhotoUploadInput = z.object({
-  contentType: z.enum(ALLOWED_MIME),
+  contentType: z.enum(ALLOWED_MIME_TYPES),
   hasThumbnail: z.boolean().default(true),
   size: z.number().int().positive().max(MAX_FILE_SIZE),
 });
@@ -65,7 +55,7 @@ const finalizePhotoInput = z.object({
   latitude: z.number().nullable().optional(),
   lensModel: z.string().nullable().optional(),
   longitude: z.number().nullable().optional(),
-  mimeType: z.enum(ALLOWED_MIME),
+  mimeType: z.enum(ALLOWED_MIME_TYPES),
   orientation: z.number().int().nullable().optional(),
   originalKey: z.string().min(1),
   photoId: z.string().min(1),

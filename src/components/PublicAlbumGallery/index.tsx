@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { LayoutGridIcon, Share2Icon } from "lucide-react";
 
 import { PhotoLightbox } from "#/components/PhotoLightbox";
+import { photoImageUrl } from "#/lib/image-url.ts";
 import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
 
 import classes from "./PublicAlbumGallery.module.css";
@@ -63,7 +64,7 @@ export const PublicAlbumGallery = ({
                     aria-label={p.caption ?? p.alt ?? "写真を拡大する"}
                   >
                     <img
-                      src={`/api/i/${(p.thumbnailKey ?? p.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
+                      src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
                       alt={p.alt ?? p.caption ?? ""}
                       loading="lazy"
                       style={{ aspectRatio: `${p.width} / ${p.height}` }}

@@ -18,22 +18,13 @@ import { useRouter } from "@tanstack/react-router";
 import { EraserIcon, SaveIcon, SparklesIcon } from "lucide-react";
 
 import { extractExif, generateThumbnail, probeDimensions } from "#/lib/image.ts";
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import {
   createPhotoUpload,
   finalizePhoto,
   generatePhotoDraft,
   updatePhoto,
 } from "#/server/photos.ts";
-
-const ACCEPTED_MIME = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/heic",
-  "image/heif",
-  "image/gif",
-] as const;
 
 type UploadState = {
   id: string;
@@ -77,7 +68,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
 
   const uploadOne = async (file: File, id: string) => {
     const contentType = file.type.toLowerCase();
-    if (!ACCEPTED_MIME.includes(contentType as (typeof ACCEPTED_MIME)[number])) {
+    if (!ALLOWED_MIME_TYPES.includes(contentType as (typeof ALLOWED_MIME_TYPES)[number])) {
       updateItem(id, { error: `非対応の形式: ${contentType}`, status: "error" });
       return null;
     }
@@ -95,7 +86,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       updateItem(id, { progress: 25 });
       const prep = await createPhotoUpload({
         data: {
-          contentType: contentType as (typeof ACCEPTED_MIME)[number],
+          contentType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
           hasThumbnail: Boolean(thumb),
           size: file.size,
         },
@@ -114,7 +105,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
         data: {
           fileSize: file.size,
           height: dims.height,
-          mimeType: contentType as (typeof ACCEPTED_MIME)[number],
+          mimeType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
           originalKey: prep.originalKey,
           photoId: prep.photoId,
           thumbnailKey: prep.thumbnailKey,
@@ -256,7 +247,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
           console.warn("rejected files", rejections);
         }}
         accept={IMAGE_MIME_TYPE}
-        maxSize={50 * 1024 * 1024}
+        maxSize={MAX_FILE_SIZE}
         loading={busy}
         multiple
       >
@@ -266,7 +257,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
               画像をドラッグ&ドロップ
             </Text>
             <Text size="sm" c="dimmed">
-              JPEG / PNG / WebP / AVIF / HEIC、1 ファイル 50 MB まで
+              {`JPEG / PNG / WebP / AVIF / HEIC、1 ファイル ${MAX_FILE_SIZE / 1024 / 1024} MB まで`}
             </Text>
           </Stack>
         </Group>

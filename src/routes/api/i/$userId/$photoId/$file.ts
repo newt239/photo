@@ -7,8 +7,7 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 
-const FILE_PATTERN =
-  /^(?<kind>original|thumb)\.(?<extension>jpg|jpeg|png|webp|avif|heic|heif|gif)$/i;
+const FILE_PATTERN = /^(?:original|thumb)\.(?:jpg|jpeg|png|webp|avif|heic|heif|gif)$/i;
 
 const serveFromR2 = async (key: string, cacheControl: string): Promise<Response> => {
   const obj = await env.MY_BUCKET.get(key);

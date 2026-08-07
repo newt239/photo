@@ -19,6 +19,8 @@ import { useRouter } from "@tanstack/react-router";
 import { MapPinIcon, SearchCheckIcon } from "lucide-react";
 
 import { TimelineMatchMap } from "#/components/TimelineMatchMap";
+import { formatDateTime } from "#/lib/format.ts";
+import { photoImageUrl } from "#/lib/image-url.ts";
 import { matchTimeline, parseTimeline, type Timeline } from "#/lib/timeline.ts";
 import { applyPhotoLocations } from "#/server/photos.ts";
 
@@ -74,17 +76,7 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
     () =>
       matches.map(({ match, photo }) => ({
         id: photo.id,
-        label: `${
-          photo.takenAt
-            ? new Date(photo.takenAt).toLocaleString("ja-JP", {
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })
-            : ""
-        }（${Math.round(match.diffMs / 60_000)} 分差）`,
+        label: `${formatDateTime(photo.takenAt) ?? ""}（${Math.round(match.diffMs / 60_000)} 分差）`,
         latitude: match.latitude,
         longitude: match.longitude,
         selected: !excludedIds.has(photo.id),
@@ -276,7 +268,7 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
                           </Table.Td>
                           <Table.Td>
                             <img
-                              src={`/api/i/${(photo.thumbnailKey ?? photo.storageKey).replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
+                              src={photoImageUrl(photo.thumbnailKey ?? photo.storageKey)}
                               alt={photo.alt ?? photo.caption ?? ""}
                               width={56}
                               height={56}
@@ -285,17 +277,7 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
                             />
                           </Table.Td>
                           <Table.Td>
-                            <Text size="sm">
-                              {photo.takenAt
-                                ? new Date(photo.takenAt).toLocaleString("ja-JP", {
-                                    day: "2-digit",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                  })
-                                : ""}
-                            </Text>
+                            <Text size="sm">{formatDateTime(photo.takenAt) ?? ""}</Text>
                           </Table.Td>
                           <Table.Td>
                             <Anchor

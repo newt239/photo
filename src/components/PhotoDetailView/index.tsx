@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 
 import { PhotoLocationMap } from "#/components/PhotoLocationMap";
+import { formatDateTime } from "#/lib/format.ts";
+import { photoImageUrl } from "#/lib/image-url.ts";
 import { generatePhotoDraft, updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
@@ -57,23 +59,6 @@ type PhotoDetailData = {
 
 type InfoRow = { label: string; value: string };
 
-const formatDateTime = (value: Date | string | null): string | null => {
-  if (!value) {
-    return null;
-  }
-  const d = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) {
-    return null;
-  }
-  return d.toLocaleString("ja-JP", {
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
 const renderInfoList = (rows: InfoRow[]) => (
   <Stack gap={6}>
     {rows.map((row) => (
@@ -98,7 +83,7 @@ type Props = {
 
 export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Props) => {
   const router = useRouter();
-  const imageSrc = `/api/i/${photo.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`;
+  const imageSrc = photoImageUrl(photo.storageKey);
   const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
   const exifRows: InfoRow[] = [];
   if (camera) {

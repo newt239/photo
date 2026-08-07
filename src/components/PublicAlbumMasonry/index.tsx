@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { photoImageUrl } from "#/lib/image-url.ts";
 import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
 
 import classes from "./PublicAlbumMasonry.module.css";
@@ -29,7 +30,7 @@ export const PublicAlbumMasonry = ({ albums }: { albums: PublicAlbumData[] }) =>
               >
                 {coverKey && album.coverWidth && album.coverHeight ? (
                   <img
-                    src={`/api/i/${coverKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
+                    src={photoImageUrl(coverKey)}
                     alt=""
                     loading="lazy"
                     style={{ aspectRatio: `${album.coverWidth} / ${album.coverHeight}` }}

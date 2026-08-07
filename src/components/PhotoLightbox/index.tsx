@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
+import { photoImageUrl } from "#/lib/image-url.ts";
+
 import classes from "./PhotoLightbox.module.css";
 
 type LightboxPhoto = {
@@ -235,7 +237,7 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
         >
           <img
             className={classes.image}
-            src={`/api/i/${photo.storageKey.replace(/^users\/(?<owner>[^/]+)\/photos\//, "$<owner>/")}`}
+            src={photoImageUrl(photo.storageKey)}
             alt={photo.alt ?? photo.caption ?? ""}
             draggable={false}
           />

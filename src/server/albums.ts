@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/d1";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
@@ -9,6 +9,21 @@ import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { ensureUserRow, requireUserId } from "#/server/auth.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
+
+const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
+
+const findOwnedAlbum = async (
+  db: DrizzleD1Database<typeof schema>,
+  albumId: string,
+  userId: string,
+) => {
+  const [album] = await db
+    .select({ id: albums.id })
+    .from(albums)
+    .where(and(eq(albums.id, albumId), eq(albums.userId, userId)))
+    .limit(1);
+  return album;
+};
 
 const createAlbumInput = z.object({
   description: z.string().max(2000).nullable().optional(),
@@ -26,7 +41,7 @@ export const createAlbum = createServerFn({ method: "POST" })
     const id = nanoid();
     const requested = data.slug?.trim() ?? "";
     if (requested) {
-      if (!/^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF-]+$/.test(requested)) {
+      if (!SLUG_PATTERN.test(requested)) {
         return { error: "URL に使えない文字が含まれています", success: false } as const;
       }
       const [duplicate] = await db
@@ -70,15 +85,11 @@ export const updateAlbum = createServerFn({ method: "POST" })
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
 
-    if (!/^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/.test(data.slug)) {
+    if (!SLUG_PATTERN.test(data.slug)) {
       return { error: "URL に使えない文字が含まれています", success: false } as const;
     }
 
-    const [album] = await db
-      .select({ id: albums.id })
-      .from(albums)
-      .where(and(eq(albums.id, data.id), eq(albums.userId, userId)))
-      .limit(1);
+    const album = await findOwnedAlbum(db, data.id, userId);
     if (!album) {
       return { error: "アルバムが見つかりません", success: false } as const;
     }
@@ -212,11 +223,7 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
 
-    const [album] = await db
-      .select({ id: albums.id })
-      .from(albums)
-      .where(and(eq(albums.id, data.albumId), eq(albums.userId, userId)))
-      .limit(1);
+    const album = await findOwnedAlbum(db, data.albumId, userId);
     if (!album) {
       return { error: "アルバムが見つかりません", success: false } as const;
     }
@@ -253,11 +260,7 @@ export const removePhotosFromAlbum = createServerFn({ method: "POST" })
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
 
-    const [album] = await db
-      .select({ id: albums.id })
-      .from(albums)
-      .where(and(eq(albums.id, data.albumId), eq(albums.userId, userId)))
-      .limit(1);
+    const album = await findOwnedAlbum(db, data.albumId, userId);
     if (!album) {
       return { error: "アルバムが見つかりません", success: false } as const;
     }
@@ -281,11 +284,7 @@ export const deleteAlbum = createServerFn({ method: "POST" })
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
 
-    const [album] = await db
-      .select({ id: albums.id })
-      .from(albums)
-      .where(and(eq(albums.id, data.id), eq(albums.userId, userId)))
-      .limit(1);
+    const album = await findOwnedAlbum(db, data.id, userId);
     if (!album) {
       return { error: "アルバムが見つかりません", success: false } as const;
     }
