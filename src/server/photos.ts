@@ -1,6 +1,6 @@
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -137,18 +137,46 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     return { id: data.photoId };
   });
 
+const listMyPhotosInput = z.object({
+  limit: z.number().int().positive().max(200).optional(),
+  order: z.enum(["asc", "desc"]).default("desc"),
+});
+
 export const listMyPhotos = createServerFn({ method: "GET" })
-  .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
+  .validator(listMyPhotosInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const db = drizzle(env.DB, { schema });
+    const direction = data.order === "asc" ? asc : desc;
     const rows = await db
-      .select()
+      .select({
+        alt: photos.alt,
+        caption: photos.caption,
+        height: photos.height,
+        id: photos.id,
+        storageKey: photos.storageKey,
+        takenAt: photos.takenAt,
+        thumbnailKey: photos.thumbnailKey,
+        width: photos.width,
+      })
       .from(photos)
       .where(eq(photos.userId, userId))
-      .orderBy(desc(photos.uploadedAt))
+      .orderBy(
+        sql`${photos}.taken_at IS NULL`,
+        direction(photos.takenAt),
+        direction(photos.uploadedAt),
+      )
       .limit(data.limit ?? 200);
-    return rows;
+    return rows.map((row) => ({
+      alt: row.alt,
+      caption: row.caption,
+      height: row.height,
+      id: row.id,
+      storageKey: row.storageKey,
+      takenAt: row.takenAt?.toISOString() ?? null,
+      thumbnailKey: row.thumbnailKey,
+      width: row.width,
+    }));
   });
 
 export const getPhoto = createServerFn({ method: "GET" })

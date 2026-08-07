@@ -17,6 +17,7 @@ import { createAlbum } from "#/server/albums.ts";
 const NewAlbumPage = () => {
   const router = useRouter();
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<"private" | "public">("private");
   const [submitting, setSubmitting] = useState(false);
@@ -30,14 +31,19 @@ const NewAlbumPage = () => {
     setSubmitting(true);
     setErrorMessage(null);
     try {
-      const { slug } = await createAlbum({
+      const result = await createAlbum({
         data: {
           description: description.trim() || null,
+          slug: slug.trim() || null,
           title: title.trim(),
           visibility,
         },
       });
-      await router.navigate({ params: { slug }, to: "/admin/albums/$slug" });
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return;
+      }
+      await router.navigate({ params: { slug: result.slug }, to: "/admin/albums/$slug" });
       await router.invalidate();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -65,6 +71,13 @@ const NewAlbumPage = () => {
             value={description}
             onChange={(e) => setDescription(e.currentTarget.value)}
             maxLength={2000}
+          />
+          <TextInput
+            label="URL"
+            description="公開ページのアドレスに使われます。英数字・ひらがな・カタカナ・漢字とハイフンが使えます。空欄の場合は名前から自動で作られます"
+            value={slug}
+            onChange={(e) => setSlug(e.currentTarget.value)}
+            maxLength={200}
           />
           <div>
             <Text size="sm" fw={500} mb={4}>

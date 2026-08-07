@@ -1,6 +1,7 @@
-import { SimpleGrid, Text } from "@mantine/core";
+import { Text } from "@mantine/core";
 
 import { PhotoCard, type PhotoCardData } from "./PhotoCard";
+import classes from "./PhotoGrid.module.css";
 
 export const PhotoGrid = ({
   photos,
@@ -23,16 +24,17 @@ export const PhotoGrid = ({
     );
   }
   return (
-    <SimpleGrid cols={{ base: 2, md: 4, sm: 3 }} spacing="md">
+    <div className={classes.masonry}>
       {photos.map((p) => (
-        <PhotoCard
-          key={p.id}
-          photo={p}
-          albumSlug={albumSlug}
-          selected={selectedPhotoIds?.has(p.id)}
-          onSelect={onSelect}
-        />
+        <div key={p.id} className={classes.item}>
+          <PhotoCard
+            photo={p}
+            albumSlug={albumSlug}
+            selected={selectedPhotoIds?.has(p.id)}
+            onSelect={onSelect}
+          />
+        </div>
       ))}
-    </SimpleGrid>
+    </div>
   );
 };

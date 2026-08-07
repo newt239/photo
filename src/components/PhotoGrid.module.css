@@ -1,0 +1,9 @@
+.masonry {
+  column-width: 15rem;
+  column-gap: var(--mantine-spacing-md);
+}
+
+.item {
+  break-inside: avoid;
+  margin-bottom: var(--mantine-spacing-md);
+}

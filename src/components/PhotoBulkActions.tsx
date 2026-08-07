@@ -1,54 +1,192 @@
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
+
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Menu,
+  Modal,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import {
+  CheckCheckIcon,
+  EllipsisIcon,
+  FolderMinusIcon,
+  FolderPlusIcon,
+  PlusIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 
 type PhotoBulkActionsProps = {
   selectedCount: number;
   submitting: boolean;
+  albums: { id: string; title: string | null }[];
   onSelectAll: () => void;
   onCancel: () => void;
   onDelete: () => Promise<void>;
+  onAddToAlbum: (albumId: string) => Promise<void>;
+  onCreateAlbum: (title: string) => Promise<void>;
   onRemoveFromAlbum?: () => Promise<void>;
 };
 
 export const PhotoBulkActions = ({
   selectedCount,
   submitting,
+  albums,
   onSelectAll,
   onCancel,
   onDelete,
+  onAddToAlbum,
+  onCreateAlbum,
   onRemoveFromAlbum,
 }: PhotoBulkActionsProps) => {
-  const [opened, { open, close }] = useDisclosure(false);
+  const [modal, setModal] = useState<"add" | "create" | "delete" | null>(null);
+  const [albumId, setAlbumId] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
 
   return (
-    <Group gap="sm" wrap="wrap">
+    <Group gap="sm" wrap="nowrap">
       <Text size="sm" c="dimmed">
         {selectedCount} 枚を選択中
       </Text>
-      <Button variant="subtle" size="xs" onClick={onSelectAll} disabled={submitting}>
-        すべて選択する
-      </Button>
-      {onRemoveFromAlbum && (
-        <Button
-          variant="default"
-          size="xs"
-          disabled={selectedCount === 0}
-          loading={submitting}
-          onClick={() => {
-            void onRemoveFromAlbum();
-          }}
-        >
-          アルバムから外す
-        </Button>
-      )}
-      <Button color="red" size="xs" disabled={selectedCount === 0 || submitting} onClick={open}>
-        削除する
-      </Button>
-      <Button variant="subtle" color="gray" size="xs" onClick={onCancel} disabled={submitting}>
-        選択をやめる
-      </Button>
+      <Menu position="bottom-end" shadow="md" width={240}>
+        <Menu.Target>
+          <ActionIcon variant="default" disabled={submitting} aria-label="選択した写真の操作">
+            <EllipsisIcon size={16} />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Label>選択</Menu.Label>
+          <Menu.Item leftSection={<CheckCheckIcon size={14} />} onClick={onSelectAll}>
+            すべて選択する
+          </Menu.Item>
+          <Menu.Item leftSection={<XIcon size={14} />} onClick={onCancel}>
+            選択を解除する
+          </Menu.Item>
+          <Menu.Divider />
+          <Menu.Label>アルバム</Menu.Label>
+          <Menu.Item
+            leftSection={<FolderPlusIcon size={14} />}
+            onClick={() => {
+              setAlbumId(null);
+              setModal("add");
+            }}
+            disabled={albums.length === 0}
+          >
+            既存のアルバムに追加する
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<PlusIcon size={14} />}
+            onClick={() => {
+              setTitle("");
+              setModal("create");
+            }}
+          >
+            新しいアルバムを作成する
+          </Menu.Item>
+          {onRemoveFromAlbum && (
+            <Menu.Item
+              leftSection={<FolderMinusIcon size={14} />}
+              onClick={() => {
+                void onRemoveFromAlbum();
+              }}
+            >
+              このアルバムから外す
+            </Menu.Item>
+          )}
+          <Menu.Divider />
+          <Menu.Item
+            color="red"
+            leftSection={<Trash2Icon size={14} />}
+            onClick={() => setModal("delete")}
+          >
+            削除する
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
 
-      <Modal opened={opened} onClose={close} title="写真を削除する" centered>
+      <Modal
+        opened={modal === "add"}
+        onClose={() => setModal(null)}
+        title="既存のアルバムに追加する"
+        centered
+      >
+        <Stack gap="md">
+          <Select
+            label="アルバム"
+            placeholder="アルバムを選ぶ"
+            value={albumId}
+            onChange={setAlbumId}
+            data={albums.map((album) => ({
+              label: album.title ?? "(無題)",
+              value: album.id,
+            }))}
+            searchable
+            nothingFoundMessage="アルバムが見つかりません"
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setModal(null)} disabled={submitting}>
+              キャンセルする
+            </Button>
+            <Button
+              loading={submitting}
+              disabled={!albumId}
+              onClick={() => {
+                if (albumId) {
+                  void onAddToAlbum(albumId).then(() => setModal(null));
+                }
+              }}
+            >
+              {selectedCount} 枚を追加する
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={modal === "create"}
+        onClose={() => setModal(null)}
+        title="新しいアルバムを作成する"
+        centered
+      >
+        <Stack gap="md">
+          <TextInput
+            label="名前"
+            placeholder="アルバムの名前"
+            value={title}
+            onChange={(e) => setTitle(e.currentTarget.value)}
+            maxLength={200}
+          />
+          <Text size="xs" c="dimmed">
+            作成したアルバムは非公開です。公開状態はアルバムの設定から変更できます。
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setModal(null)} disabled={submitting}>
+              キャンセルする
+            </Button>
+            <Button
+              loading={submitting}
+              disabled={!title.trim()}
+              onClick={() => {
+                void onCreateAlbum(title.trim()).then(() => setModal(null));
+              }}
+            >
+              作成して {selectedCount} 枚を追加する
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={modal === "delete"}
+        onClose={() => setModal(null)}
+        title="写真を削除する"
+        centered
+      >
         <Stack gap="md">
           <Text size="sm">
             選択した {selectedCount} 枚の写真を削除します。この操作は取り消せません。
@@ -57,14 +195,14 @@ export const PhotoBulkActions = ({
             写真が含まれているすべてのアルバムからも取り除かれます。
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={close} disabled={submitting}>
+            <Button variant="default" onClick={() => setModal(null)} disabled={submitting}>
               キャンセルする
             </Button>
             <Button
               color="red"
               loading={submitting}
               onClick={() => {
-                void onDelete().then(close);
+                void onDelete().then(() => setModal(null));
               }}
             >
               削除する
