@@ -8,8 +8,8 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
-import { ensureUserRow, requireUserId } from "#/server/auth.ts";
 import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
+import { ensureUserRow, requireUserId } from "#/server/user.ts";
 
 const THUMB_MIME = "image/webp";
 
