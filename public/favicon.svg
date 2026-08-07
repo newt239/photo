@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="photos.newt239.dev">
+  <rect width="64" height="64" rx="14" fill="#1f2933" />
+  <g transform="translate(32 32)">
+    <circle r="21" fill="#0d141b" />
+    <g>
+      <path d="M7.5 0 L13.5 16.09 A21 21 0 0 1 -7.18 19.73 L3.75 6.5 Z" fill="#4dabf7" />
+      <path d="M7.5 0 L13.5 16.09 A21 21 0 0 1 -7.18 19.73 L3.75 6.5 Z" fill="#a5d8ff" transform="rotate(60)" />
+      <path d="M7.5 0 L13.5 16.09 A21 21 0 0 1 -7.18 19.73 L3.75 6.5 Z" fill="#4dabf7" transform="rotate(120)" />
+      <path d="M7.5 0 L13.5 16.09 A21 21 0 0 1 -7.18 19.73 L3.75 6.5 Z" fill="#a5d8ff" transform="rotate(180)" />
+      <path d="M7.5 0 L13.5 16.09 A21 21 0 0 1 -7.18 19.73 L3.75 6.5 Z" fill="#4dabf7" transform="rotate(240)" />
+      <path d="M7.5 0 L13.5 16.09 A21 21 0 0 1 -7.18 19.73 L3.75 6.5 Z" fill="#a5d8ff" transform="rotate(300)" />
+    </g>
+    <circle r="21" fill="none" stroke="#0d141b" stroke-width="2" />
+  </g>
+</svg>
