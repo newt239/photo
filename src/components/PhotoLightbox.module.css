@@ -18,8 +18,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: max(2.25rem, var(--public-touch-size));
-  height: max(2.25rem, var(--public-touch-size));
+  width: var(--public-touch-size);
+  height: var(--public-touch-size);
   padding: 0;
   border: 1px solid var(--public-glass-border);
   border-radius: 999px;
