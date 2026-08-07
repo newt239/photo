@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   Group,
-  SegmentedControl,
   Stack,
   Text,
   Textarea,
@@ -17,8 +16,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ExpandIcon,
-  GlobeIcon,
-  LockIcon,
   SaveIcon,
   SparklesIcon,
   ZoomInIcon,
@@ -26,6 +23,8 @@ import {
 } from "lucide-react";
 
 import { PhotoLocationMap } from "#/components/PhotoLocationMap";
+import { VisibilityIcon } from "#/components/VisibilityIcon";
+import { VisibilitySegmentedControl } from "#/components/VisibilitySegmentedControl";
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { generatePhotoDraft, updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
@@ -300,38 +299,13 @@ export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Pro
         </div>
 
         <Stack gap="md" className={classes.side}>
-          <Group justify="space-between" align="center" wrap="nowrap">
-            <Text size="sm" fw={500}>
-              公開状態
-            </Text>
-            <SegmentedControl
-              value={photo.visibility}
-              onChange={(value) => {
-                void handleVisibility(value === "public" ? "public" : "private");
-              }}
-              disabled={switching}
-              data={[
-                {
-                  label: (
-                    <Group gap={6} wrap="nowrap" justify="center">
-                      <LockIcon size={14} />
-                      非公開
-                    </Group>
-                  ),
-                  value: "private",
-                },
-                {
-                  label: (
-                    <Group gap={6} wrap="nowrap" justify="center">
-                      <GlobeIcon size={14} />
-                      公開
-                    </Group>
-                  ),
-                  value: "public",
-                },
-              ]}
-            />
-          </Group>
+          <VisibilitySegmentedControl
+            value={photo.visibility}
+            onChange={(value) => {
+              void handleVisibility(value);
+            }}
+            disabled={switching}
+          />
           <Textarea
             label="キャプション"
             autosize
@@ -424,11 +398,7 @@ export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Pro
                 <Stack gap={6}>
                   {photo.albums.map((album) => (
                     <Group key={album.id} gap={6} wrap="nowrap">
-                      {album.visibility === "public" ? (
-                        <GlobeIcon size={14} color="var(--mantine-color-dimmed)" />
-                      ) : (
-                        <LockIcon size={14} color="var(--mantine-color-dimmed)" />
-                      )}
+                      <VisibilityIcon visibility={album.visibility} size={14} />
                       <Anchor
                         size="sm"
                         renderRoot={(props) => (

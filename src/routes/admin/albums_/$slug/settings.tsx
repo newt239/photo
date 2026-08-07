@@ -7,7 +7,6 @@ import {
   Divider,
   Group,
   Modal,
-  SegmentedControl,
   Stack,
   Text,
   TextInput,
@@ -16,8 +15,9 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
-import { ArrowLeftIcon, GlobeIcon, LockIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 
+import { VisibilitySegmentedControl } from "#/components/VisibilitySegmentedControl";
 import { deleteAlbum, getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
 
 const AlbumSettingsPage = () => {
@@ -140,35 +140,7 @@ const AlbumSettingsPage = () => {
             onChange={(e) => setAlbumSlug(e.currentTarget.value)}
             maxLength={200}
           />
-          <Group justify="space-between" align="center" wrap="nowrap">
-            <Text size="sm" fw={500}>
-              公開状態
-            </Text>
-            <SegmentedControl
-              value={visibility}
-              onChange={(v) => setVisibility(v === "public" ? "public" : "private")}
-              data={[
-                {
-                  label: (
-                    <Group gap={6} wrap="nowrap" justify="center">
-                      <LockIcon size={14} />
-                      非公開
-                    </Group>
-                  ),
-                  value: "private",
-                },
-                {
-                  label: (
-                    <Group gap={6} wrap="nowrap" justify="center">
-                      <GlobeIcon size={14} />
-                      公開
-                    </Group>
-                  ),
-                  value: "public",
-                },
-              ]}
-            />
-          </Group>
+          <VisibilitySegmentedControl value={visibility} onChange={setVisibility} />
           {errorMessage && (
             <Text size="sm" c="red">
               {errorMessage}

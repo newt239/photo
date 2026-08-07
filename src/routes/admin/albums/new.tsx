@@ -1,18 +1,10 @@
 import { useState } from "react";
 
-import {
-  Button,
-  Group,
-  SegmentedControl,
-  Stack,
-  Text,
-  TextInput,
-  Textarea,
-  Title,
-} from "@mantine/core";
+import { Button, Group, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { GlobeIcon, LockIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 
+import { VisibilitySegmentedControl } from "#/components/VisibilitySegmentedControl";
 import { createAlbum } from "#/server/albums.ts";
 
 const NewAlbumPage = () => {
@@ -80,35 +72,7 @@ const NewAlbumPage = () => {
             onChange={(e) => setSlug(e.currentTarget.value)}
             maxLength={200}
           />
-          <Group justify="space-between" align="center" wrap="nowrap">
-            <Text size="sm" fw={500}>
-              公開状態
-            </Text>
-            <SegmentedControl
-              value={visibility}
-              onChange={(v) => setVisibility(v)}
-              data={[
-                {
-                  label: (
-                    <Group gap={6} wrap="nowrap" justify="center">
-                      <LockIcon size={14} />
-                      非公開
-                    </Group>
-                  ),
-                  value: "private",
-                },
-                {
-                  label: (
-                    <Group gap={6} wrap="nowrap" justify="center">
-                      <GlobeIcon size={14} />
-                      公開
-                    </Group>
-                  ),
-                  value: "public",
-                },
-              ]}
-            />
-          </Group>
+          <VisibilitySegmentedControl value={visibility} onChange={setVisibility} />
           {errorMessage && (
             <Text size="sm" c="red">
               {errorMessage}

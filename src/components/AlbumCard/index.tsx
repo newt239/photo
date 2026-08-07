@@ -1,7 +1,7 @@
 import { Card, Group, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
-import { GlobeIcon, LockIcon } from "lucide-react";
 
+import { VisibilityIcon } from "#/components/VisibilityIcon";
 import { photoImageUrl } from "#/lib/image-url.ts";
 
 import classes from "./AlbumCard.module.css";
@@ -36,11 +36,7 @@ export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
           <Text fw={600} truncate style={{ minWidth: 0 }}>
             {album.title ?? "(無題)"}
           </Text>
-          {album.visibility === "public" ? (
-            <GlobeIcon size={14} aria-label="公開" color="var(--mantine-color-dimmed)" />
-          ) : (
-            <LockIcon size={14} aria-label="非公開" color="var(--mantine-color-dimmed)" />
-          )}
+          <VisibilityIcon visibility={album.visibility} size={14} />
         </Group>
       </Card>
     </Link>

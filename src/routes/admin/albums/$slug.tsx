@@ -2,13 +2,14 @@ import { useState } from "react";
 
 import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { Link, createFileRoute, useLoaderData, useRouter } from "@tanstack/react-router";
-import { ExternalLinkIcon, GlobeIcon, ImagePlusIcon, LockIcon, SettingsIcon } from "lucide-react";
+import { ExternalLinkIcon, ImagePlusIcon, SettingsIcon } from "lucide-react";
 import { z } from "zod";
 
 import { PhotoBulkActions } from "#/components/PhotoBulkActions";
 import { PhotoGrid } from "#/components/PhotoGrid";
 import { PhotoTable } from "#/components/PhotoTable";
 import { PhotoViewControls } from "#/components/PhotoViewControls";
+import { VisibilityIcon } from "#/components/VisibilityIcon";
 import {
   addPhotosToAlbum,
   createAlbum,
@@ -142,11 +143,7 @@ const AlbumDetailPage = () => {
         <Group justify="space-between" align="flex-start">
           <Group gap="xs" wrap="nowrap">
             <Title order={2}>{album.title ?? "(無題)"}</Title>
-            {album.visibility === "public" ? (
-              <GlobeIcon size={18} aria-label="公開" color="var(--mantine-color-dimmed)" />
-            ) : (
-              <LockIcon size={18} aria-label="非公開" color="var(--mantine-color-dimmed)" />
-            )}
+            <VisibilityIcon visibility={album.visibility} size={18} />
           </Group>
           <Group gap="sm" wrap="nowrap">
             <Tooltip label="公開ページを開く">

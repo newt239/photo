@@ -4,12 +4,7 @@ import leafletCss from "leaflet/dist/leaflet.css?url";
 import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import { PhotoDetailView } from "#/components/PhotoDetailView";
-import { getPhoto, getPhotoNeighbors } from "#/server/photos.ts";
-
-type PhotoDetail = {
-  photo: Awaited<ReturnType<typeof getPhoto>>;
-  neighbors: Awaited<ReturnType<typeof getPhotoNeighbors>>;
-};
+import { getPhoto, getPhotoNeighbors, type PhotoDetail } from "#/server/photos.ts";
 
 const AlbumPhotoDetailPage = () => {
   const { neighbors, photo } = Route.useLoaderData();
