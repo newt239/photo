@@ -13,19 +13,13 @@ type PublicGalleryPhoto = {
   height: number;
 };
 
-type PublicAlbumGalleryProps = {
-  title: string | null;
-  description: string | null;
-  photos: PublicGalleryPhoto[];
-  size: number;
-};
-
 export const PublicAlbumGallery = ({
-  title,
-  description,
   photos,
   size,
-}: PublicAlbumGalleryProps) => {
+}: {
+  photos: PublicGalleryPhoto[];
+  size: number;
+}) => {
   const [index, setIndex] = useState<number | null>(null);
 
   return (
@@ -48,10 +42,6 @@ export const PublicAlbumGallery = ({
             {p.caption && <span className={classes.caption}>{p.caption}</span>}
           </button>
         ))}
-      </div>
-      <div className={classes.overlay}>
-        <div className={classes.overlayTitle}>{title ?? "(無題)"}</div>
-        {description && <div className={classes.overlayDescription}>{description}</div>}
       </div>
       <PhotoLightbox
         photos={photos}

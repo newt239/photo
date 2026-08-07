@@ -1,27 +1,16 @@
-import { Text } from "@mantine/core";
 import { createFileRoute, useLoaderData, useSearch } from "@tanstack/react-router";
 
 import { PublicAlbumGallery } from "#/components/PublicAlbumGallery.tsx";
+import { PublicNotice } from "#/components/PublicNotice.tsx";
 
 const PublicAlbumIndexPage = () => {
-  const { album, photos } = useLoaderData({ from: "/albums/$slug" });
+  const { photos } = useLoaderData({ from: "/albums/$slug" });
   const { size } = useSearch({ from: "/albums/$slug" });
 
   if (photos.length === 0) {
-    return (
-      <Text c="dimmed" size="sm" p="xl">
-        このアルバムにはまだ写真がありません
-      </Text>
-    );
+    return <PublicNotice>このアルバムにはまだ写真がありません</PublicNotice>;
   }
-  return (
-    <PublicAlbumGallery
-      title={album.title}
-      description={album.description}
-      photos={photos}
-      size={size}
-    />
-  );
+  return <PublicAlbumGallery photos={photos} size={size} />;
 };
 
 export const Route = createFileRoute("/albums/$slug/")({

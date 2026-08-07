@@ -1,0 +1,12 @@
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+  margin: 0;
+  padding: 2rem;
+  background: var(--public-surface);
+  color: var(--public-fg-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}

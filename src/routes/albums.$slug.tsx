@@ -13,6 +13,7 @@ import { getPublicAlbumBySlug } from "#/server/public.ts";
 type PublicAlbum = NonNullable<Awaited<ReturnType<typeof getPublicAlbumBySlug>>>;
 
 const PublicAlbumLayout = () => {
+  const { album } = Route.useLoaderData();
   const { slug } = Route.useParams();
   const { size } = Route.useSearch();
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ const PublicAlbumLayout = () => {
     <>
       <Outlet />
       <PublicAlbumControls
+        title={album.title}
+        description={album.description}
         mode={mode}
         size={size}
         onModeChange={(next) => {

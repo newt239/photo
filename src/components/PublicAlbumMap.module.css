@@ -1,11 +1,47 @@
 .map {
   width: 100%;
   height: 100dvh;
-  background: var(--mantine-color-gray-1);
+  background: var(--public-surface);
 }
 
 .map :global(.leaflet-container) {
   font-family: inherit;
+}
+
+.map :global(.leaflet-bar) {
+  border: 1px solid var(--public-glass-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--public-glass-shadow);
+}
+
+.map :global(.leaflet-bar a) {
+  border: 0;
+  background: var(--public-glass-bg);
+  backdrop-filter: var(--public-glass-blur);
+  -webkit-backdrop-filter: var(--public-glass-blur);
+  color: var(--public-fg);
+}
+
+.map :global(.leaflet-bar a:hover) {
+  background: var(--public-glass-hover);
+  color: var(--public-fg);
+}
+
+.map :global(.leaflet-tooltip) {
+  border: 1px solid var(--public-glass-border);
+  border-radius: 999px;
+  padding: 0.25rem 0.625rem;
+  background: var(--public-glass-bg);
+  backdrop-filter: var(--public-glass-blur);
+  -webkit-backdrop-filter: var(--public-glass-blur);
+  box-shadow: var(--public-glass-shadow);
+  color: var(--public-fg);
+  font-size: 0.75rem;
+}
+
+.map :global(.leaflet-tooltip::before) {
+  display: none;
 }
 
 .map :global(.leaflet-marker-pane) .pin {
@@ -20,7 +56,12 @@
   height: 48px;
   object-fit: cover;
   border-radius: 50%;
-  border: 2px solid var(--mantine-color-white);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  background: var(--mantine-color-gray-1);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  transition: transform 150ms ease;
+}
+
+.map :global(.leaflet-marker-pane) .pin:hover img {
+  transform: scale(1.1);
 }

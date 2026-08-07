@@ -1,8 +1,8 @@
-import { Text } from "@mantine/core";
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
 import { PublicAlbumMap } from "#/components/PublicAlbumMap.tsx";
+import { PublicNotice } from "#/components/PublicNotice.tsx";
 
 const PublicAlbumMapPage = () => {
   const { photos } = useLoaderData({ from: "/albums/$slug" });
@@ -13,11 +13,7 @@ const PublicAlbumMapPage = () => {
   );
 
   if (geotagged.length === 0) {
-    return (
-      <Text c="dimmed" size="sm" p="xl">
-        位置情報のある写真がありません
-      </Text>
-    );
+    return <PublicNotice>位置情報のある写真がありません</PublicNotice>;
   }
   return <PublicAlbumMap photos={geotagged} />;
 };

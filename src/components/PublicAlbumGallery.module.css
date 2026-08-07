@@ -1,7 +1,9 @@
 .gallery {
   column-gap: 0;
   width: 100%;
+  min-height: 100dvh;
   line-height: 0;
+  background: var(--public-surface);
 }
 
 .item {
@@ -20,66 +22,34 @@
   display: block;
   width: 100%;
   height: auto;
-  background: var(--mantine-color-gray-1);
+  background: rgba(255, 255, 255, 0.04);
+  transition: opacity 200ms ease;
 }
 
-.item::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  transition: opacity 150ms ease;
-  pointer-events: none;
-}
-
-.item:hover::after,
-.item:focus-visible::after {
-  opacity: 1;
+.item:hover img,
+.item:focus-visible img {
+  opacity: 0.72;
 }
 
 .caption {
   position: absolute;
   inset-inline: 0;
   bottom: 0;
-  z-index: 1;
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
-  color: var(--mantine-color-white);
-  font-size: var(--mantine-font-size-sm);
+  padding: 1.5rem 0.75rem 0.625rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  color: var(--public-fg);
+  font-size: 0.8125rem;
   line-height: 1.4;
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   opacity: 0;
-  transition: opacity 150ms ease;
+  transition: opacity 200ms ease;
   pointer-events: none;
 }
 
 .item:hover .caption,
 .item:focus-visible .caption {
   opacity: 1;
-}
-
-.overlay {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  max-width: min(90vw, 48rem);
-  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
-  text-align: right;
-  color: var(--mantine-color-white);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
-  pointer-events: none;
-  line-height: 1.2;
-}
-
-.overlayTitle {
-  font-size: clamp(1.75rem, 6vw, 4.5rem);
-  font-weight: 700;
-}
-
-.overlayDescription {
-  margin-top: 0.25em;
-  font-size: clamp(0.875rem, 1.8vw, 1.5rem);
-  line-height: 1.4;
 }
