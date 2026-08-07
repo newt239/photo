@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { ChevronDownIcon, ChevronUpIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { ChevronDownIcon, InfoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
 import classes from "./PublicAlbumControls.module.css";
 
@@ -25,14 +25,18 @@ export const PublicAlbumControls = ({
 
   if (minimized) {
     return (
-      <button
-        type="button"
-        className={classes.restore}
-        onClick={() => setMinimized(false)}
-        aria-label="メニューを開く"
-      >
-        <ChevronUpIcon size={18} />
-      </button>
+      <div className={classes.collapsed}>
+        <span className={classes.collapsedTitle}>{title ?? "(無題)"}</span>
+        <button
+          type="button"
+          className={classes.infoButton}
+          onClick={() => setMinimized(false)}
+          aria-expanded={false}
+          aria-label="アルバムの情報を開く"
+        >
+          <InfoIcon size={18} />
+        </button>
+      </div>
     );
   }
 
@@ -47,7 +51,8 @@ export const PublicAlbumControls = ({
           type="button"
           className={classes.iconButton}
           onClick={() => setMinimized(true)}
-          aria-label="メニューを閉じる"
+          aria-expanded
+          aria-label="アルバムの情報を閉じる"
         >
           <ChevronDownIcon size={16} />
         </button>
