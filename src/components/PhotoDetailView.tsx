@@ -177,7 +177,7 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
   };
 
   return (
-    <Stack p="xl" gap="md" maw={1200} mx="auto">
+    <Stack p="xl" gap="md">
       {backLink && <Group wrap="nowrap">{backLink}</Group>}
 
       <Stack gap="md">

@@ -1,5 +1,5 @@
-import { Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { AlbumCard, type AlbumCardData } from "#/components/AlbumCard.tsx";
 import { listMyAlbums } from "#/server/albums.ts";
@@ -7,16 +7,8 @@ import { listMyAlbums } from "#/server/albums.ts";
 const AlbumsIndexPage = () => {
   const { albums } = Route.useLoaderData();
   return (
-    <Stack p="xl" gap="md" maw={1200} mx="auto">
-      <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
-        ← ホーム
-      </Button>
-      <Group justify="space-between">
-        <Title order={2}>アルバム</Title>
-        <Button component={Link} to="/admin/albums/new">
-          新規作成
-        </Button>
-      </Group>
+    <Stack p="xl" gap="md">
+      <Title order={2}>アルバム</Title>
       {albums.length === 0 ? (
         <Text c="dimmed" size="sm">
           アルバムはまだありません
@@ -34,7 +26,7 @@ const AlbumsIndexPage = () => {
 
 export const Route = createFileRoute("/admin/albums/")({
   component: AlbumsIndexPage,
-  head: () => ({ meta: [{ title: "アルバム | Photo" }] }),
+  head: () => ({ meta: [{ title: "アルバム | photos.newt239.dev" }] }),
   loader: async (): Promise<{ albums: AlbumCardData[] }> => ({
     albums: await listMyAlbums({ data: {} }),
   }),

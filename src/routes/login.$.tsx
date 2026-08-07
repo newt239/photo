@@ -10,5 +10,5 @@ const LoginPage = () => (
 
 export const Route = createFileRoute("/login/$")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "ログイン | Photo" }] }),
+  head: () => ({ meta: [{ title: "ログイン | photos.newt239.dev" }] }),
 });

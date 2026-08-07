@@ -55,7 +55,7 @@ export const Route = createRootRoute({
         name: "viewport",
       },
       {
-        title: "Photo",
+        title: "photos.newt239.dev",
       },
     ],
   }),

@@ -18,7 +18,7 @@ const IndexPage = () => {
 
 export const Route = createFileRoute("/")({
   component: IndexPage,
-  head: () => ({ meta: [{ title: "Photo" }] }),
+  head: () => ({ meta: [{ title: "photos.newt239.dev" }] }),
   loader: async (): Promise<{ albums: PublicAlbumData[] }> => ({
     albums: await listPublicAlbums(),
   }),

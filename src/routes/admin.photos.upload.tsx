@@ -1,13 +1,10 @@
-import { Button, Paper, Stack, Title } from "@mantine/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Paper, Stack, Title } from "@mantine/core";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { UploadDropzone } from "#/components/UploadDropzone.tsx";
 
 const PhotosUploadPage = () => (
-  <Stack p="xl" gap="md" maw={900} mx="auto">
-    <Button component={Link} to="/admin" variant="subtle" size="xs" w="fit-content">
-      ← ホーム
-    </Button>
+  <Stack p="xl" gap="md">
     <Title order={2}>写真をアップロード</Title>
     <Paper withBorder radius="md" p="lg">
       <UploadDropzone />
@@ -17,5 +14,5 @@ const PhotosUploadPage = () => (
 
 export const Route = createFileRoute("/admin/photos/upload")({
   component: PhotosUploadPage,
-  head: () => ({ meta: [{ title: "アップロード | Photo" }] }),
+  head: () => ({ meta: [{ title: "アップロード | photos.newt239.dev" }] }),
 });

@@ -19,6 +19,7 @@
 
 .item {
   display: block;
+  position: relative;
   break-inside: avoid;
 }
 
@@ -29,23 +30,63 @@
   background: var(--mantine-color-gray-1);
 }
 
+.item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.item:hover::after,
+.item:focus-visible::after {
+  opacity: 1;
+}
+
+.caption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  color: var(--mantine-color-white);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.item:hover .caption,
+.item:focus-visible .caption {
+  opacity: 1;
+}
+
 .overlay {
   position: fixed;
   right: 0;
   bottom: 0;
-  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  max-width: min(90vw, 48rem);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
   text-align: right;
   color: var(--mantine-color-white);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
   pointer-events: none;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .overlayTitle {
-  font-size: var(--mantine-font-size-xl);
+  font-size: clamp(1.75rem, 6vw, 4.5rem);
   font-weight: 700;
 }
 
 .overlayDescription {
-  font-size: var(--mantine-font-size-sm);
+  margin-top: 0.25em;
+  font-size: clamp(0.875rem, 1.8vw, 1.5rem);
+  line-height: 1.4;
 }

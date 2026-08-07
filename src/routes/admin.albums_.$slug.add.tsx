@@ -54,7 +54,7 @@ const AlbumAddPhotosPage = () => {
   };
 
   return (
-    <Stack p="xl" gap="md" maw={1200} mx="auto">
+    <Stack p="xl" gap="md">
       <Button
         variant="subtle"
         size="xs"

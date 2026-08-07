@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -38,6 +38,56 @@ export const createAlbum = createServerFn({ method: "POST" })
       visibility: data.visibility,
     });
     return { id, slug };
+  });
+
+const updateAlbumInput = z.object({
+  description: z.string().max(2000).nullable(),
+  id: z.string().min(1),
+  slug: z.string().min(1).max(200),
+  title: z.string().min(1).max(200),
+  visibility: z.enum(["public", "private"]),
+});
+
+export const updateAlbum = createServerFn({ method: "POST" })
+  .validator(updateAlbumInput)
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const db = drizzle(env.DB, { schema });
+
+    if (!/^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/.test(data.slug)) {
+      return { error: "URL に使えない文字が含まれています", success: false } as const;
+    }
+
+    const [album] = await db
+      .select({ id: albums.id })
+      .from(albums)
+      .where(and(eq(albums.id, data.id), eq(albums.userId, userId)))
+      .limit(1);
+    if (!album) {
+      return { error: "アルバムが見つかりません", success: false } as const;
+    }
+
+    const [duplicate] = await db
+      .select({ id: albums.id })
+      .from(albums)
+      .where(and(eq(albums.slug, data.slug), ne(albums.id, data.id)))
+      .limit(1);
+    if (duplicate) {
+      return { error: "この URL は既に使われています", success: false } as const;
+    }
+
+    await db
+      .update(albums)
+      .set({
+        description: data.description,
+        slug: data.slug,
+        title: data.title,
+        updatedAt: new Date(),
+        visibility: data.visibility,
+      })
+      .where(eq(albums.id, data.id));
+
+    return { slug: data.slug, success: true } as const;
   });
 
 export const listMyAlbums = createServerFn({ method: "GET" })

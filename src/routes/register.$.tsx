@@ -10,5 +10,5 @@ const RegisterPage = () => (
 
 export const Route = createFileRoute("/register/$")({
   component: RegisterPage,
-  head: () => ({ meta: [{ title: "新規登録 | Photo" }] }),
+  head: () => ({ meta: [{ title: "新規登録 | photos.newt239.dev" }] }),
 });

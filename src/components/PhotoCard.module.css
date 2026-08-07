@@ -2,19 +2,13 @@
   text-decoration: none;
   color: inherit;
   display: block;
-  transition: transform 120ms ease;
-}
-
-.link:hover {
-  transform: translateY(-2px);
-}
-
-.card {
-  overflow: hidden;
 }
 
 .thumb {
+  position: relative;
   width: 100%;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-sm);
   background: var(--mantine-color-gray-1);
   display: block;
 }
@@ -26,6 +20,38 @@
   object-fit: cover;
 }
 
+.thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.link:hover .thumb::after,
+.link:focus-visible .thumb::after {
+  opacity: 1;
+}
+
 .caption {
-  border-top: 1px solid var(--mantine-color-gray-3);
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  color: var(--mantine-color-white);
+  font-size: var(--mantine-font-size-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.link:hover .caption,
+.link:focus-visible .caption {
+  opacity: 1;
 }

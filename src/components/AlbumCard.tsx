@@ -1,5 +1,6 @@
-import { Card, Stack, Text } from "@mantine/core";
+import { Card, Group, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
+import { GlobeIcon, LockIcon } from "lucide-react";
 
 import classes from "./AlbumCard.module.css";
 
@@ -11,7 +12,6 @@ export type AlbumCardData = {
   visibility: "public" | "private";
   coverThumbnailKey: string | null;
   coverStorageKey: string | null;
-  photoCount: number;
 };
 
 export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
@@ -34,15 +34,16 @@ export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
             </div>
           )}
         </div>
-        <Stack gap={2} px="sm" py="xs">
-          <Text fw={600} truncate>
+        <Group gap={6} wrap="nowrap" px="sm" py="xs">
+          <Text fw={600} truncate style={{ minWidth: 0 }}>
             {album.title ?? "(無題)"}
           </Text>
-          <Text size="xs" c="dimmed">
-            {album.photoCount} 枚・
-            {album.visibility === "public" ? "公開" : "非公開"}
-          </Text>
-        </Stack>
+          {album.visibility === "public" ? (
+            <GlobeIcon size={14} aria-label="公開" color="var(--mantine-color-dimmed)" />
+          ) : (
+            <LockIcon size={14} aria-label="非公開" color="var(--mantine-color-dimmed)" />
+          )}
+        </Group>
       </Card>
     </Link>
   );

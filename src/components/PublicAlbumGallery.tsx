@@ -33,6 +33,7 @@ export const PublicAlbumGallery = ({ title, description, photos }: PublicAlbumGa
             loading="lazy"
             style={{ aspectRatio: `${p.width} / ${p.height}` }}
           />
+          {p.caption && <span className={classes.caption}>{p.caption}</span>}
         </a>
       ))}
     </div>
