@@ -1,5 +1,6 @@
 import { Button } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import leafletCss from "leaflet/dist/leaflet.css?url";
 
 import { PhotoDetailView } from "#/components/PhotoDetailView.tsx";
 import { getPhoto } from "#/server/photos.ts";
@@ -29,6 +30,7 @@ const AlbumPhotoDetailPage = () => {
 export const Route = createFileRoute("/admin/albums_/$slug/photos/$photoId")({
   component: AlbumPhotoDetailPage,
   head: ({ loaderData }) => ({
+    links: [{ href: leafletCss, rel: "stylesheet" }],
     meta: [{ title: `${loaderData?.caption ?? "写真"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string; photoId: string } }): Promise<PhotoDetail> =>

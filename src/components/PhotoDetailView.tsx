@@ -1,19 +1,21 @@
 import { useState, type ReactNode } from "react";
 
 import {
+  ActionIcon,
   Anchor,
   Badge,
   Button,
   Card,
   Group,
-  SimpleGrid,
   Stack,
   Text,
   Textarea,
   Title,
 } from "@mantine/core";
 import { useRouter } from "@tanstack/react-router";
+import { ExpandIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
+import { PhotoLocationMap } from "#/components/PhotoLocationMap.tsx";
 import { generatePhotoDraft, updatePhoto } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
@@ -121,10 +123,10 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
     fileRows.push({ label: "アップロード日時", value: uploaded });
   }
   const takenAt = formatDateTime(photo.takenAt);
-  const hasLocation = photo.latitude !== null && photo.longitude !== null;
 
   const [caption, setCaption] = useState(photo.caption ?? "");
   const [alt, setAlt] = useState(photo.alt ?? "");
+  const [zoom, setZoom] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -180,93 +182,140 @@ export const PhotoDetailView = ({ photo, backLink }: Props) => {
     <Stack p="xl" gap="md">
       {backLink && <Group wrap="nowrap">{backLink}</Group>}
 
-      <Stack gap="md">
-        <Group justify="flex-end">
-          <Badge variant="light">{photo.visibility === "public" ? "公開" : "非公開"}</Badge>
-        </Group>
-        <Textarea
-          label="キャプション"
-          autosize
-          minRows={2}
-          value={caption}
-          onChange={(e) => setCaption(e.currentTarget.value)}
-          maxLength={2000}
-        />
-        <Textarea
-          label="代替テキスト"
-          autosize
-          minRows={2}
-          value={alt}
-          onChange={(e) => setAlt(e.currentTarget.value)}
-          maxLength={500}
-        />
-        {errorMessage && (
-          <Text size="sm" c="red">
-            {errorMessage}
-          </Text>
-        )}
-        <Group justify="space-between">
-          <Button
-            variant="light"
-            loading={generating}
-            disabled={submitting}
-            onClick={handleGenerate}
-          >
-            AIで生成する
-          </Button>
-          <Button loading={submitting} disabled={generating} onClick={handleSubmit}>
-            保存する
-          </Button>
-        </Group>
-        {takenAt && (
-          <Text size="sm" c="dimmed">
-            撮影日時: {takenAt}
-          </Text>
-        )}
-      </Stack>
-
-      <div className={classes.frame} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
-        <img src={imageSrc} alt={alt || caption || ""} />
-      </div>
-
-      <SimpleGrid cols={{ base: 1, md: hasLocation ? 3 : 2 }} spacing="md">
-        {exifRows.length > 0 && (
-          <Card withBorder radius="md" padding="md">
-            <Stack gap="xs">
-              <Title order={4}>EXIF</Title>
-              {renderInfoList(exifRows)}
-            </Stack>
-          </Card>
-        )}
-        <Card withBorder radius="md" padding="md">
-          <Stack gap="xs">
-            <Title order={4}>ファイル情報</Title>
-            {renderInfoList(fileRows)}
-          </Stack>
-        </Card>
-        {photo.latitude !== null && photo.longitude !== null && (
-          <Card withBorder radius="md" padding="md">
-            <Stack gap="xs">
-              <Title order={4}>位置情報</Title>
-              {renderInfoList([
-                { label: "緯度", value: photo.latitude.toFixed(6) },
-                { label: "経度", value: photo.longitude.toFixed(6) },
-                ...(photo.altitude === null
-                  ? []
-                  : [{ label: "標高", value: `${photo.altitude.toFixed(1)} m` }]),
-              ])}
-              <Anchor
-                href={`https://www.google.com/maps?q=${photo.latitude},${photo.longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                size="sm"
+      <div className={classes.layout}>
+        <div className={classes.viewer}>
+          <div className={classes.stage}>
+            <button
+              type="button"
+              className={classes.canvas}
+              style={{ height: `${zoom * 100}%`, width: `${zoom * 100}%` }}
+              onClick={() => setZoom((prev) => (prev >= 4 ? 1 : prev + 1))}
+              aria-label={zoom >= 4 ? "全体を表示する" : "拡大する"}
+            >
+              <img src={imageSrc} alt={alt || caption || ""} />
+            </button>
+          </div>
+          <Group className={classes.toolbar} gap="xs" justify="space-between" wrap="nowrap">
+            <Group gap="xs" wrap="nowrap">
+              <ActionIcon
+                variant="default"
+                onClick={() => setZoom((prev) => Math.max(1, prev - 0.5))}
+                disabled={zoom <= 1}
+                aria-label="縮小する"
               >
-                Google Maps で開く
-              </Anchor>
+                <ZoomOutIcon size={16} />
+              </ActionIcon>
+              <Text size="sm" c="dimmed" w={48} ta="center">
+                {Math.round(zoom * 100)}%
+              </Text>
+              <ActionIcon
+                variant="default"
+                onClick={() => setZoom((prev) => Math.min(4, prev + 0.5))}
+                disabled={zoom >= 4}
+                aria-label="拡大する"
+              >
+                <ZoomInIcon size={16} />
+              </ActionIcon>
+              <ActionIcon
+                variant="default"
+                onClick={() => setZoom(1)}
+                disabled={zoom === 1}
+                aria-label="全体を表示する"
+              >
+                <ExpandIcon size={16} />
+              </ActionIcon>
+            </Group>
+            <Anchor href={imageSrc} target="_blank" rel="noopener noreferrer" size="sm">
+              原寸で開く
+            </Anchor>
+          </Group>
+        </div>
+
+        <Stack gap="md">
+          <Group justify="space-between" wrap="nowrap">
+            <Badge variant="light">{photo.visibility === "public" ? "公開" : "非公開"}</Badge>
+            {takenAt && (
+              <Text size="sm" c="dimmed">
+                撮影日時: {takenAt}
+              </Text>
+            )}
+          </Group>
+          <Textarea
+            label="キャプション"
+            autosize
+            minRows={2}
+            value={caption}
+            onChange={(e) => setCaption(e.currentTarget.value)}
+            maxLength={2000}
+          />
+          <Textarea
+            label="代替テキスト"
+            autosize
+            minRows={3}
+            value={alt}
+            onChange={(e) => setAlt(e.currentTarget.value)}
+            maxLength={500}
+          />
+          {errorMessage && (
+            <Text size="sm" c="red">
+              {errorMessage}
+            </Text>
+          )}
+          <Group justify="space-between">
+            <Button
+              variant="light"
+              loading={generating}
+              disabled={submitting}
+              onClick={handleGenerate}
+            >
+              AIで生成する
+            </Button>
+            <Button loading={submitting} disabled={generating} onClick={handleSubmit}>
+              保存する
+            </Button>
+          </Group>
+
+          {photo.latitude !== null && photo.longitude !== null && (
+            <Card withBorder radius="md" padding="md">
+              <Stack gap="xs">
+                <Title order={4}>位置情報</Title>
+                <PhotoLocationMap latitude={photo.latitude} longitude={photo.longitude} />
+                {renderInfoList([
+                  { label: "緯度", value: photo.latitude.toFixed(6) },
+                  { label: "経度", value: photo.longitude.toFixed(6) },
+                  ...(photo.altitude === null
+                    ? []
+                    : [{ label: "標高", value: `${photo.altitude.toFixed(1)} m` }]),
+                ])}
+                <Anchor
+                  href={`https://www.google.com/maps?q=${photo.latitude},${photo.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="sm"
+                >
+                  Google Maps で開く
+                </Anchor>
+              </Stack>
+            </Card>
+          )}
+
+          {exifRows.length > 0 && (
+            <Card withBorder radius="md" padding="md">
+              <Stack gap="xs">
+                <Title order={4}>EXIF</Title>
+                {renderInfoList(exifRows)}
+              </Stack>
+            </Card>
+          )}
+
+          <Card withBorder radius="md" padding="md">
+            <Stack gap="xs">
+              <Title order={4}>ファイル情報</Title>
+              {renderInfoList(fileRows)}
             </Stack>
           </Card>
-        )}
-      </SimpleGrid>
+        </Stack>
+      </div>
     </Stack>
   );
 };
