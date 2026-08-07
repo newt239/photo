@@ -8,4 +8,4 @@ allowBuilds:
   sharp: true
   workerd: true
 saveExact: true
-minimumReleaseAge: 1440
+minimumReleaseAge: 10080
