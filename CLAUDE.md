@@ -87,7 +87,10 @@ src/
 │   └── api/                # API ルート（画像配信など）
 ├── router.tsx              # ルーターの生成（getRouter）
 ├── routeTree.gen.ts        # 自動生成（編集禁止）
-├── components/             # コンポーネント（PascalCase のディレクトリ）
+├── components/             # Atomic Design（atoms / molecules / organisms）
+│   ├── atoms/              # 単一の要素。ドメイン知識も状態も持たない
+│   ├── molecules/          # atoms の組み合わせ。単一の目的を持つ制御 UI・カード
+│   └── organisms/          # それ自体で意味を持つセクション。server function も扱う
 ├── providers/              # アプリ全体を包む Provider（Clerk など）
 ├── server/                 # server functions（createServerFn）とサーバー専用処理
 ├── db/                     # Drizzle スキーマと DB クライアント
@@ -96,7 +99,10 @@ src/
 ```
 
 - ルートはドット記法ではなくディレクトリで階層を表現してください。`<Outlet />` を持つレイアウトは `route.tsx`、末尾に `_` が付いたセグメント（例: `albums_/`）は親レイアウトにネストさせない非ネストルートです。`createFileRoute` の引数はディレクトリ構成と一致させてください。
-- コンポーネントは PascalCase のディレクトリを作り、その下に `index.tsx` と CSS Module を置いてください（例: `components/PhotoCard/index.tsx` と `components/PhotoCard/PhotoCard.module.css`）。`index.tsx` 以外に再エクスポートだけのバレルファイルを作ってはなりません。
+- コンポーネントは `components/<層>/` の下に PascalCase のディレクトリを作り、その下に `index.tsx` と CSS Module を置いてください（例: `components/molecules/PhotoCard/index.tsx` と `components/molecules/PhotoCard/PhotoCard.module.css`）。`index.tsx` 以外に再エクスポートだけのバレルファイルを作ってはなりません。
+- 層は再利用される回数ではなく粒度で決めてください。`atoms` は単一の要素で状態もドメイン知識も持たないもの、`molecules` は atoms を組み合わせた単一目的の UI、`organisms` は複数の状態や server function を扱う独立したセクションです。
+- Atomic Design の templates（レイアウト）と pages は `components` に置かず、`src/routes` に書いてください。`route.tsx` がテンプレート、各ルートの `component` がページに相当します。
+- コンポーネント名は所在ではなく役割で付けてください（`ProfileSection` ではなく `UserProfile`、`PublicAlbumGallery` ではなく `PhotoGallery`）。
 - コンポーネント固有のスタイルはコンポーネント名の CSS Module（例: `PhotoCard.module.css`）に記述してください。
 - `src/lib` はクライアントからも読み込まれます。`cloudflare:workers` の `env` や Clerk のサーバー API を使う処理は `src/server` に置いてください。
 
@@ -104,7 +110,7 @@ src/
 
 - 同階層でないモジュールをインポートする場合は、**相対パスではなくパスエイリアスを使用してください**。
 - プロジェクトでは `#/` が `src/` にマップされています。例: `#/lib/format.ts` → `src/lib/format.ts`。
-- コンポーネントは `#/components/PhotoCard` のようにディレクトリを指定してインポートしてください。
+- コンポーネントは `#/components/molecules/PhotoCard` のように層とディレクトリを指定してインポートしてください。
 - **同一ディレクトリ内**のインポートでは相対パス（`./PhotoCard.module.css` など）を使用して構いません。
 
 ## 不変条件（絶対に破らないこと）
