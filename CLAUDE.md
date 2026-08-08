@@ -51,6 +51,8 @@
 - `pnpm wrangler d1 migrations apply photo --local` - ローカル D1 にマイグレーションを適用
 - `pnpm wrangler d1 migrations apply photo --remote` - 本番 D1 にマイグレーションを適用
 
+`drizzle/` にマイグレーションを追加した変更をデプロイする際は、必ず `--remote` の適用を先に実行してください。適用を忘れると本番のスキーマだけが古いまま残り、ローカルでは再現しない実行時エラーになります。未適用のマイグレーションは `pnpm wrangler d1 migrations list photo --remote` で確認できます。
+
 ## アーキテクチャ
 
 ### 技術スタック

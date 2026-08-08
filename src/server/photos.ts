@@ -130,7 +130,8 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         userId,
         width: data.width,
       });
-    } catch {
+    } catch (error) {
+      console.error("finalizePhoto: photos への insert に失敗しました", error);
       await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
       if (data.thumbnailKey) {
         await env.MY_BUCKET.delete(data.thumbnailKey).catch(() => {});
@@ -410,8 +411,13 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
   );
   for (let offset = 0; offset < storageKeys.length; offset += R2_DELETE_CHUNK_SIZE) {
     // R2 の一括削除は 1 回あたり 1000 キーまでのため分割する
-    // eslint-disable-next-line no-await-in-loop
-    await env.MY_BUCKET.delete(storageKeys.slice(offset, offset + R2_DELETE_CHUNK_SIZE));
+    const chunk = storageKeys.slice(offset, offset + R2_DELETE_CHUNK_SIZE);
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      await env.MY_BUCKET.delete(chunk);
+    } catch (error) {
+      console.error("deleteOwnedPhotos: R2 のオブジェクト削除に失敗しました", chunk, error);
+    }
   }
   return rows.length;
 });
