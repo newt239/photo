@@ -14,7 +14,7 @@ type PhotoTableProps = {
   albumSlug?: string;
   emptyMessage?: string;
   selectedPhotoIds: Set<string>;
-  onSelect: (photoId: string) => void;
+  onSelect: (photoId: string, extend: boolean) => void;
 };
 
 export const PhotoTable = ({
@@ -53,7 +53,8 @@ export const PhotoTable = ({
                 <Table.Td>
                   <Checkbox
                     checked={selected}
-                    onChange={() => onSelect(p.id)}
+                    readOnly
+                    onClick={(event) => onSelect(p.id, event.shiftKey)}
                     aria-label={p.caption ?? p.alt ?? "この写真を選択する"}
                   />
                 </Table.Td>

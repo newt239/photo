@@ -1,7 +1,5 @@
-import { useEffect } from "react";
-
 import { FocusTrap, Portal, RemoveScroll } from "@mantine/core";
-import { useFocusReturn } from "@mantine/hooks";
+import { useFocusReturn, useHotkeys } from "@mantine/hooks";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
 import { photoImageUrl } from "#/lib/image-url.ts";
@@ -29,49 +27,44 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
     photo?.id ?? null,
   );
 
-  // Esc と左右キーでの操作を受け取るため window にイベントを登録する
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (index === null) {
-        return;
-      }
-      if (event.key === "Escape") {
-        reset();
-        onClose();
-        return;
-      }
-      let delta = 0;
-      if (event.key === "ArrowLeft") {
-        delta = -1;
-      }
-      if (event.key === "ArrowRight") {
-        delta = 1;
-      }
-      if (delta === 0) {
-        return;
-      }
-      reset();
-      onIndexChange((index + delta + photos.length) % photos.length);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [index, photos.length, onClose, onIndexChange, reset]);
-
-  useFocusReturn({ opened: index !== null });
-
-  if (index === null || !photo) {
-    return null;
-  }
-
   const handleClose = () => {
     reset();
     onClose();
   };
 
   const move = (delta: number) => {
+    if (index === null) {
+      return;
+    }
     reset();
     onIndexChange((index + delta + photos.length) % photos.length);
   };
+
+  const jumpTo = (next: number) => {
+    if (index === null) {
+      return;
+    }
+    reset();
+    onIndexChange(next);
+  };
+
+  useHotkeys([
+    ["-", () => index !== null && zoomTo(scale / 1.5)],
+    ["0", () => index !== null && reset()],
+    ["=", () => index !== null && zoomTo(scale * 1.5)],
+    ["ArrowLeft", () => move(-1)],
+    ["ArrowRight", () => move(1)],
+    ["End", () => jumpTo(photos.length - 1)],
+    ["Escape", () => index !== null && handleClose()],
+    ["Home", () => jumpTo(0)],
+    ["shift+=", () => index !== null && zoomTo(scale * 1.5)],
+  ]);
+
+  useFocusReturn({ opened: index !== null });
+
+  if (index === null || !photo) {
+    return null;
+  }
 
   return (
     <Portal>

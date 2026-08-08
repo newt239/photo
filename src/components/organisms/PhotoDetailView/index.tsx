@@ -12,6 +12,7 @@ import {
   Textarea,
   Title,
 } from "@mantine/core";
+import { useHotkeys } from "@mantine/hooks";
 import { Link, useRouter } from "@tanstack/react-router";
 import {
   ArrowLeftIcon,
@@ -237,6 +238,35 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
         アルバムに戻る
       </Button>
     );
+
+  const goToPhoto = (photoId: string | null) => {
+    if (photoId === null) {
+      return;
+    }
+    if (albumSlug === undefined) {
+      router.navigate({ params: { photoId }, to: "/admin/photos/$photoId" });
+    } else {
+      router.navigate({
+        params: { photoId, slug: albumSlug },
+        to: "/admin/albums/$slug/photos/$photoId",
+      });
+    }
+  };
+
+  useHotkeys([
+    ["ArrowLeft", () => goToPhoto(previousId)],
+    ["ArrowRight", () => goToPhoto(nextId)],
+    [
+      "Escape",
+      () => {
+        if (albumSlug === undefined) {
+          router.navigate({ to: "/admin" });
+        } else {
+          router.navigate({ params: { slug: albumSlug }, to: "/admin/albums/$slug" });
+        }
+      },
+    ],
+  ]);
 
   const neighborButton = (photoId: string | null, direction: "previous" | "next") => {
     const label = direction === "previous" ? "前の写真" : "次の写真";

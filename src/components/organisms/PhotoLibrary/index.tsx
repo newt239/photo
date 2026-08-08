@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Group, Text } from "@mantine/core";
+import { useHotkeys } from "@mantine/hooks";
 import { useRouter } from "@tanstack/react-router";
 
 import { PhotoViewControls } from "#/components/molecules/PhotoViewControls";
@@ -35,13 +36,25 @@ export const PhotoLibrary = ({
 }: PhotoLibraryProps) => {
   const router = useRouter();
   const [selected, setSelected] = useState(new Set<string>());
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+  const [modal, setModal] = useState<"add" | "create" | "delete" | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const toggle = (photoId: string) => {
+  const toggle = (photoId: string, extend: boolean) => {
+    const anchorIndex = photos.findIndex((p) => p.id === lastSelectedId);
+    const targetIndex = photos.findIndex((p) => p.id === photoId);
     setSelected((prev) => {
       const next = new Set(prev);
+      if (extend && anchorIndex !== -1 && targetIndex !== -1) {
+        const [from, to] =
+          anchorIndex < targetIndex ? [anchorIndex, targetIndex] : [targetIndex, anchorIndex];
+        for (const photo of photos.slice(from, to + 1)) {
+          next.add(photo.id);
+        }
+        return next;
+      }
       if (next.has(photoId)) {
         next.delete(photoId);
       } else {
@@ -49,7 +62,15 @@ export const PhotoLibrary = ({
       }
       return next;
     });
+    setLastSelectedId(photoId);
   };
+
+  useHotkeys([
+    ["Backspace", () => selected.size > 0 && setModal("delete")],
+    ["Delete", () => selected.size > 0 && setModal("delete")],
+    ["Escape", () => setSelected(new Set())],
+    ["mod+A", () => setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]))],
+  ]);
 
   const handleRemove = async () => {
     if (!album || selected.size === 0 || submitting) {
@@ -162,6 +183,8 @@ export const PhotoLibrary = ({
             selectedCount={selected.size}
             submitting={submitting}
             albums={album ? albums.filter((a) => a.id !== album.id) : albums}
+            modal={modal}
+            onModalChange={setModal}
             onSelectAll={() =>
               setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]))
             }

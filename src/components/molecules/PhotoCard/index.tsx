@@ -21,7 +21,7 @@ type PhotoCardProps = {
   photo: PhotoCardData;
   albumSlug?: string;
   selected?: boolean;
-  onSelect?: (photoId: string) => void;
+  onSelect?: (photoId: string, extend: boolean) => void;
 };
 
 export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: PhotoCardProps) => {
@@ -69,7 +69,8 @@ export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: Phot
       <Checkbox
         className={classes.check}
         checked={selected}
-        onChange={() => onSelect(photo.id)}
+        readOnly
+        onClick={(event) => onSelect(photo.id, event.shiftKey)}
         aria-label={photo.caption ?? photo.alt ?? "この写真を選択する"}
       />
     </div>
