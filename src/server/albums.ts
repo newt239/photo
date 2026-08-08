@@ -305,7 +305,6 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
     for (let offset = 0; offset < data.photoIds.length; offset += ID_CHUNK_SIZE) {
       // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
       const chunk = data.photoIds.slice(offset, offset + ID_CHUNK_SIZE);
-      // eslint-disable-next-line no-await-in-loop
       const owned = await db
         .select({ id: photos.id })
         .from(photos)
@@ -322,7 +321,6 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
         .slice(offset, offset + INSERT_CHUNK_SIZE)
         .map((photoId) => ({ albumId: data.albumId, photoId }));
       // 1 行あたり 2 パラメータを使うため挿入はさらに小さく分割する
-      // eslint-disable-next-line no-await-in-loop
       const result = await db
         .insert(albumPhotos)
         .values(rows)
@@ -359,7 +357,6 @@ export const removePhotosFromAlbum = createServerFn({ method: "POST" })
     for (let offset = 0; offset < data.photoIds.length; offset += ID_CHUNK_SIZE) {
       // D1 のバインドパラメータ上限を超えないよう ID を分割して削除する
       const chunk = data.photoIds.slice(offset, offset + ID_CHUNK_SIZE);
-      // eslint-disable-next-line no-await-in-loop
       const result = await db
         .delete(albumPhotos)
         .where(and(eq(albumPhotos.albumId, album.id), inArray(albumPhotos.photoId, chunk)))
