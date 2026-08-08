@@ -12,9 +12,12 @@ type PhotoMapItem = {
   id: string;
   caption: string | null;
   alt: string | null;
+  placeholder: string | null;
   storageKey: string;
   latitude: number;
   longitude: number;
+  width: number;
+  height: number;
 };
 
 export const PhotoMap = ({ photos }: { photos: PhotoMapItem[] }) => {

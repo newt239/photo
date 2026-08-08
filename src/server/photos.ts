@@ -63,6 +63,7 @@ const finalizePhotoInput = z.object({
   orientation: z.number().int().nullable().optional(),
   originalKey: z.string().min(1),
   photoId: z.string().min(1),
+  placeholder: z.string().max(64).nullable().optional(),
   rawExif: z.string().nullable().optional(),
   shutterSpeed: z.string().nullable().optional(),
   takenAt: z.string().datetime().nullable().optional(),
@@ -112,6 +113,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         longitude: data.longitude ?? null,
         mimeType: data.mimeType,
         orientation: data.orientation ?? null,
+        placeholder: data.placeholder ?? null,
         rawExif: data.rawExif ?? null,
         shutterSpeed: data.shutterSpeed ?? null,
         storageKey: data.originalKey,
@@ -292,6 +294,54 @@ export const applyPhotoLocations = createServerFn({ method: "POST" })
         .where(condition)
         .returning({ id: photos.id });
     });
+    if (!first) {
+      return { error: "EMPTY", success: false } as const;
+    }
+    const results = await db.batch([first, ...rest]);
+    return { success: true, updated: results.flat().length } as const;
+  });
+
+export const listPhotosMissingPlaceholder = createServerFn({ method: "GET" })
+  .validator(z.object({ limit: z.number().int().positive().max(1000).optional() }))
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const rows = await db
+      .select({ id: photos.id, storageKey: photos.storageKey })
+      .from(photos)
+      .where(and(eq(photos.userId, userId), isNull(photos.placeholder)))
+      .orderBy(desc(photos.uploadedAt))
+      .limit(data.limit ?? 1000);
+    return { photos: rows, success: true } as const;
+  });
+
+const placeholderItemSchema = z.object({
+  id: z.string().min(1),
+  placeholder: z.string().min(1).max(64),
+});
+
+const savePhotoPlaceholdersInput = z.object({
+  items: z.array(placeholderItemSchema).min(1).max(100),
+});
+
+export const savePhotoPlaceholders = createServerFn({ method: "POST" })
+  .validator(savePhotoPlaceholdersInput)
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const [first, ...rest] = data.items.map((item) =>
+      db
+        .update(photos)
+        .set({ placeholder: item.placeholder })
+        .where(and(eq(photos.id, item.id), eq(photos.userId, userId)))
+        .returning({ id: photos.id }),
+    );
     if (!first) {
       return { error: "EMPTY", success: false } as const;
     }

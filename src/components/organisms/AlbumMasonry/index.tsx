@@ -1,4 +1,7 @@
+import { useMemo } from "react";
+
 import { Link } from "@tanstack/react-router";
+import { thumbHashToDataURL } from "thumbhash";
 
 import { formatAlbumPeriod } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
@@ -23,6 +26,24 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
       width: album.coverWidth ?? 4,
     })),
     columns,
+  );
+  const blurs = useMemo(
+    () =>
+      new Map(
+        albums.flatMap((album) =>
+          album.coverPlaceholder
+            ? [
+                [
+                  album.id,
+                  thumbHashToDataURL(
+                    Uint8Array.from(atob(album.coverPlaceholder), (c) => c.codePointAt(0) ?? 0),
+                  ),
+                ] as const,
+              ]
+            : [],
+        ),
+      ),
+    [albums],
   );
 
   return (
@@ -56,7 +77,13 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
                   loading={index < EAGER_COUNT ? "eager" : "lazy"}
                   fetchPriority={index < EAGER_COUNT ? "high" : undefined}
                   decoding="async"
-                  style={{ aspectRatio: `${album.width} / ${album.height}` }}
+                  style={{
+                    aspectRatio: `${album.width} / ${album.height}`,
+                    backgroundImage: blurs.get(album.id)
+                      ? `url(${blurs.get(album.id)})`
+                      : undefined,
+                    backgroundSize: "cover",
+                  }}
                 />
               ) : (
                 <div className={classes.placeholder} />

@@ -22,6 +22,7 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
   const rows = await db
     .select({
       coverHeight: photos.height,
+      coverPlaceholder: photos.placeholder,
       coverStorageKey: photos.storageKey,
       coverWidth: photos.width,
       createdAt: albums.createdAt,
@@ -69,6 +70,7 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
         id: photos.id,
         latitude: photos.latitude,
         longitude: photos.longitude,
+        placeholder: photos.placeholder,
         storageKey: photos.storageKey,
         width: photos.width,
       })

@@ -1,6 +1,9 @@
+import { useMemo } from "react";
+
 import { FocusTrap, Portal, RemoveScroll } from "@mantine/core";
 import { useFocusReturn, useHotkeys } from "@mantine/hooks";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { thumbHashToDataURL } from "thumbhash";
 
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { usePhotoZoom } from "#/lib/photo-zoom.ts";
@@ -11,7 +14,10 @@ type LightboxPhoto = {
   id: string;
   caption: string | null;
   alt: string | null;
+  placeholder: string | null;
   storageKey: string;
+  width: number;
+  height: number;
 };
 
 type PhotoLightboxProps = {
@@ -25,6 +31,13 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
   const photo = index === null ? undefined : photos[index];
   const { canvasRef, reset, scale, stageProps, stageRef, transform, zoomTo } = usePhotoZoom(
     photo?.id ?? null,
+  );
+  const blur = useMemo(
+    () =>
+      photo?.placeholder
+        ? thumbHashToDataURL(Uint8Array.from(atob(photo.placeholder), (c) => c.codePointAt(0) ?? 0))
+        : null,
+    [photo?.placeholder],
   );
 
   const handleClose = () => {
@@ -87,7 +100,15 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
                   className={classes.image}
                   src={photoImageUrl(photo.storageKey, 2048)}
                   alt={photo.alt ?? photo.caption ?? ""}
+                  width={photo.width}
+                  height={photo.height}
                   draggable={false}
+                  style={{
+                    backgroundImage: blur ? `url(${blur})` : undefined,
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: "contain",
+                  }}
                 />
               </div>
             </div>

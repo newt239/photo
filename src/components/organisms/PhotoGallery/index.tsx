@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 import { LayoutGridIcon, Share2Icon } from "lucide-react";
+import { thumbHashToDataURL } from "thumbhash";
 
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
@@ -16,6 +17,7 @@ type PhotoGalleryItem = {
   id: string;
   caption: string | null;
   alt: string | null;
+  placeholder: string | null;
   storageKey: string;
   width: number;
   height: number;
@@ -38,6 +40,15 @@ export const PhotoGallery = ({
       : Math.min(size ?? (width <= 480 ? 2 : 3), Math.max(1, Math.floor(width / 120)));
   const layout = masonryLayout(photos, columns);
   const columnPx = width === 0 ? 0 : Math.round(width / columns);
+  const blurs = useMemo(
+    () =>
+      photos.map((p) =>
+        p.placeholder
+          ? thumbHashToDataURL(Uint8Array.from(atob(p.placeholder), (c) => c.codePointAt(0) ?? 0))
+          : null,
+      ),
+    [photos],
+  );
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -93,7 +104,11 @@ export const PhotoGallery = ({
                     loading={i < EAGER_COUNT ? "eager" : "lazy"}
                     fetchPriority={i < EAGER_COUNT ? "high" : undefined}
                     decoding="async"
-                    style={{ aspectRatio: `${p.width} / ${p.height}` }}
+                    style={{
+                      aspectRatio: `${p.width} / ${p.height}`,
+                      backgroundImage: blurs[i] ? `url(${blurs[i]})` : undefined,
+                      backgroundSize: "cover",
+                    }}
                   />
                   {p.caption && <span className={classes.caption}>{p.caption}</span>}
                 </button>

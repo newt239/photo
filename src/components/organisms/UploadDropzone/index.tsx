@@ -9,6 +9,7 @@ import { PhotoPreviewModal } from "#/components/molecules/PhotoPreviewModal";
 import { TimeZoneSelect } from "#/components/molecules/TimeZoneSelect";
 import { UploadDraftRow, type UploadDraftItem } from "#/components/molecules/UploadDraftRow";
 import { extractExif, probeDimensions } from "#/lib/image.ts";
+import { encodeThumbHash } from "#/lib/thumbhash.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
 import { createPhotoUpload, finalizePhoto, updatePhoto } from "#/server/photos.ts";
@@ -52,7 +53,11 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     }
     try {
       updateItem(id, { progress: 5, status: "preparing" });
-      const [dims, exif] = await Promise.all([probeDimensions(file), extractExif(file, timeZone)]);
+      const [dims, exif, placeholder] = await Promise.all([
+        probeDimensions(file),
+        extractExif(file, timeZone),
+        encodeThumbHash(file),
+      ]);
       updateItem(id, { thumbUrl: URL.createObjectURL(file) });
 
       const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
@@ -93,6 +98,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
           mimeType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
           originalKey: prep.originalKey,
           photoId: prep.photoId,
+          placeholder,
           width: dims.width,
           ...exif,
         },
