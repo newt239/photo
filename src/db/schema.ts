@@ -77,8 +77,9 @@ export const albums = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
-    description: text(),
     id: text().primaryKey(),
+    periodEnd: text("period_end"),
+    periodStart: text("period_start"),
     slug: text().notNull(),
     title: text(),
     updatedAt: integer("updated_at", { mode: "timestamp" })

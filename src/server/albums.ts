@@ -40,12 +40,25 @@ const findOwnedAlbum = async (
   return album;
 };
 
-const createAlbumInput = z.object({
-  description: z.string().max(2000).nullable().optional(),
-  slug: z.string().max(200).nullable().optional(),
-  title: z.string().min(1).max(200),
-  visibility: z.enum(["public", "private"]).default("private"),
-});
+const albumPeriod = z
+  .string()
+  .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/)
+  .nullable();
+
+const hasValidPeriod = (value: { periodEnd: string | null; periodStart: string | null }) =>
+  value.periodEnd === null || (value.periodStart !== null && value.periodStart <= value.periodEnd);
+
+const periodMessage = { message: "終了年月は開始年月以降にしてください" };
+
+const createAlbumInput = z
+  .object({
+    periodEnd: albumPeriod.optional().default(null),
+    periodStart: albumPeriod.optional().default(null),
+    slug: z.string().max(200).nullable().optional(),
+    title: z.string().min(1).max(200),
+    visibility: z.enum(["public", "private"]).default("private"),
+  })
+  .refine(hasValidPeriod, periodMessage);
 
 export const createAlbum = createServerFn({ method: "POST" })
   .validator(createAlbumInput)
@@ -80,8 +93,9 @@ export const createAlbum = createServerFn({ method: "POST" })
     const slug = requested || `${normalized || "album"}-${nanoid(6)}`;
     try {
       await db.insert(albums).values({
-        description: data.description ?? null,
         id,
+        periodEnd: data.periodEnd,
+        periodStart: data.periodStart,
         slug,
         title: data.title,
         userId,
@@ -94,13 +108,16 @@ export const createAlbum = createServerFn({ method: "POST" })
     return { id, slug, success: true } as const;
   });
 
-const updateAlbumInput = z.object({
-  description: z.string().max(2000).nullable(),
-  id: z.string().min(1),
-  slug: z.string().min(1).max(200),
-  title: z.string().min(1).max(200),
-  visibility: z.enum(["public", "private"]),
-});
+const updateAlbumInput = z
+  .object({
+    id: z.string().min(1),
+    periodEnd: albumPeriod,
+    periodStart: albumPeriod,
+    slug: z.string().min(1).max(200),
+    title: z.string().min(1).max(200),
+    visibility: z.enum(["public", "private"]),
+  })
+  .refine(hasValidPeriod, periodMessage);
 
 export const updateAlbum = createServerFn({ method: "POST" })
   .validator(updateAlbumInput)
@@ -132,7 +149,8 @@ export const updateAlbum = createServerFn({ method: "POST" })
     await db
       .update(albums)
       .set({
-        description: data.description,
+        periodEnd: data.periodEnd,
+        periodStart: data.periodStart,
         slug: data.slug,
         title: data.title,
         updatedAt: new Date(),
@@ -156,8 +174,9 @@ export const listMyAlbums = createServerFn({ method: "GET" })
         coverPhotoId: albums.coverPhotoId,
         coverStorageKey: photos.storageKey,
         createdAt: albums.createdAt,
-        description: albums.description,
         id: albums.id,
+        periodEnd: albums.periodEnd,
+        periodStart: albums.periodStart,
         photoCount: sql<number>`(
             SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
           )`.as("photo_count"),
@@ -169,7 +188,11 @@ export const listMyAlbums = createServerFn({ method: "GET" })
       .from(albums)
       .leftJoin(photos, eq(photos.id, coverPhotoId))
       .where(eq(albums.userId, userId))
-      .orderBy(desc(albums.createdAt))
+      .orderBy(
+        sql`${albums}.period_start IS NULL`,
+        desc(albums.periodStart),
+        desc(albums.createdAt),
+      )
       .limit(data.limit ?? 200);
     return { albums: rows, success: true } as const;
   });
@@ -191,8 +214,9 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
       .select({
         coverPhotoId: albums.coverPhotoId,
         coverStorageKey: photos.storageKey,
-        description: albums.description,
         id: albums.id,
+        periodEnd: albums.periodEnd,
+        periodStart: albums.periodStart,
         slug: albums.slug,
         title: albums.title,
         visibility: albums.visibility,

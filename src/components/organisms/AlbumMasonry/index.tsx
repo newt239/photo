@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { formatAlbumPeriod } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
 
@@ -62,8 +63,10 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
               )}
               <span className={classes.caption}>
                 <span className={classes.title}>{album.title ?? "(無題)"}</span>
-                {album.description ? (
-                  <span className={classes.description}>{album.description}</span>
+                {formatAlbumPeriod(album.periodStart, album.periodEnd) ? (
+                  <span className={classes.description}>
+                    {formatAlbumPeriod(album.periodStart, album.periodEnd)}
+                  </span>
                 ) : null}
               </span>
             </Link>

@@ -10,10 +10,18 @@ import {
   UploadIcon,
 } from "lucide-react";
 
+import { formatAlbumPeriod } from "#/lib/format.ts";
+
 import classes from "./AdminNavbar.module.css";
 
 type AdminNavbarProps = {
-  albums: { id: string; slug: string; title: string | null; description: string | null }[];
+  albums: {
+    id: string;
+    slug: string;
+    title: string | null;
+    periodStart: string | null;
+    periodEnd: string | null;
+  }[];
   onNavigate: () => void;
 };
 
@@ -56,11 +64,8 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
               renderRoot={(props) => (
                 <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
               )}
-              label={
-                album.description
-                  ? `${album.title ?? "(無題)"} - ${album.description}`
-                  : (album.title ?? "(無題)")
-              }
+              label={album.title ?? "(無題)"}
+              description={formatAlbumPeriod(album.periodStart, album.periodEnd) ?? undefined}
               classNames={{ label: classes.albumLabel }}
               leftSection={<FolderIcon size={16} />}
               active={Boolean(

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/og/")({
 
         return ogImageResponse(request, {
           coverStorageKeys: rows.map((row) => row.storageKey),
-          description: null,
+          subheading: null,
           title: "photos.newt239.dev",
         });
       },

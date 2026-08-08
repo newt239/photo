@@ -43,13 +43,13 @@ const imageDataUrl = async (storageKey: string, width: number, height: number) =
 
 type RenderOgImageInput = {
   title: string;
-  description: string | null;
+  subheading: string | null;
   coverStorageKeys: string[];
 };
 
-const renderOgImage = async ({ title, description, coverStorageKeys }: RenderOgImageInput) => {
+const renderOgImage = async ({ title, subheading: sub, coverStorageKeys }: RenderOgImageInput) => {
   const heading = truncate(title, 40);
-  const subheading = description ? truncate(description, 60) : "";
+  const subheading = sub ? truncate(sub, 60) : "";
   const tiled = coverStorageKeys.length > 1;
 
   const [boldFont, regularFont, covers] = await Promise.all([

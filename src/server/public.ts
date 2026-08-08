@@ -25,8 +25,9 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
       coverStorageKey: photos.storageKey,
       coverWidth: photos.width,
       createdAt: albums.createdAt,
-      description: albums.description,
       id: albums.id,
+      periodEnd: albums.periodEnd,
+      periodStart: albums.periodStart,
       photoCount: sql<number>`(
           SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
         )`.as("photo_count"),
@@ -36,7 +37,7 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
     .from(albums)
     .leftJoin(photos, eq(photos.id, coverPhotoId))
     .where(eq(albums.visibility, "public"))
-    .orderBy(desc(albums.createdAt));
+    .orderBy(sql`${albums}.period_start IS NULL`, desc(albums.periodStart), desc(albums.createdAt));
   return rows;
 });
 
@@ -46,8 +47,9 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
     const db = drizzle(env.DB, { schema });
     const [album] = await db
       .select({
-        description: albums.description,
         id: albums.id,
+        periodEnd: albums.periodEnd,
+        periodStart: albums.periodStart,
         slug: albums.slug,
         title: albums.title,
         updatedAt: albums.updatedAt,

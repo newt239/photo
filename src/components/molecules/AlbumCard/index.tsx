@@ -10,7 +10,8 @@ export type AlbumCardData = {
   id: string;
   slug: string;
   title: string | null;
-  description: string | null;
+  periodStart: string | null;
+  periodEnd: string | null;
   visibility: "public" | "private";
   coverStorageKey: string | null;
 };

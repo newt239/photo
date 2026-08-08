@@ -7,7 +7,7 @@ import classes from "./AlbumViewerControls.module.css";
 
 type AlbumViewerControlsProps = {
   title: string | null;
-  description: string | null;
+  period: string | null;
   hasGeotagged: boolean;
   mode: "photo" | "map";
   size: number | undefined;
@@ -17,7 +17,7 @@ type AlbumViewerControlsProps = {
 
 export const AlbumViewerControls = ({
   title,
-  description,
+  period,
   hasGeotagged,
   mode,
   size,
@@ -74,7 +74,7 @@ export const AlbumViewerControls = ({
             <ChevronDownIcon size={16} />
           </button>
         </div>
-        {description && <div className={classes.description}>{description}</div>}
+        {period && <div className={classes.description}>{period}</div>}
       </div>
 
       {(hasGeotagged || showSize) && (

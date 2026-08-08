@@ -21,7 +21,8 @@ const NewAlbumPage = () => {
     try {
       const result = await createAlbum({
         data: {
-          description: values.description || null,
+          periodEnd: values.periodEnd || null,
+          periodStart: values.periodStart || null,
           slug: values.slug || null,
           title: values.title,
           visibility: values.visibility,

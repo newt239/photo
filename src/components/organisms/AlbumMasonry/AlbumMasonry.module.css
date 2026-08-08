@@ -66,11 +66,10 @@
 }
 
 .description {
-  display: -webkit-box;
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   color: rgba(255, 255, 255, 0.78);
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: 0.8125rem;
   line-height: 1.5;
 }
