@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AlbumsSlugRouteRouteImport } from './routes/albums/$slug/route'
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -147,6 +153,7 @@ const ApiIUserIdPhotoIdFileRoute = ApiIUserIdPhotoIdFileRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
   '/login/$': typeof LoginSplatRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
   '/login/$': typeof LoginSplatRoute
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/sitemap.xml'
     | '/albums/$slug'
     | '/admin/settings'
     | '/login/$'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/sitemap.xml'
     | '/admin/settings'
     | '/login/$'
     | '/register/$'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/sitemap.xml'
     | '/albums/$slug'
     | '/admin/settings'
     | '/login/$'
@@ -291,6 +303,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AlbumsSlugRouteRoute: typeof AlbumsSlugRouteRouteWithChildren
   LoginSplatRoute: typeof LoginSplatRoute
   RegisterSplatRoute: typeof RegisterSplatRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -509,6 +529,7 @@ const AlbumsSlugRouteRouteWithChildren = AlbumsSlugRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   AlbumsSlugRouteRoute: AlbumsSlugRouteRouteWithChildren,
   LoginSplatRoute: LoginSplatRoute,
   RegisterSplatRoute: RegisterSplatRoute,
