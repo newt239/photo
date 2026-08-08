@@ -23,7 +23,7 @@ export const PublicAlbumControls = ({
   onModeChange,
   onSizeChange,
 }: PublicAlbumControlsProps) => {
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(true);
   const [maxSize, setMaxSize] = useState(1);
   const [mobile, setMobile] = useState(false);
 

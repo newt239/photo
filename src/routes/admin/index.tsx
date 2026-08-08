@@ -5,8 +5,6 @@ import { z } from "zod";
 import { PhotoLibrary } from "#/components/PhotoLibrary";
 import { listMyPhotos } from "#/server/photos.ts";
 
-import type { PhotoCardData } from "#/components/PhotoCard";
-
 const AdminIndexPage = () => {
   const { photos } = Route.useLoaderData();
   const { albums } = useLoaderData({ from: "/admin" });
@@ -23,10 +21,10 @@ const AdminIndexPage = () => {
         order={order}
         view={view}
         onOrderChange={(next) => {
-          void navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
+          navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
         }}
         onViewChange={(next) => {
-          void navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
+          navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
         }}
       />
     </Stack>
@@ -36,11 +34,7 @@ const AdminIndexPage = () => {
 export const Route = createFileRoute("/admin/")({
   component: AdminIndexPage,
   head: () => ({ meta: [{ title: "写真 | photos.newt239.dev" }] }),
-  loader: async ({
-    deps,
-  }: {
-    deps: { order: "asc" | "desc" };
-  }): Promise<{ photos: PhotoCardData[] }> => ({
+  loader: async ({ deps }: { deps: { order: "asc" | "desc" } }) => ({
     photos: await listMyPhotos({ data: { order: deps.order } }),
   }),
   loaderDeps: ({ search }) => ({ order: search.order }),

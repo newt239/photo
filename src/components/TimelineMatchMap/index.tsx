@@ -33,7 +33,7 @@ export const TimelineMatchMap = ({ points, focusedId }: Props) => {
     const markers = markersRef.current;
     let cancelled = false;
     let map: Leaflet.Map | null = null;
-    void import("leaflet").then((leaflet) => {
+    import("leaflet").then((leaflet) => {
       const container = containerRef.current;
       if (cancelled || !container) {
         return;

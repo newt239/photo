@@ -18,7 +18,7 @@ type ImageMeta = {
   rawExif: string | null;
 };
 
-export const probeDimensions = async (file: File): Promise<{ width: number; height: number }> => {
+export const probeDimensions = async (file: File) => {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();
@@ -108,18 +108,14 @@ const emptyExif = (): Omit<ImageMeta, "width" | "height"> => ({
   takenAt: null,
 });
 
-const strOrNull = (v: unknown): string | null => {
+const strOrNull = (v: unknown) => {
   if (typeof v !== "string") {
     return null;
   }
   const trimmed = v.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
-export const generateThumbnail = async (
-  file: File,
-  maxEdge = 1024,
-  quality = 0.82,
-): Promise<Blob | null> => {
+export const generateThumbnail = async (file: File, maxEdge = 1024, quality = 0.82) => {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();

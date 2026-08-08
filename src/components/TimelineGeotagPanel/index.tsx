@@ -24,7 +24,7 @@ import { photoImageUrl } from "#/lib/image-url.ts";
 import { matchTimeline, parseTimeline, type Timeline } from "#/lib/timeline.ts";
 import { applyPhotoLocations } from "#/server/photos.ts";
 
-export type GeotagCandidate = {
+type GeotagCandidate = {
   id: string;
   caption: string | null;
   alt: string | null;

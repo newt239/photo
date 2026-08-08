@@ -18,7 +18,7 @@ export const PhotoLocationMap = ({ latitude, longitude }: PhotoLocationMapProps)
   useEffect(() => {
     let cancelled = false;
     let map: Leaflet.Map | null = null;
-    void import("leaflet").then((leaflet) => {
+    import("leaflet").then((leaflet) => {
       const container = containerRef.current;
       if (cancelled || !container) {
         return;

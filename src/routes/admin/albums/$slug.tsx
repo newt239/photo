@@ -7,8 +7,6 @@ import { PhotoLibrary } from "#/components/PhotoLibrary";
 import { VisibilityIcon } from "#/components/VisibilityIcon";
 import { getAlbumBySlug } from "#/server/albums.ts";
 
-import type { PhotoCardData } from "#/components/PhotoCard";
-
 const AlbumDetailPage = () => {
   const { album, photos } = Route.useLoaderData();
   const { albums } = useLoaderData({ from: "/admin" });
@@ -73,10 +71,10 @@ const AlbumDetailPage = () => {
         order={order}
         view={view}
         onOrderChange={(next) => {
-          void navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
+          navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
         }}
         onViewChange={(next) => {
-          void navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
+          navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
         }}
         album={{ id: album.id, slug }}
         emptyMessage="このアルバムにはまだ写真がありません"
@@ -85,28 +83,13 @@ const AlbumDetailPage = () => {
   );
 };
 
-type AlbumDetail = {
-  album: {
-    id: string;
-    title: string | null;
-    description: string | null;
-    visibility: "public" | "private";
-  };
-  photos: PhotoCardData[];
-};
-
 export const Route = createFileRoute("/admin/albums/$slug")({
   component: AlbumDetailPage,
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
-  loader: async ({
-    deps,
-    params,
-  }: {
-    deps: { order: "asc" | "desc" };
-    params: { slug: string };
-  }): Promise<AlbumDetail> => getAlbumBySlug({ data: { order: deps.order, slug: params.slug } }),
+  loader: async ({ deps, params }: { deps: { order: "asc" | "desc" }; params: { slug: string } }) =>
+    getAlbumBySlug({ data: { order: deps.order, slug: params.slug } }),
   loaderDeps: ({ search }) => ({ order: search.order }),
   validateSearch: z.object({
     order: z.enum(["asc", "desc"]).default("desc"),

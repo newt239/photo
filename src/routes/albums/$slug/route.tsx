@@ -10,8 +10,6 @@ import { z } from "zod";
 import { PublicAlbumControls } from "#/components/PublicAlbumControls";
 import { getPublicAlbumBySlug } from "#/server/public.ts";
 
-type PublicAlbum = NonNullable<Awaited<ReturnType<typeof getPublicAlbumBySlug>>>;
-
 const PublicAlbumLayout = () => {
   const { album, photos } = Route.useLoaderData();
   const { slug } = Route.useParams();
@@ -30,14 +28,14 @@ const PublicAlbumLayout = () => {
         mode={mode}
         size={size}
         onModeChange={(next) => {
-          void navigate({
+          navigate({
             params: { slug },
             search: (prev) => prev,
             to: next === "map" ? "/albums/$slug/map" : "/albums/$slug",
           });
         }}
         onSizeChange={(next) => {
-          void navigate({
+          navigate({
             params: { slug },
             replace: true,
             search: (prev) => ({ ...prev, size: next }),
@@ -54,7 +52,7 @@ export const Route = createFileRoute("/albums/$slug")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
-  loader: async ({ params }: { params: { slug: string } }): Promise<PublicAlbum> => {
+  loader: async ({ params }: { params: { slug: string } }) => {
     const result = await getPublicAlbumBySlug({ data: { slug: params.slug } });
     if (!result) {
       throw notFound();

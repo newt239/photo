@@ -96,7 +96,7 @@ const readCoordinate = (
   return { latitude, longitude };
 };
 
-const toEpoch = (value?: string): number | null => {
+const toEpoch = (value?: string) => {
   if (!value) {
     return null;
   }

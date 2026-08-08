@@ -12,11 +12,7 @@ export const MIME_EXT: Record<string, string> = {
   "image/webp": "webp",
 };
 
-export const signPutUrl = async (
-  key: string,
-  contentType: string,
-  expiresInSeconds = 300,
-): Promise<string> => {
+export const signPutUrl = async (key: string, contentType: string, expiresInSeconds = 300) => {
   const client = new AwsClient({
     accessKeyId: env.R2_ACCESS_KEY_ID,
     region: "auto",

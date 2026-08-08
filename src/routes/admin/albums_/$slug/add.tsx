@@ -4,7 +4,7 @@ import { Button, Group, Paper, Stack, Tabs, Text, Title } from "@mantine/core";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 
-import { PhotoPicker, type PhotoPickerItem } from "#/components/PhotoPicker";
+import { PhotoPicker } from "#/components/PhotoPicker";
 import { UploadDropzone } from "#/components/UploadDropzone";
 import { addPhotosToAlbum, getAlbumBySlug } from "#/server/albums.ts";
 import { listMyPhotos } from "#/server/photos.ts";
@@ -92,7 +92,7 @@ const AlbumAddPhotosPage = () => {
             <Paper withBorder radius="md" p="lg">
               <UploadDropzone
                 onComplete={(photoIds) => {
-                  void handleUploaded(photoIds);
+                  handleUploaded(photoIds);
                 }}
               />
             </Paper>
@@ -131,7 +131,7 @@ const AlbumAddPhotosPage = () => {
                 <Button
                   leftSection={<PlusIcon size={16} />}
                   onClick={() => {
-                    void handleSubmit();
+                    handleSubmit();
                   }}
                   loading={submitting}
                   disabled={selected.size === 0}
@@ -147,18 +147,12 @@ const AlbumAddPhotosPage = () => {
   );
 };
 
-type AlbumAddPhotos = {
-  album: { id: string; title: string | null };
-  existingPhotoIds: string[];
-  photos: PhotoPickerItem[];
-};
-
 export const Route = createFileRoute("/admin/albums_/$slug/add")({
   component: AlbumAddPhotosPage,
   head: ({ loaderData }) => ({
     meta: [{ title: `写真を追加 | ${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
-  loader: async ({ params }: { params: { slug: string } }): Promise<AlbumAddPhotos> => {
+  loader: async ({ params }: { params: { slug: string } }) => {
     const [detail, myPhotos] = await Promise.all([
       getAlbumBySlug({ data: { slug: params.slug } }),
       listMyPhotos({ data: {} }),

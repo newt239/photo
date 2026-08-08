@@ -474,8 +474,3 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
       success: true,
     } as const;
   });
-
-export type PhotoDetail = {
-  photo: Awaited<ReturnType<typeof getPhoto>>;
-  neighbors: Awaited<ReturnType<typeof getPhotoNeighbors>>;
-};

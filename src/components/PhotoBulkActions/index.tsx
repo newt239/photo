@@ -93,7 +93,7 @@ export const PhotoBulkActions = ({
             <Menu.Item
               leftSection={<FolderMinusIcon size={14} />}
               onClick={() => {
-                void onRemoveFromAlbum();
+                onRemoveFromAlbum();
               }}
             >
               このアルバムから外す
@@ -144,7 +144,7 @@ export const PhotoBulkActions = ({
               disabled={!albumId}
               onClick={() => {
                 if (albumId) {
-                  void onAddToAlbum(albumId).then(() => setModal(null));
+                  onAddToAlbum(albumId).then(() => setModal(null));
                 }
               }}
             >
@@ -185,7 +185,7 @@ export const PhotoBulkActions = ({
               loading={submitting}
               disabled={!title.trim()}
               onClick={() => {
-                void onCreateAlbum(title.trim()).then(() => setModal(null));
+                onCreateAlbum(title.trim()).then(() => setModal(null));
               }}
             >
               作成して {selectedCount} 枚を追加する
@@ -221,7 +221,7 @@ export const PhotoBulkActions = ({
               leftSection={<Trash2Icon size={16} />}
               loading={submitting}
               onClick={() => {
-                void onDelete().then(() => setModal(null));
+                onDelete().then(() => setModal(null));
               }}
             >
               削除する

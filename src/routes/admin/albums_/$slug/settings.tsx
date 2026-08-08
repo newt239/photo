@@ -210,7 +210,9 @@ const AlbumSettingsPage = () => {
               color="red"
               leftSection={<Trash2Icon size={16} />}
               loading={deleting}
-              onClick={() => void handleDelete()}
+              onClick={() => {
+                handleDelete();
+              }}
             >
               削除する
             </Button>
@@ -221,23 +223,12 @@ const AlbumSettingsPage = () => {
   );
 };
 
-type AlbumSettings = {
-  album: {
-    id: string;
-    slug: string;
-    title: string | null;
-    description: string | null;
-    visibility: "public" | "private";
-  };
-  photoCount: number;
-};
-
 export const Route = createFileRoute("/admin/albums_/$slug/settings")({
   component: AlbumSettingsPage,
   head: ({ loaderData }) => ({
     meta: [{ title: `設定 | ${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
-  loader: async ({ params }: { params: { slug: string } }): Promise<AlbumSettings> => {
+  loader: async ({ params }: { params: { slug: string } }) => {
     const { album, photos } = await getAlbumBySlug({ data: { slug: params.slug } });
     return {
       album: {

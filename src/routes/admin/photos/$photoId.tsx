@@ -4,7 +4,7 @@ import leafletCss from "leaflet/dist/leaflet.css?url";
 import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import { PhotoDetailView } from "#/components/PhotoDetailView";
-import { getPhoto, getPhotoNeighbors, type PhotoDetail } from "#/server/photos.ts";
+import { getPhoto, getPhotoNeighbors } from "#/server/photos.ts";
 
 const PhotoDetailPage = () => {
   const { neighbors, photo } = Route.useLoaderData();
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/admin/photos/$photoId")({
     links: [{ href: leafletCss, rel: "stylesheet" }],
     meta: [{ title: `${loaderData?.photo.caption ?? "写真"} | photos.newt239.dev` }],
   }),
-  loader: async ({ params }: { params: { photoId: string } }): Promise<PhotoDetail> => {
+  loader: async ({ params }: { params: { photoId: string } }) => {
     const [photo, neighbors] = await Promise.all([
       getPhoto({ data: { id: params.photoId } }),
       getPhotoNeighbors({ data: { id: params.photoId } }),

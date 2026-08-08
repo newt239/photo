@@ -9,7 +9,7 @@ import { albumPhotos, albums, photos } from "#/db/schema.ts";
 
 const FILE_PATTERN = /^(?:original|thumb)\.(?:jpg|jpeg|png|webp|avif|heic|heif|gif)$/i;
 
-const serveFromR2 = async (key: string, cacheControl: string): Promise<Response> => {
+const serveFromR2 = async (key: string, cacheControl: string) => {
   const obj = await env.MY_BUCKET.get(key);
   if (!obj) {
     return new Response("Not Found", { status: 404 });

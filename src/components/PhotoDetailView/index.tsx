@@ -302,7 +302,7 @@ export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Pro
           <VisibilitySegmentedControl
             value={photo.visibility}
             onChange={(value) => {
-              void handleVisibility(value);
+              handleVisibility(value);
             }}
             disabled={switching}
           />

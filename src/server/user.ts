@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "#/db/schema.ts";
 import { users } from "#/db/schema.ts";
 
-export const requireUserId = async (): Promise<string> => {
+export const requireUserId = async () => {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("UNAUTHORIZED");
@@ -14,7 +14,7 @@ export const requireUserId = async (): Promise<string> => {
   return userId;
 };
 
-export const ensureUserRow = async (userId: string): Promise<void> => {
+export const ensureUserRow = async (userId: string) => {
   const db = drizzle(env.DB, { schema });
   const existing = await db
     .select({ id: users.id })

@@ -289,7 +289,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                 <Button
                   leftSection={<SaveIcon size={16} />}
                   onClick={() => {
-                    void saveAll();
+                    saveAll();
                   }}
                   loading={savingAll}
                   disabled={generatingField !== null || unsavedCount === 0}
@@ -312,7 +312,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                           variant="light"
                           leftSection={<SparklesIcon size={12} />}
                           onClick={() => {
-                            void generateAll("caption");
+                            generateAll("caption");
                           }}
                           loading={generatingField === "caption"}
                           disabled={
@@ -331,7 +331,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                           variant="light"
                           leftSection={<SparklesIcon size={12} />}
                           onClick={() => {
-                            void generateAll("alt");
+                            generateAll("alt");
                           }}
                           loading={generatingField === "alt"}
                           disabled={
@@ -418,7 +418,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                                 aria-label="キャプションをAIで生成する"
                                 onClick={() => {
                                   if (photoId) {
-                                    void generateOne(it.id, photoId, "caption");
+                                    generateOne(it.id, photoId, "caption");
                                   }
                                 }}
                                 loading={it.generating === "caption"}
@@ -452,7 +452,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                                 aria-label="代替テキストをAIで生成する"
                                 onClick={() => {
                                   if (photoId) {
-                                    void generateOne(it.id, photoId, "alt");
+                                    generateOne(it.id, photoId, "alt");
                                   }
                                 }}
                                 loading={it.generating === "alt"}

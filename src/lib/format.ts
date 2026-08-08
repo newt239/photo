@@ -1,4 +1,4 @@
-export const formatDateTime = (value: Date | string | null): string | null => {
+export const formatDateTime = (value: Date | string | null) => {
   if (!value) {
     return null;
   }

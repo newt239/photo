@@ -4,7 +4,7 @@ import { photoImageUrl } from "#/lib/image-url.ts";
 
 import classes from "./PhotoPicker.module.css";
 
-export type PhotoPickerItem = {
+type PhotoPickerItem = {
   id: string;
   caption: string | null;
   storageKey: string;
