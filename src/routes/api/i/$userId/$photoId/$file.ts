@@ -36,7 +36,6 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
           return serveFromR2(key, "private, max-age=3600");
         }
 
-        // 非所有者: 写真自体が public、または public アルバムに属していれば配信
         const db = drizzle(env.DB, { schema });
         const joinCondition = eq(albumPhotos.albumId, albums.id);
         const publicAlbumCondition = and(

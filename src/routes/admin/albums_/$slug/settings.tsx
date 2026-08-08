@@ -210,9 +210,7 @@ const AlbumSettingsPage = () => {
               color="red"
               leftSection={<Trash2Icon size={16} />}
               loading={deleting}
-              onClick={() => {
-                handleDelete();
-              }}
+              onClick={() => handleDelete()}
             >
               削除する
             </Button>
