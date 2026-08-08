@@ -27,4 +27,7 @@
     "binding": "IMAGES",
     "remote": true,
   },
+  "observability": {
+    "enabled": true,
+  },
 }
