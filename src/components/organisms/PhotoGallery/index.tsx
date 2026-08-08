@@ -6,6 +6,7 @@ import { LayoutGridIcon, Share2Icon } from "lucide-react";
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
+import { THUMBNAIL_MAX_EDGE } from "#/lib/upload-constraints.ts";
 
 import classes from "./PhotoGallery.module.css";
 
@@ -37,6 +38,7 @@ export const PhotoGallery = ({
       ? (size ?? 3)
       : Math.min(size ?? (width <= 480 ? 2 : 3), Math.max(1, Math.floor(width / 120)));
   const layout = masonryLayout(photos, columns);
+  const columnPx = width === 0 ? 0 : Math.round(width / columns);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -63,30 +65,41 @@ export const PhotoGallery = ({
             className={classes.canvas}
             style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
           >
-            {layout.items.map((p, i) => (
-              <button
-                key={p.id}
-                type="button"
-                className={classes.item}
-                onClick={() => setIndex(i)}
-                aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
-                style={{
-                  left: `${(p.column * 100) / columns}%`,
-                  top: `${(p.top * 100) / columns}cqw`,
-                  width: `${100 / columns}%`,
-                }}
-              >
-                <img
-                  src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
-                  alt=""
-                  loading={i < EAGER_COUNT ? "eager" : "lazy"}
-                  fetchPriority={i < EAGER_COUNT ? "high" : undefined}
-                  decoding="async"
-                  style={{ aspectRatio: `${p.width} / ${p.height}` }}
-                />
-                {p.caption && <span className={classes.caption}>{p.caption}</span>}
-              </button>
-            ))}
+            {layout.items.map((p, i) => {
+              const thumbnailWidth = Math.round(
+                p.width * Math.min(1, THUMBNAIL_MAX_EDGE / Math.max(p.width, p.height)),
+              );
+              const srcSet =
+                columnPx > 0 && p.thumbnailKey !== null && thumbnailWidth < p.width
+                  ? `${photoImageUrl(p.thumbnailKey)} ${thumbnailWidth}w, ${photoImageUrl(p.storageKey)} ${p.width}w`
+                  : undefined;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={classes.item}
+                  onClick={() => setIndex(i)}
+                  aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
+                  style={{
+                    left: `${(p.column * 100) / columns}%`,
+                    top: `${(p.top * 100) / columns}cqw`,
+                    width: `${100 / columns}%`,
+                  }}
+                >
+                  <img
+                    src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
+                    srcSet={srcSet}
+                    sizes={srcSet ? `${columnPx}px` : undefined}
+                    alt=""
+                    loading={i < EAGER_COUNT ? "eager" : "lazy"}
+                    fetchPriority={i < EAGER_COUNT ? "high" : undefined}
+                    decoding="async"
+                    style={{ aspectRatio: `${p.width} / ${p.height}` }}
+                  />
+                  {p.caption && <span className={classes.caption}>{p.caption}</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
         <nav className={classes.footer}>

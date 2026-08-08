@@ -1,5 +1,7 @@
 import { parse } from "exifr";
 
+import { THUMBNAIL_MAX_EDGE } from "#/lib/upload-constraints.ts";
+
 type ImageMeta = {
   width: number;
   height: number;
@@ -115,7 +117,11 @@ const strOrNull = (v: unknown) => {
   const trimmed = v.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
-export const generateThumbnail = async (file: File, maxEdge = 1024, quality = 0.82) => {
+export const generateThumbnail = async (
+  file: File,
+  maxEdge = THUMBNAIL_MAX_EDGE,
+  quality = 0.82,
+) => {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();
