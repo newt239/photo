@@ -12,7 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { Link, createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { ArrowLeftIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 
 import { AlbumForm, type AlbumFormValues } from "#/components/organisms/AlbumForm";
@@ -187,7 +187,11 @@ export const Route = createFileRoute("/admin/albums_/$slug/settings")({
     meta: [{ title: `設定 | ${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
   loader: async ({ params }: { params: { slug: string } }) => {
-    const { album, photos } = await getAlbumBySlug({ data: { slug: params.slug } });
+    const result = await getAlbumBySlug({ data: { slug: params.slug } });
+    if (!result.success) {
+      throw notFound();
+    }
+    const { album, photos } = result;
     return {
       album: {
         description: album.description,

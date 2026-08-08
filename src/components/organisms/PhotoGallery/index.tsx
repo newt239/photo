@@ -5,9 +5,11 @@ import { LayoutGridIcon, Share2Icon } from "lucide-react";
 
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
-import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
+import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
 
 import classes from "./PhotoGallery.module.css";
+
+const EAGER_COUNT = 6;
 
 type PhotoGalleryItem = {
   id: string;
@@ -22,8 +24,11 @@ type PhotoGalleryItem = {
 export const PhotoGallery = ({ photos, size }: { photos: PhotoGalleryItem[]; size: number }) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const { columns: maxColumns, ref, width } = useMasonryColumns(160);
-  const columns = width > 0 && width <= 480 ? 2 : Math.min(size, maxColumns);
+  const { ref, width } = useContainerWidth();
+  // 計測前は size をそのまま使い、マウント後に画面幅で頭打ちにする
+  const columns =
+    width === 0 ? size : width <= 480 ? 2 : Math.min(size, Math.max(1, Math.floor(width / 160)));
+  const layout = masonryLayout(photos, columns);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -46,29 +51,35 @@ export const PhotoGallery = ({ photos, size }: { photos: PhotoGalleryItem[]; siz
     <>
       <div className={classes.page}>
         <div className={classes.gallery} ref={ref}>
-          {Array.from({ length: columns }, (_, column) => (
-            <div key={column} className={classes.column}>
-              {photos.map((p, i) =>
-                i % columns === column ? (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={classes.item}
-                    onClick={() => setIndex(i)}
-                    aria-label={p.caption ?? p.alt ?? "写真を拡大する"}
-                  >
-                    <img
-                      src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
-                      alt={p.alt ?? p.caption ?? ""}
-                      loading="lazy"
-                      style={{ aspectRatio: `${p.width} / ${p.height}` }}
-                    />
-                    {p.caption && <span className={classes.caption}>{p.caption}</span>}
-                  </button>
-                ) : null,
-              )}
-            </div>
-          ))}
+          <div
+            className={classes.canvas}
+            style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
+          >
+            {layout.items.map((p, i) => (
+              <button
+                key={p.id}
+                type="button"
+                className={classes.item}
+                onClick={() => setIndex(i)}
+                aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
+                style={{
+                  left: `${(p.column * 100) / columns}%`,
+                  top: `${(p.top * 100) / columns}cqw`,
+                  width: `${100 / columns}%`,
+                }}
+              >
+                <img
+                  src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
+                  alt=""
+                  loading={i < EAGER_COUNT ? "eager" : "lazy"}
+                  fetchPriority={i < EAGER_COUNT ? "high" : undefined}
+                  decoding="async"
+                  style={{ aspectRatio: `${p.width} / ${p.height}` }}
+                />
+                {p.caption && <span className={classes.caption}>{p.caption}</span>}
+              </button>
+            ))}
+          </div>
         </div>
         <nav className={classes.footer}>
           <Link className={classes.footerLink} to="/">
@@ -77,7 +88,7 @@ export const PhotoGallery = ({ photos, size }: { photos: PhotoGalleryItem[]; siz
           </Link>
           <button type="button" className={classes.footerLink} onClick={handleShare}>
             <Share2Icon size={14} />
-            {copied ? "URL をコピーしました" : "このページをシェアする"}
+            <span role="status">{copied ? "URL をコピーしました" : "このページをシェアする"}</span>
           </button>
         </nav>
       </div>

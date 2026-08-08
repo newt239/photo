@@ -28,7 +28,7 @@ export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: Phot
   const src = photoImageUrl(key);
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
-      <img src={src} alt={photo.alt ?? photo.caption ?? ""} loading="lazy" />
+      <img src={src} alt={photo.alt ?? photo.caption ?? ""} loading="lazy" decoding="async" />
       {photo.caption && <span className={classes.caption}>{photo.caption}</span>}
     </div>
   );

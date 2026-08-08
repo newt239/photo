@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { FocusTrap, Portal, RemoveScroll } from "@mantine/core";
+import { useFocusReturn } from "@mantine/hooks";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
 import { photoImageUrl } from "#/lib/image-url.ts";
@@ -21,9 +23,10 @@ type PhotoLightboxProps = {
 };
 
 export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLightboxProps) => {
-  const [view, setView] = useState({ scale: 1, x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
   const viewRef = useRef({ scale: 1, x: 0, y: 0 });
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
   const pinchRef = useRef<{
     distance: number;
@@ -36,9 +39,9 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
   const panRef = useRef<{ pointerX: number; pointerY: number; x: number; y: number } | null>(null);
   const photo = index === null ? undefined : photos[index];
 
-  const commit = (scale: number, x: number, y: number) => {
+  const commit = (nextScale: number, x: number, y: number) => {
     const stage = stageRef.current;
-    const clamped = Math.min(4, Math.max(0.25, scale));
+    const clamped = Math.min(4, Math.max(0.25, nextScale));
     const maxX = stage ? Math.max(0, (stage.clientWidth * (clamped - 1)) / 2) : 0;
     const maxY = stage ? Math.max(0, (stage.clientHeight * (clamped - 1)) / 2) : 0;
     const next = {
@@ -47,20 +50,24 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
       y: Math.min(maxY, Math.max(-maxY, y)),
     };
     viewRef.current = next;
-    setView(next);
+    // パン中の再レンダーを避けるため transform は DOM に直接書き倍率だけ state に反映する
+    if (canvasRef.current) {
+      canvasRef.current.style.transform = `translate(${next.x}px, ${next.y}px) scale(${next.scale})`;
+    }
+    setScale(clamped);
   };
 
-  const zoomTo = (scale: number, anchor?: { x: number; y: number }) => {
+  const zoomTo = (nextScale: number, anchor?: { x: number; y: number }) => {
     const stage = stageRef.current;
     const { current } = viewRef;
     if (!stage) {
-      commit(scale, current.x, current.y);
+      commit(nextScale, current.x, current.y);
       return;
     }
     const rect = stage.getBoundingClientRect();
     const anchorX = anchor ? anchor.x - rect.left - rect.width / 2 : 0;
     const anchorY = anchor ? anchor.y - rect.top - rect.height / 2 : 0;
-    const next = Math.min(4, Math.max(0.25, scale));
+    const next = Math.min(4, Math.max(0.25, nextScale));
     commit(
       next,
       anchorX - ((anchorX - current.x) / current.scale) * next,
@@ -126,13 +133,7 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [index, photos.length, onClose, onIndexChange]);
 
-  // 開いている間は背景のスクロールを止めるため body のスタイルを直接操作する
-  useEffect(() => {
-    document.body.style.overflow = index === null ? "" : "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [index]);
+  useFocusReturn({ opened: index !== null });
 
   // React の onWheel は passive で登録され preventDefault が効かないため直接登録する
   useEffect(() => {
@@ -163,149 +164,161 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
   };
 
   return (
-    <div className={classes.overlay} role="dialog" aria-modal="true" aria-label="写真を表示">
-      <button
-        type="button"
-        className={classes.close}
-        onClick={handleClose}
-        aria-label="閉じる"
-        autoFocus
-      >
-        <XIcon size={18} />
-      </button>
-
-      <div
-        ref={stageRef}
-        className={classes.stage}
-        onPointerDown={(event) => {
-          event.currentTarget.setPointerCapture(event.pointerId);
-          pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-          if (pointersRef.current.size >= 2) {
-            startPinch();
-            return;
-          }
-          const { current } = viewRef;
-          panRef.current = {
-            pointerX: event.clientX,
-            pointerY: event.clientY,
-            x: current.x,
-            y: current.y,
-          };
-        }}
-        onPointerMove={(event) => {
-          const pointers = pointersRef.current;
-          if (!pointers.has(event.pointerId)) {
-            return;
-          }
-          pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-          const stage = stageRef.current;
-          const pinch = pinchRef.current;
-          if (pinch && stage) {
-            const [a, b] = [...pointers.values()];
-            if (!a || !b) {
-              return;
-            }
-            const rect = stage.getBoundingClientRect();
-            const scale = Math.min(
-              4,
-              Math.max(0.25, (pinch.scale * Math.hypot(a.x - b.x, a.y - b.y)) / pinch.distance),
-            );
-            const originX = (pinch.midX - rect.left - rect.width / 2 - pinch.x) / pinch.scale;
-            const originY = (pinch.midY - rect.top - rect.height / 2 - pinch.y) / pinch.scale;
-            commit(
-              scale,
-              (a.x + b.x) / 2 - rect.left - rect.width / 2 - originX * scale,
-              (a.y + b.y) / 2 - rect.top - rect.height / 2 - originY * scale,
-            );
-            return;
-          }
-          const pan = panRef.current;
-          if (pan) {
-            commit(
-              viewRef.current.scale,
-              pan.x + (event.clientX - pan.pointerX),
-              pan.y + (event.clientY - pan.pointerY),
-            );
-          }
-        }}
-        onPointerUp={endPointer}
-        onPointerCancel={endPointer}
-      >
-        <div
-          className={classes.canvas}
-          style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}
-        >
-          <img
-            className={classes.image}
-            src={photoImageUrl(photo.storageKey)}
-            alt={photo.alt ?? photo.caption ?? ""}
-            draggable={false}
-          />
-        </div>
-      </div>
-
-      <div className={classes.footer}>
-        <p className={photo.caption ? classes.caption : classes.captionEmpty}>
-          {photo.caption ?? "説明はありません"}
-        </p>
-
-        <div className={classes.actions}>
-          <div className={classes.group}>
+    <Portal>
+      <RemoveScroll>
+        <FocusTrap active>
+          <div className={classes.overlay} role="dialog" aria-modal="true" aria-label="写真を表示">
             <button
               type="button"
-              className={classes.button}
-              onClick={() => move(-1)}
-              disabled={photos.length < 2}
-              aria-label="前の写真を表示する"
+              className={classes.close}
+              onClick={handleClose}
+              aria-label="閉じる"
+              data-autofocus
             >
-              <ChevronLeftIcon size={14} />
-              <span className={classes.buttonLabel}>前へ戻る</span>
+              <XIcon size={18} />
             </button>
-            <span className={classes.counter}>
-              {index + 1} / {photos.length}
-            </span>
-            <button
-              type="button"
-              className={classes.button}
-              onClick={() => move(1)}
-              disabled={photos.length < 2}
-              aria-label="次の写真を表示する"
+
+            <div
+              ref={stageRef}
+              className={classes.stage}
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture(event.pointerId);
+                pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+                if (pointersRef.current.size >= 2) {
+                  startPinch();
+                  return;
+                }
+                const { current } = viewRef;
+                panRef.current = {
+                  pointerX: event.clientX,
+                  pointerY: event.clientY,
+                  x: current.x,
+                  y: current.y,
+                };
+              }}
+              onPointerMove={(event) => {
+                const pointers = pointersRef.current;
+                if (!pointers.has(event.pointerId)) {
+                  return;
+                }
+                pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+                const stage = stageRef.current;
+                const pinch = pinchRef.current;
+                if (pinch && stage) {
+                  const [a, b] = [...pointers.values()];
+                  if (!a || !b) {
+                    return;
+                  }
+                  const rect = stage.getBoundingClientRect();
+                  const pinchScale = Math.min(
+                    4,
+                    Math.max(
+                      0.25,
+                      (pinch.scale * Math.hypot(a.x - b.x, a.y - b.y)) / pinch.distance,
+                    ),
+                  );
+                  const originX = (pinch.midX - rect.left - rect.width / 2 - pinch.x) / pinch.scale;
+                  const originY = (pinch.midY - rect.top - rect.height / 2 - pinch.y) / pinch.scale;
+                  commit(
+                    pinchScale,
+                    (a.x + b.x) / 2 - rect.left - rect.width / 2 - originX * pinchScale,
+                    (a.y + b.y) / 2 - rect.top - rect.height / 2 - originY * pinchScale,
+                  );
+                  return;
+                }
+                const pan = panRef.current;
+                if (pan) {
+                  commit(
+                    viewRef.current.scale,
+                    pan.x + (event.clientX - pan.pointerX),
+                    pan.y + (event.clientY - pan.pointerY),
+                  );
+                }
+              }}
+              onPointerUp={endPointer}
+              onPointerCancel={endPointer}
             >
-              <span className={classes.buttonLabel}>次へ進む</span>
-              <ChevronRightIcon size={14} />
-            </button>
+              <div
+                ref={canvasRef}
+                className={classes.canvas}
+                style={{
+                  transform: `translate(${viewRef.current.x}px, ${viewRef.current.y}px) scale(${viewRef.current.scale})`,
+                }}
+              >
+                <img
+                  className={classes.image}
+                  src={photoImageUrl(photo.storageKey)}
+                  alt={photo.alt ?? photo.caption ?? ""}
+                  draggable={false}
+                />
+              </div>
+            </div>
+
+            <div className={classes.footer}>
+              <p className={photo.caption ? classes.caption : classes.captionEmpty}>
+                {photo.caption ?? "説明はありません"}
+              </p>
+
+              <div className={classes.actions}>
+                <div className={classes.group}>
+                  <button
+                    type="button"
+                    className={classes.button}
+                    onClick={() => move(-1)}
+                    disabled={photos.length < 2}
+                    aria-label="前の写真を表示する"
+                  >
+                    <ChevronLeftIcon size={14} />
+                    <span className={classes.buttonLabel}>前へ戻る</span>
+                  </button>
+                  <span className={classes.counter}>
+                    {index + 1} / {photos.length}
+                  </span>
+                  <button
+                    type="button"
+                    className={classes.button}
+                    onClick={() => move(1)}
+                    disabled={photos.length < 2}
+                    aria-label="次の写真を表示する"
+                  >
+                    <span className={classes.buttonLabel}>次へ進む</span>
+                    <ChevronRightIcon size={14} />
+                  </button>
+                </div>
+
+                <div className={`${classes.group} ${classes.zoomGroup}`}>
+                  <button
+                    type="button"
+                    className={classes.iconButton}
+                    onClick={() => zoomTo(scale / 1.5)}
+                    disabled={scale <= 0.25}
+                    aria-label="縮小する"
+                  >
+                    <ZoomOutIcon size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={classes.zoomReset}
+                    onClick={() => commit(1, 0, 0)}
+                    aria-label="等倍に戻す"
+                  >
+                    {Math.round(scale * 100)}%
+                  </button>
+                  <button
+                    type="button"
+                    className={classes.iconButton}
+                    onClick={() => zoomTo(scale * 1.5)}
+                    disabled={scale >= 4}
+                    aria-label="拡大する"
+                  >
+                    <ZoomInIcon size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div className={`${classes.group} ${classes.zoomGroup}`}>
-            <button
-              type="button"
-              className={classes.iconButton}
-              onClick={() => zoomTo(view.scale / 1.5)}
-              disabled={view.scale <= 0.25}
-              aria-label="縮小する"
-            >
-              <ZoomOutIcon size={16} />
-            </button>
-            <button
-              type="button"
-              className={classes.zoomReset}
-              onClick={() => commit(1, 0, 0)}
-              aria-label="等倍に戻す"
-            >
-              {Math.round(view.scale * 100)}%
-            </button>
-            <button
-              type="button"
-              className={classes.iconButton}
-              onClick={() => zoomTo(view.scale * 1.5)}
-              disabled={view.scale >= 4}
-              aria-label="拡大する"
-            >
-              <ZoomInIcon size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+        </FocusTrap>
+      </RemoveScroll>
+    </Portal>
   );
 };

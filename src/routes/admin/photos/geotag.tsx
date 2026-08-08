@@ -1,5 +1,5 @@
 import { Stack, Text, Title } from "@mantine/core";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
 import { TimelineGeotagPanel } from "#/components/organisms/TimelineGeotagPanel";
@@ -25,7 +25,11 @@ export const Route = createFileRoute("/admin/photos/geotag")({
     links: [{ href: leafletCss, rel: "stylesheet" }],
     meta: [{ title: "位置情報の一括設定 | photos.newt239.dev" }],
   }),
-  loader: async () => ({
-    photos: await listPhotosMissingLocation({ data: {} }),
-  }),
+  loader: async () => {
+    const result = await listPhotosMissingLocation({ data: {} });
+    if (!result.success) {
+      throw notFound();
+    }
+    return { photos: result.photos };
+  },
 });

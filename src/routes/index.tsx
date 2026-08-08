@@ -6,10 +6,15 @@ import { listPublicAlbums } from "#/server/public.ts";
 
 const IndexPage = () => {
   const { albums } = Route.useLoaderData();
-  if (albums.length === 0) {
-    return <Notice>公開アルバムはまだありません</Notice>;
-  }
-  return <AlbumMasonry albums={albums} />;
+  return (
+    <main id="main">
+      {albums.length === 0 ? (
+        <Notice>公開アルバムはまだありません</Notice>
+      ) : (
+        <AlbumMasonry albums={albums} />
+      )}
+    </main>
+  );
 };
 
 export const Route = createFileRoute("/")({

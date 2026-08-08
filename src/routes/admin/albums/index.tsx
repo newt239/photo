@@ -1,5 +1,5 @@
 import { SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { AlbumCard } from "#/components/molecules/AlbumCard";
 import { listMyAlbums } from "#/server/albums.ts";
@@ -27,7 +27,11 @@ const AlbumsIndexPage = () => {
 export const Route = createFileRoute("/admin/albums/")({
   component: AlbumsIndexPage,
   head: () => ({ meta: [{ title: "アルバム | photos.newt239.dev" }] }),
-  loader: async () => ({
-    albums: await listMyAlbums({ data: {} }),
-  }),
+  loader: async () => {
+    const result = await listMyAlbums({ data: {} });
+    if (!result.success) {
+      throw notFound();
+    }
+    return { albums: result.albums };
+  },
 });

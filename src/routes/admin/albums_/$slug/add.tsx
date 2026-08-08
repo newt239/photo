@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { Button, Group, Paper, Stack, Tabs, Text, Title } from "@mantine/core";
-import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { Link, createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 
 import { PhotoPicker } from "#/components/molecules/PhotoPicker";
@@ -157,10 +157,13 @@ export const Route = createFileRoute("/admin/albums_/$slug/add")({
       getAlbumBySlug({ data: { slug: params.slug } }),
       listMyPhotos({ data: {} }),
     ]);
+    if (!detail.success || !myPhotos.success) {
+      throw notFound();
+    }
     return {
       album: { id: detail.album.id, title: detail.album.title },
       existingPhotoIds: detail.photos.map((p) => p.id),
-      photos: myPhotos.map((p) => ({
+      photos: myPhotos.photos.map((p) => ({
         caption: p.caption,
         id: p.id,
         storageKey: p.storageKey,

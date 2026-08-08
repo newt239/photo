@@ -28,7 +28,8 @@ import { LocationMap } from "#/components/molecules/LocationMap";
 import { VisibilityControl } from "#/components/molecules/VisibilityControl";
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
-import { generatePhotoDraft, updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
+import { generatePhotoDraft } from "#/server/photo-draft.ts";
+import { updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
 
@@ -374,7 +375,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
             maxLength={500}
           />
           {errorMessage && (
-            <Text size="sm" c="red">
+            <Text size="sm" c="red" role="alert">
               {errorMessage}
             </Text>
           )}

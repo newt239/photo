@@ -46,7 +46,7 @@ export const PhotoTable = ({
           {photos.map((p) => {
             const selected = selectedPhotoIds.has(p.id);
             const src = photoImageUrl(p.thumbnailKey ?? p.storageKey);
-            const label = p.caption ?? "(キャプションなし)";
+            const label = p.caption ?? p.alt ?? "(キャプションなし)";
             return (
               <Table.Tr key={p.id} bg={selected ? "var(--mantine-color-blue-light)" : undefined}>
                 <Table.Td>

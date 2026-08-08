@@ -1,5 +1,5 @@
 import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { Link, createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { ExternalLinkIcon, ImagePlusIcon, SettingsIcon } from "lucide-react";
 import { z } from "zod";
 
@@ -88,8 +88,19 @@ export const Route = createFileRoute("/admin/albums/$slug")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
   }),
-  loader: async ({ deps, params }: { deps: { order: "asc" | "desc" }; params: { slug: string } }) =>
-    getAlbumBySlug({ data: { order: deps.order, slug: params.slug } }),
+  loader: async ({
+    deps,
+    params,
+  }: {
+    deps: { order: "asc" | "desc" };
+    params: { slug: string };
+  }) => {
+    const result = await getAlbumBySlug({ data: { order: deps.order, slug: params.slug } });
+    if (!result.success) {
+      throw notFound();
+    }
+    return { album: result.album, photos: result.photos };
+  },
   loaderDeps: ({ search }) => ({ order: search.order }),
   validateSearch: z.object({
     order: z.enum(["asc", "desc"]).default("desc"),

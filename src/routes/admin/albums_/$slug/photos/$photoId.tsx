@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
 import { PhotoDetailView } from "#/components/organisms/PhotoDetailView";
@@ -28,6 +28,12 @@ export const Route = createFileRoute("/admin/albums_/$slug/photos/$photoId")({
       getPhoto({ data: { id: params.photoId } }),
       getPhotoNeighbors({ data: { albumSlug: params.slug, id: params.photoId } }),
     ]);
-    return { neighbors, photo };
+    if (!photo.success || !neighbors.success) {
+      throw notFound();
+    }
+    return {
+      neighbors: { nextId: neighbors.nextId, previousId: neighbors.previousId },
+      photo: photo.photo,
+    };
   },
 });

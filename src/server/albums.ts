@@ -1,3 +1,4 @@
+import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
@@ -8,9 +9,20 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
-import { ensureUserRow, requireUserId } from "#/server/user.ts";
+import { ensureUserRow } from "#/server/user.ts";
 
 const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
+
+const ID_CHUNK_SIZE = 90;
+
+const INSERT_CHUNK_SIZE = 45;
+
+const coverPhotoId = sql`(
+    SELECT ap.photo_id FROM album_photos ap
+    WHERE ap.album_id = ${albums}.id
+    ORDER BY ap.sort_order ASC, ap.added_at ASC
+    LIMIT 1
+  )`;
 
 const findOwnedAlbum = async (
   db: DrizzleD1Database<typeof schema>,
@@ -35,7 +47,10 @@ const createAlbumInput = z.object({
 export const createAlbum = createServerFn({ method: "POST" })
   .validator(createAlbumInput)
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
     await ensureUserRow(userId);
     const db = drizzle(env.DB, { schema });
     const id = nanoid();
@@ -60,14 +75,19 @@ export const createAlbum = createServerFn({ method: "POST" })
       .replaceAll(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, "-")
       .replaceAll(/^-+|-+$/g, "");
     const slug = requested || `${normalized || "album"}-${nanoid(6)}`;
-    await db.insert(albums).values({
-      description: data.description ?? null,
-      id,
-      slug,
-      title: data.title,
-      userId,
-      visibility: data.visibility,
-    });
+    try {
+      await db.insert(albums).values({
+        description: data.description ?? null,
+        id,
+        slug,
+        title: data.title,
+        userId,
+        visibility: data.visibility,
+      });
+    } catch {
+      // 重複チェックの後に他のリクエストが割り込むと一意制約に違反しうる
+      return { error: "この URL は既に使われています", success: false } as const;
+    }
     return { id, slug, success: true } as const;
   });
 
@@ -82,7 +102,10 @@ const updateAlbumInput = z.object({
 export const updateAlbum = createServerFn({ method: "POST" })
   .validator(updateAlbumInput)
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
     const db = drizzle(env.DB, { schema });
 
     if (!SLUG_PATTERN.test(data.slug)) {
@@ -120,25 +143,16 @@ export const updateAlbum = createServerFn({ method: "POST" })
 export const listMyAlbums = createServerFn({ method: "GET" })
   .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
     const db = drizzle(env.DB, { schema });
     const rows = await db
       .select({
         coverPhotoId: albums.coverPhotoId,
-        coverStorageKey: sql<string | null>`(
-            SELECT p.storage_key FROM album_photos ap
-            JOIN photos p ON p.id = ap.photo_id
-            WHERE ap.album_id = ${albums}.id
-            ORDER BY ap.sort_order ASC, ap.added_at ASC
-            LIMIT 1
-          )`.as("cover_storage_key"),
-        coverThumbnailKey: sql<string | null>`(
-            SELECT p.thumbnail_key FROM album_photos ap
-            JOIN photos p ON p.id = ap.photo_id
-            WHERE ap.album_id = ${albums}.id
-            ORDER BY ap.sort_order ASC, ap.added_at ASC
-            LIMIT 1
-          )`.as("cover_thumbnail_key"),
+        coverStorageKey: photos.storageKey,
+        coverThumbnailKey: photos.thumbnailKey,
         createdAt: albums.createdAt,
         description: albums.description,
         id: albums.id,
@@ -151,10 +165,11 @@ export const listMyAlbums = createServerFn({ method: "GET" })
         visibility: albums.visibility,
       })
       .from(albums)
+      .leftJoin(photos, eq(photos.id, coverPhotoId))
       .where(eq(albums.userId, userId))
       .orderBy(desc(albums.createdAt))
       .limit(data.limit ?? 200);
-    return rows;
+    return { albums: rows, success: true } as const;
   });
 
 const getAlbumBySlugInput = z.object({
@@ -165,7 +180,10 @@ const getAlbumBySlugInput = z.object({
 export const getAlbumBySlug = createServerFn({ method: "GET" })
   .validator(getAlbumBySlugInput)
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
     const db = drizzle(env.DB, { schema });
     const [album] = await db
       .select()
@@ -173,7 +191,7 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
       .where(and(eq(albums.slug, data.slug), eq(albums.userId, userId)))
       .limit(1);
     if (!album) {
-      throw new Error("NOT_FOUND");
+      return { error: "アルバムが見つかりません", success: false } as const;
     }
 
     const direction = data.order === "asc" ? asc : desc;
@@ -209,7 +227,8 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
         thumbnailKey: row.thumbnailKey,
         width: row.width,
       })),
-    };
+      success: true,
+    } as const;
   });
 
 const addPhotosInput = z.object({
@@ -220,7 +239,10 @@ const addPhotosInput = z.object({
 export const addPhotosToAlbum = createServerFn({ method: "POST" })
   .validator(addPhotosInput)
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
     const db = drizzle(env.DB, { schema });
 
     const album = await findOwnedAlbum(db, data.albumId, userId);
@@ -228,25 +250,37 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
       return { error: "アルバムが見つかりません", success: false } as const;
     }
 
-    const ownedPhotos = await db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(and(eq(photos.userId, userId), inArray(photos.id, data.photoIds)));
-    if (ownedPhotos.length !== data.photoIds.length) {
+    let ownedCount = 0;
+    for (let offset = 0; offset < data.photoIds.length; offset += ID_CHUNK_SIZE) {
+      // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
+      const chunk = data.photoIds.slice(offset, offset + ID_CHUNK_SIZE);
+      // eslint-disable-next-line no-await-in-loop
+      const owned = await db
+        .select({ id: photos.id })
+        .from(photos)
+        .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
+      ownedCount += owned.length;
+    }
+    if (ownedCount !== data.photoIds.length) {
       return { error: "追加できない写真が含まれています", success: false } as const;
     }
 
-    const rows = data.photoIds.map((photoId) => ({
-      albumId: data.albumId,
-      photoId,
-    }));
-    const inserted = await db
-      .insert(albumPhotos)
-      .values(rows)
-      .onConflictDoNothing()
-      .returning({ photoId: albumPhotos.photoId });
+    let inserted = 0;
+    for (let offset = 0; offset < data.photoIds.length; offset += INSERT_CHUNK_SIZE) {
+      const rows = data.photoIds
+        .slice(offset, offset + INSERT_CHUNK_SIZE)
+        .map((photoId) => ({ albumId: data.albumId, photoId }));
+      // 1 行あたり 2 パラメータを使うため挿入はさらに小さく分割する
+      // eslint-disable-next-line no-await-in-loop
+      const result = await db
+        .insert(albumPhotos)
+        .values(rows)
+        .onConflictDoNothing()
+        .returning({ photoId: albumPhotos.photoId });
+      inserted += result.length;
+    }
 
-    return { inserted: inserted.length, success: true } as const;
+    return { inserted, success: true } as const;
   });
 
 const removePhotosInput = z.object({
@@ -257,7 +291,10 @@ const removePhotosInput = z.object({
 export const removePhotosFromAlbum = createServerFn({ method: "POST" })
   .validator(removePhotosInput)
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
     const db = drizzle(env.DB, { schema });
 
     const album = await findOwnedAlbum(db, data.albumId, userId);
@@ -265,12 +302,19 @@ export const removePhotosFromAlbum = createServerFn({ method: "POST" })
       return { error: "アルバムが見つかりません", success: false } as const;
     }
 
-    const removed = await db
-      .delete(albumPhotos)
-      .where(and(eq(albumPhotos.albumId, album.id), inArray(albumPhotos.photoId, data.photoIds)))
-      .returning({ photoId: albumPhotos.photoId });
+    let removed = 0;
+    for (let offset = 0; offset < data.photoIds.length; offset += ID_CHUNK_SIZE) {
+      // D1 のバインドパラメータ上限を超えないよう ID を分割して削除する
+      const chunk = data.photoIds.slice(offset, offset + ID_CHUNK_SIZE);
+      // eslint-disable-next-line no-await-in-loop
+      const result = await db
+        .delete(albumPhotos)
+        .where(and(eq(albumPhotos.albumId, album.id), inArray(albumPhotos.photoId, chunk)))
+        .returning({ photoId: albumPhotos.photoId });
+      removed += result.length;
+    }
 
-    return { removed: removed.length, success: true } as const;
+    return { removed, success: true } as const;
   });
 
 const deleteAlbumInput = z.object({
@@ -281,7 +325,10 @@ const deleteAlbumInput = z.object({
 export const deleteAlbum = createServerFn({ method: "POST" })
   .validator(deleteAlbumInput)
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
     const db = drizzle(env.DB, { schema });
 
     const album = await findOwnedAlbum(db, data.id, userId);

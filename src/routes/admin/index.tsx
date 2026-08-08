@@ -1,5 +1,5 @@
 import { Stack, Title } from "@mantine/core";
-import { createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
@@ -34,9 +34,13 @@ const AdminIndexPage = () => {
 export const Route = createFileRoute("/admin/")({
   component: AdminIndexPage,
   head: () => ({ meta: [{ title: "写真 | photos.newt239.dev" }] }),
-  loader: async ({ deps }: { deps: { order: "asc" | "desc" } }) => ({
-    photos: await listMyPhotos({ data: { order: deps.order } }),
-  }),
+  loader: async ({ deps }: { deps: { order: "asc" | "desc" } }) => {
+    const result = await listMyPhotos({ data: { order: deps.order } });
+    if (!result.success) {
+      throw notFound();
+    }
+    return { photos: result.photos };
+  },
   loaderDeps: ({ search }) => ({ order: search.order }),
   validateSearch: z.object({
     order: z.enum(["asc", "desc"]).default("desc"),

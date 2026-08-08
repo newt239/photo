@@ -19,12 +19,8 @@ import { EraserIcon, SaveIcon, SparklesIcon } from "lucide-react";
 
 import { extractExif, generateThumbnail, probeDimensions } from "#/lib/image.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
-import {
-  createPhotoUpload,
-  finalizePhoto,
-  generatePhotoDraft,
-  updatePhoto,
-} from "#/server/photos.ts";
+import { generatePhotoDraft } from "#/server/photo-draft.ts";
+import { createPhotoUpload, finalizePhoto, updatePhoto } from "#/server/photos.ts";
 
 type UploadState = {
   id: string;
@@ -91,6 +87,10 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
           size: file.size,
         },
       });
+      if (!prep.success) {
+        updateItem(id, { error: prep.error, status: "error" });
+        return null;
+      }
 
       updateItem(id, { progress: 40, status: "uploading" });
       await putToR2(prep.originalUrl, file, contentType);
@@ -101,7 +101,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       }
 
       updateItem(id, { progress: 85, status: "saving" });
-      await finalizePhoto({
+      const saved = await finalizePhoto({
         data: {
           fileSize: file.size,
           height: dims.height,
@@ -113,6 +113,10 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
           ...exif,
         },
       });
+      if (!saved.success) {
+        updateItem(id, { error: saved.error, status: "error" });
+        return null;
+      }
 
       updateItem(id, { photoId: prep.photoId, progress: 100, status: "done" });
       return prep.photoId;
@@ -375,7 +379,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                             <Text size="sm" truncate maw={180}>
                               {it.name}
                             </Text>
-                            <Text size="xs" c="dimmed">
+                            <Text size="xs" c="dimmed" role="status">
                               {STATUS_LABEL[it.status]}
                             </Text>
                             {it.status !== "done" && (
@@ -395,7 +399,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                               </Text>
                             )}
                             {it.error && (
-                              <Text size="xs" c="red">
+                              <Text size="xs" c="red" role="alert">
                                 {it.error}
                               </Text>
                             )}

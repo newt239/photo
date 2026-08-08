@@ -176,12 +176,12 @@ export const PhotoLibrary = ({
       </Group>
 
       {error && (
-        <Text size="sm" c="red">
+        <Text size="sm" c="red" role="alert">
           {error}
         </Text>
       )}
       {notice && (
-        <Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed" role="status">
           {notice}
         </Text>
       )}

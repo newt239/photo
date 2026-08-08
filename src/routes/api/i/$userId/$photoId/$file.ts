@@ -18,6 +18,9 @@ const serveFromR2 = async (key: string, cacheControl: string) => {
   obj.writeHttpMetadata(headers);
   headers.set("Cache-Control", cacheControl);
   headers.set("ETag", obj.httpEtag);
+  headers.set("X-Content-Type-Options", "nosniff");
+  // 同じ URL でも認証状態により 200 と 404 が変わるため共有キャッシュを分離する
+  headers.set("Vary", "Cookie");
   return new Response(obj.body, { headers });
 };
 
@@ -56,7 +59,8 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
         if (!row || (row.visibility !== "public" && !row.inPublicAlbum)) {
           return new Response("Not Found", { status: 404 });
         }
-        return serveFromR2(key, "public, max-age=3600");
+        // 公開を取り消した直後もキャッシュから配信され続けないよう短めにする
+        return serveFromR2(key, "public, max-age=300, must-revalidate");
       },
     },
   },

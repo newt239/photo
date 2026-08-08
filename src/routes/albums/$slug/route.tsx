@@ -20,7 +20,9 @@ const PublicAlbumLayout = () => {
 
   return (
     <>
-      <Outlet />
+      <main id="main">
+        <Outlet />
+      </main>
       <AlbumViewerControls
         title={album.title}
         description={album.description}

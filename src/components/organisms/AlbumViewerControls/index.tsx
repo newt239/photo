@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useThrottledCallback } from "@mantine/hooks";
 import { ChevronDownIcon, InfoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
 import classes from "./AlbumViewerControls.module.css";
@@ -26,13 +27,17 @@ export const AlbumViewerControls = ({
   const [minimized, setMinimized] = useState(true);
   const [maxSize, setMaxSize] = useState(1);
 
+  const update = useThrottledCallback(
+    () => setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160))),
+    100,
+  );
+
   // スライダーの上限は画面幅から決まる数値のためブラウザ API で計測し resize を監視する
   useEffect(() => {
-    const update = () => setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160)));
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
+  }, [update]);
 
   const current = Math.min(size, maxSize);
   const showSize = mode === "photo" && maxSize > 1;
@@ -117,6 +122,7 @@ export const AlbumViewerControls = ({
                 value={maxSize + 1 - current}
                 onChange={(e) => onSizeChange(maxSize + 1 - Number(e.currentTarget.value))}
                 aria-label="表示サイズ"
+                aria-valuetext={`${current} 列`}
               />
               <button
                 type="button"

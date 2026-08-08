@@ -1,20 +1,19 @@
 .gallery {
-  display: flex;
-  align-items: flex-start;
+  container-type: inline-size;
   width: 100%;
   min-height: 100dvh;
   line-height: 0;
   background: var(--public-surface);
 }
 
-.column {
-  flex: 1 1 0;
-  min-width: 0;
+.canvas {
+  position: relative;
+  width: 100%;
 }
 
 .item {
   display: block;
-  position: relative;
+  position: absolute;
   color: inherit;
   text-decoration: none;
 }

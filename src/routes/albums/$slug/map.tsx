@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
@@ -6,10 +8,15 @@ import { PhotoMap } from "#/components/organisms/PhotoMap";
 
 const PublicAlbumMapPage = () => {
   const { photos } = useLoaderData({ from: "/albums/$slug" });
-  const geotagged = photos.flatMap((p) =>
-    p.latitude === null || p.longitude === null
-      ? []
-      : [{ ...p, latitude: p.latitude, longitude: p.longitude }],
+  // 参照が変わるたび Leaflet の地図が作り直されるため配列を安定させる
+  const geotagged = useMemo(
+    () =>
+      photos.flatMap((p) =>
+        p.latitude === null || p.longitude === null
+          ? []
+          : [{ ...p, latitude: p.latitude, longitude: p.longitude }],
+      ),
+    [photos],
   );
 
   if (geotagged.length === 0) {

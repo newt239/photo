@@ -1,18 +1,10 @@
-import { auth, clerkClient } from "@clerk/tanstack-react-start/server";
+import { clerkClient } from "@clerk/tanstack-react-start/server";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "#/db/schema.ts";
 import { users } from "#/db/schema.ts";
-
-export const requireUserId = async () => {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("UNAUTHORIZED");
-  }
-  return userId;
-};
 
 export const ensureUserRow = async (userId: string) => {
   const db = drizzle(env.DB, { schema });

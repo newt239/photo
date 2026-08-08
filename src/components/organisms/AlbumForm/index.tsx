@@ -84,13 +84,13 @@ export const AlbumForm = ({
         />
         <VisibilityControl value={visibility} onChange={setVisibility} />
         {errorMessage && (
-          <Text size="sm" c="red">
+          <Text size="sm" c="red" role="alert">
             {errorMessage}
           </Text>
         )}
         <Group justify="flex-end" gap="sm">
           {statusMessage && (
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" role="status">
               {statusMessage}
             </Text>
           )}

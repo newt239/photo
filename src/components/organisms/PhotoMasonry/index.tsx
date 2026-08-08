@@ -1,9 +1,11 @@
 import { Text } from "@mantine/core";
 
 import { PhotoCard, type PhotoCardData } from "#/components/molecules/PhotoCard";
-import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
+import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
 
 import classes from "./PhotoMasonry.module.css";
+
+const GAP = "var(--mantine-spacing-md)";
 
 export const PhotoMasonry = ({
   photos,
@@ -18,7 +20,10 @@ export const PhotoMasonry = ({
   selectedPhotoIds?: Set<string>;
   onSelect?: (photoId: string) => void;
 }) => {
-  const { columns, ref } = useMasonryColumns(240);
+  const { ref, width } = useContainerWidth();
+  const columns = width === 0 ? 4 : Math.max(1, Math.floor(width / 240));
+  const layout = masonryLayout(photos, columns);
+  const columnWidth = `((100cqw - ${columns - 1} * ${GAP}) / ${columns})`;
 
   if (photos.length === 0) {
     return (
@@ -29,21 +34,31 @@ export const PhotoMasonry = ({
   }
   return (
     <div className={classes.masonry} ref={ref}>
-      {Array.from({ length: columns }, (_, column) => (
-        <div key={column} className={classes.column}>
-          {photos.map((p, i) =>
-            i % columns === column ? (
-              <PhotoCard
-                key={p.id}
-                photo={p}
-                albumSlug={albumSlug}
-                selected={selectedPhotoIds?.has(p.id)}
-                onSelect={onSelect}
-              />
-            ) : null,
-          )}
-        </div>
-      ))}
+      <div
+        className={classes.canvas}
+        style={{
+          height: `calc(${columnWidth} * ${layout.totalHeight} + ${GAP} * ${Math.max(0, layout.totalRows - 1)})`,
+        }}
+      >
+        {layout.items.map((p) => (
+          <div
+            key={p.id}
+            className={classes.item}
+            style={{
+              left: `calc((${columnWidth} + ${GAP}) * ${p.column})`,
+              top: `calc(${columnWidth} * ${p.top} + ${GAP} * ${p.rowsAbove})`,
+              width: `calc(${columnWidth})`,
+            }}
+          >
+            <PhotoCard
+              photo={p}
+              albumSlug={albumSlug}
+              selected={selectedPhotoIds?.has(p.id)}
+              onSelect={onSelect}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

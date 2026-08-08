@@ -26,7 +26,7 @@ const AdminLayout = () => {
 
       <AdminNavbar albums={albums} onNavigate={close} />
 
-      <AppShell.Main>
+      <AppShell.Main id="main">
         <Outlet />
       </AppShell.Main>
     </AppShell>
@@ -42,7 +42,11 @@ export const Route = createFileRoute("/admin")({
     return { userId };
   },
   component: AdminLayout,
-  loader: async () => ({
-    albums: await listMyAlbums({ data: {} }),
-  }),
+  loader: async () => {
+    const result = await listMyAlbums({ data: {} });
+    if (!result.success) {
+      throw redirect({ params: { _splat: "" }, to: "/login/$" });
+    }
+    return { albums: result.albums };
+  },
 });
