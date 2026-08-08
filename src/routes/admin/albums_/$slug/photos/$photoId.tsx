@@ -9,6 +9,7 @@ const AlbumPhotoDetailPage = () => {
   const { slug } = Route.useParams();
   return (
     <PhotoDetailView
+      key={photo.id}
       photo={photo}
       albumSlug={slug}
       previousId={neighbors.previousId}
