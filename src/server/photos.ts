@@ -113,13 +113,9 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         width: data.width,
       });
     } catch (error) {
-      await env.MY_BUCKET.delete(data.originalKey).catch(() => {
-        // ロールバック時の削除失敗は無視する
-      });
+      await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
       if (data.thumbnailKey) {
-        await env.MY_BUCKET.delete(data.thumbnailKey).catch(() => {
-          // ロールバック時の削除失敗は無視する
-        });
+        await env.MY_BUCKET.delete(data.thumbnailKey).catch(() => {});
       }
       throw error;
     }

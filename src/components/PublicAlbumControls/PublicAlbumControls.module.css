@@ -200,6 +200,14 @@
     align-items: stretch;
   }
 
+  .row:not([data-geotagged]) {
+    display: none;
+  }
+
+  .sizeControl {
+    display: none;
+  }
+
   .segmented {
     width: 100%;
   }

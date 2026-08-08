@@ -25,21 +25,17 @@ export const PublicAlbumControls = ({
 }: PublicAlbumControlsProps) => {
   const [minimized, setMinimized] = useState(true);
   const [maxSize, setMaxSize] = useState(1);
-  const [mobile, setMobile] = useState(false);
 
-  // 画面幅はブラウザ API でしか取得できないため resize を監視して最大列数を求める
+  // スライダーの上限は画面幅から決まる数値のためブラウザ API で計測し resize を監視する
   useEffect(() => {
-    const update = () => {
-      setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160)));
-      setMobile(window.innerWidth <= 480);
-    };
+    const update = () => setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160)));
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
 
   const current = Math.min(size, maxSize);
-  const showSize = !mobile && mode === "photo" && maxSize > 1;
+  const showSize = mode === "photo" && maxSize > 1;
 
   if (minimized) {
     return (
@@ -79,7 +75,7 @@ export const PublicAlbumControls = ({
       </div>
 
       {(hasGeotagged || showSize) && (
-        <div className={classes.row}>
+        <div className={classes.row} data-geotagged={hasGeotagged || undefined}>
           {hasGeotagged && (
             <div className={classes.segmented}>
               <button
