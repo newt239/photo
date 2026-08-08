@@ -1,0 +1,120 @@
+import { auth } from "@clerk/tanstack-react-start/server";
+import { createServerFn } from "@tanstack/react-start";
+import { env } from "cloudflare:workers";
+import { and, eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+import { z } from "zod";
+
+import * as schema from "#/db/schema.ts";
+import { photos } from "#/db/schema.ts";
+
+const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
+
+const draftSchema = z
+  .object({
+    alt: z.string(),
+    caption: z.string(),
+  })
+  .partial();
+
+const generatePhotoDraftInput = z.object({
+  fields: z
+    .array(z.enum(["caption", "alt"]))
+    .min(1)
+    .default(["caption", "alt"]),
+  id: z.string().min(1),
+});
+
+const captionInstruction =
+  "caption は写真に写っているものを一言で表す30文字以内の短い説明にしてください。1文だけとし、句点は付けず、宣伝的な言い回しや主観的な評価は使わないでください。";
+
+const altInstruction =
+  "alt はスクリーンリーダー利用者が視覚情報なしで内容を理解できる代替テキストです。次のルールに従ってください。" +
+  "1文目は必ず「◯◯の写真」「◯◯のスクリーンショット」「◯◯の画像」のいずれかで始める。実写なら写真、PCやスマホの画面キャプチャならスクリーンショット、イラストや図解やCGなど上記以外なら画像とする。" +
+  "続けて3〜5文程度で、構図や主要な要素を平易な日本語で説明的に描写する。専門用語や難しい言い回しは避ける。" +
+  "投稿者が伝えたいであろう主題に関係する情報だけを書き、写っているものを網羅的に列挙しない。" +
+  "「美しい」「素晴らしい」などの主観的評価や、「◯◯のように見えます」などの曖昧な推測表現は避ける。" +
+  "人物は中立的に「人物」と表現し、性別や年齢などの属性は主題に明確に関係する場合のみ言及する。" +
+  "スクリーンショットや文字が主要な情報となる画像では、説明の後に改行を入れて画像内のテキストを読みやすく書き起こす。ただしOSのステータスバーやブラウザのUIなど主題に関係しないUI要素は書き起こさない。";
+
+export const generatePhotoDraft = createServerFn({ method: "POST" })
+  .validator(generatePhotoDraftInput)
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const [photo] = await db
+      .select({ storageKey: photos.storageKey, thumbnailKey: photos.thumbnailKey })
+      .from(photos)
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
+      .limit(1);
+    if (!photo) {
+      return { error: "写真が見つかりません", success: false } as const;
+    }
+
+    const obj = await env.MY_BUCKET.get(photo.thumbnailKey ?? photo.storageKey);
+    if (!obj) {
+      return { error: "画像が見つかりません", success: false } as const;
+    }
+    // Base64 に展開すると約 4/3 に膨らむため Worker のメモリ上限に触れる前に打ち切る
+    if (obj.size > MAX_IMAGE_BYTES) {
+      return { error: "画像が大きすぎて生成できません", success: false } as const;
+    }
+    const bytes = new Uint8Array(await obj.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCodePoint(...bytes.subarray(i, i + 8192));
+    }
+    const dataUri = `data:${obj.httpMetadata?.contentType ?? "image/jpeg"};base64,${btoa(binary)}`;
+
+    const wantsCaption = data.fields.includes("caption");
+    const wantsAlt = data.fields.includes("alt");
+    const jsonShape = data.fields.map((field) => `"${field}": "..."`).join(", ");
+    const instruction = `あなたは写真管理アプリのアシスタントです。画像を見て日本語で ${data.fields.join(" と ")} を生成します。出力は必ず次のJSON形式のみとし、前後に文章を付けないでください: {${jsonShape}}。${wantsCaption ? captionInstruction : ""}${wantsAlt ? altInstruction : ""}`;
+
+    const result = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", {
+      max_tokens: 512,
+      messages: [
+        {
+          content: [
+            { text: instruction, type: "text" },
+            { image_url: { url: dataUri }, type: "image_url" },
+          ],
+          role: "user",
+        },
+      ],
+      temperature: 0.2,
+    });
+
+    const response = result.response.trim();
+    const start = response.indexOf("{");
+    const end = response.lastIndexOf("}");
+    let caption = "";
+    let alt = "";
+    if (start !== -1 && end > start) {
+      try {
+        const parsed = draftSchema.parse(JSON.parse(response.slice(start, end + 1)));
+        caption = parsed.caption ?? "";
+        alt = parsed.alt ?? "";
+      } catch {
+        return { error: "AI の応答を解釈できませんでした", success: false } as const;
+      }
+    } else if (data.fields.length === 1) {
+      // JSON でない応答は単一項目の生成に限り本文をそのまま採用する
+      if (wantsCaption) {
+        caption = response;
+      } else {
+        alt = response;
+      }
+    } else {
+      return { error: "AI の応答を解釈できませんでした", success: false } as const;
+    }
+
+    return {
+      alt: wantsAlt ? alt.trim() : null,
+      caption: wantsCaption ? caption.trim() : null,
+      success: true,
+    } as const;
+  });

@@ -1,0 +1,142 @@
+import { useEffect, useState } from "react";
+
+import { useThrottledCallback } from "@mantine/hooks";
+import { ChevronDownIcon, InfoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+
+import classes from "./AlbumViewerControls.module.css";
+
+type AlbumViewerControlsProps = {
+  title: string | null;
+  description: string | null;
+  hasGeotagged: boolean;
+  mode: "photo" | "map";
+  size: number;
+  onModeChange: (mode: "photo" | "map") => void;
+  onSizeChange: (size: number) => void;
+};
+
+export const AlbumViewerControls = ({
+  title,
+  description,
+  hasGeotagged,
+  mode,
+  size,
+  onModeChange,
+  onSizeChange,
+}: AlbumViewerControlsProps) => {
+  const [minimized, setMinimized] = useState(true);
+  const [maxSize, setMaxSize] = useState(1);
+
+  const update = useThrottledCallback(
+    () => setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160))),
+    100,
+  );
+
+  // スライダーの上限は画面幅から決まる数値のためブラウザ API で計測し resize を監視する
+  useEffect(() => {
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [update]);
+
+  const current = Math.min(size, maxSize);
+  const showSize = mode === "photo" && maxSize > 1;
+
+  if (minimized) {
+    return (
+      <button
+        type="button"
+        className={`${classes.panel} ${classes.collapsed}`}
+        onClick={() => setMinimized(false)}
+        aria-expanded={false}
+        aria-label="アルバムの情報を開く"
+      >
+        <div className={classes.heading}>
+          <div className={classes.title}>{title ?? "(無題)"}</div>
+          <span className={classes.iconButton} aria-hidden>
+            <InfoIcon size={16} />
+          </span>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <div className={classes.panel}>
+      <div className={classes.info}>
+        <div className={classes.heading}>
+          <div className={classes.title}>{title ?? "(無題)"}</div>
+          <button
+            type="button"
+            className={classes.iconButton}
+            onClick={() => setMinimized(true)}
+            aria-expanded
+            aria-label="アルバムの情報を閉じる"
+          >
+            <ChevronDownIcon size={16} />
+          </button>
+        </div>
+        {description && <div className={classes.description}>{description}</div>}
+      </div>
+
+      {(hasGeotagged || showSize) && (
+        <div className={classes.row} data-geotagged={hasGeotagged || undefined}>
+          {hasGeotagged && (
+            <div className={classes.segmented}>
+              <button
+                type="button"
+                className={classes.segment}
+                data-active={mode === "photo" || undefined}
+                onClick={() => onModeChange("photo")}
+              >
+                写真
+              </button>
+              <button
+                type="button"
+                className={classes.segment}
+                data-active={mode === "map" || undefined}
+                onClick={() => onModeChange("map")}
+              >
+                地図
+              </button>
+            </div>
+          )}
+
+          {showSize && (
+            <div className={classes.sizeControl}>
+              <button
+                type="button"
+                className={classes.iconButton}
+                onClick={() => onSizeChange(current + 1)}
+                disabled={current >= maxSize}
+                aria-label="表示を小さくする"
+              >
+                <ZoomOutIcon size={16} />
+              </button>
+              <input
+                className={classes.slider}
+                type="range"
+                min={1}
+                max={maxSize}
+                step={1}
+                value={maxSize + 1 - current}
+                onChange={(e) => onSizeChange(maxSize + 1 - Number(e.currentTarget.value))}
+                aria-label="表示サイズ"
+                aria-valuetext={`${current} 列`}
+              />
+              <button
+                type="button"
+                className={classes.iconButton}
+                onClick={() => onSizeChange(current - 1)}
+                disabled={current <= 1}
+                aria-label="表示を大きくする"
+              >
+                <ZoomInIcon size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};

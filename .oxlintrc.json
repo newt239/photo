@@ -4,7 +4,6 @@
     "node_modules/",
     "dist/",
     "build/",
-    "crates/",
     ".wrangler/",
     ".tanstack/",
     "src/routeTree.gen.ts"
@@ -104,6 +103,7 @@
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/only-throw-error": "off",
     "typescript/prefer-nullish-coalescing": "off",
+    "typescript/promise-function-async": "off",
     "typescript/prefer-readonly-parameter-types": "off",
     "typescript/require-await": "off",
     "typescript/strict-boolean-expressions": "off",

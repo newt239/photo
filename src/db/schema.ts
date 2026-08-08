@@ -62,6 +62,7 @@ export const photos = sqliteTable(
   (t) => [
     index("photos_user_id_idx").on(t.userId),
     index("photos_taken_at_idx").on(t.takenAt),
+    index("photos_user_id_taken_at_idx").on(t.userId, t.takenAt),
     index("photos_lat_lng_idx").on(t.latitude, t.longitude),
   ],
 );
@@ -107,6 +108,7 @@ export const albumPhotos = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.albumId, t.photoId] }),
     index("album_photos_photo_id_idx").on(t.photoId),
+    index("album_photos_cover_idx").on(t.albumId, t.sortOrder, t.addedAt),
   ],
 );
 

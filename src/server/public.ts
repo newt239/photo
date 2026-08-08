@@ -7,38 +7,21 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 
+const coverPhotoId = sql`(
+    SELECT ap.photo_id FROM album_photos ap
+    WHERE ap.album_id = ${albums}.id
+    ORDER BY ap.sort_order ASC, ap.added_at ASC
+    LIMIT 1
+  )`;
+
 export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async () => {
   const db = drizzle(env.DB, { schema });
   const rows = await db
     .select({
-      coverHeight: sql<number | null>`(
-          SELECT p.height FROM album_photos ap
-          JOIN photos p ON p.id = ap.photo_id
-          WHERE ap.album_id = ${albums}.id
-          ORDER BY ap.sort_order ASC, ap.added_at ASC
-          LIMIT 1
-        )`.as("cover_height"),
-      coverStorageKey: sql<string | null>`(
-          SELECT p.storage_key FROM album_photos ap
-          JOIN photos p ON p.id = ap.photo_id
-          WHERE ap.album_id = ${albums}.id
-          ORDER BY ap.sort_order ASC, ap.added_at ASC
-          LIMIT 1
-        )`.as("cover_storage_key"),
-      coverThumbnailKey: sql<string | null>`(
-          SELECT p.thumbnail_key FROM album_photos ap
-          JOIN photos p ON p.id = ap.photo_id
-          WHERE ap.album_id = ${albums}.id
-          ORDER BY ap.sort_order ASC, ap.added_at ASC
-          LIMIT 1
-        )`.as("cover_thumbnail_key"),
-      coverWidth: sql<number | null>`(
-          SELECT p.width FROM album_photos ap
-          JOIN photos p ON p.id = ap.photo_id
-          WHERE ap.album_id = ${albums}.id
-          ORDER BY ap.sort_order ASC, ap.added_at ASC
-          LIMIT 1
-        )`.as("cover_width"),
+      coverHeight: photos.height,
+      coverStorageKey: photos.storageKey,
+      coverThumbnailKey: photos.thumbnailKey,
+      coverWidth: photos.width,
       createdAt: albums.createdAt,
       description: albums.description,
       id: albums.id,
@@ -49,6 +32,7 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
       title: albums.title,
     })
     .from(albums)
+    .leftJoin(photos, eq(photos.id, coverPhotoId))
     .where(eq(albums.visibility, "public"))
     .orderBy(desc(albums.createdAt));
   return rows;

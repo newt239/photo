@@ -3,7 +3,6 @@ import { z } from "zod";
 
 export const env = createEnv({
   client: {
-    VITE_APP_TITLE: z.string().min(1).optional(),
     VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
   },
 
@@ -37,10 +36,8 @@ export const env = createEnv({
 
   server: {
     CLERK_SECRET_KEY: z.string().min(1),
-    CLERK_WEBHOOK_SECRET: z.string().min(1),
     CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
     R2_ACCESS_KEY_ID: z.string().min(1),
     R2_SECRET_ACCESS_KEY: z.string().min(1),
-    SERVER_URL: z.string().url().optional(),
   },
 });

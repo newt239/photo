@@ -1,0 +1,13 @@
+.masonry {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.canvas {
+  position: relative;
+  width: 100%;
+}
+
+.item {
+  position: absolute;
+}

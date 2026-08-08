@@ -1,0 +1,49 @@
+import { Stack, Title } from "@mantine/core";
+import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
+import { z } from "zod";
+
+import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
+import { listMyPhotos } from "#/server/photos.ts";
+
+const AdminIndexPage = () => {
+  const { photos } = Route.useLoaderData();
+  const { albums } = useLoaderData({ from: "/admin" });
+  const { order, view } = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  return (
+    <Stack p="xl" gap="md">
+      <Title order={2}>写真</Title>
+
+      <PhotoLibrary
+        photos={photos}
+        albums={albums}
+        order={order}
+        view={view}
+        onOrderChange={(next) => {
+          navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
+        }}
+        onViewChange={(next) => {
+          navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
+        }}
+      />
+    </Stack>
+  );
+};
+
+export const Route = createFileRoute("/admin/")({
+  component: AdminIndexPage,
+  head: () => ({ meta: [{ title: "写真 | photos.newt239.dev" }] }),
+  loader: async ({ deps }: { deps: { order: "asc" | "desc" } }) => {
+    const result = await listMyPhotos({ data: { order: deps.order } });
+    if (!result.success) {
+      throw notFound();
+    }
+    return { photos: result.photos };
+  },
+  loaderDeps: ({ search }) => ({ order: search.order }),
+  validateSearch: z.object({
+    order: z.enum(["asc", "desc"]).default("desc"),
+    view: z.enum(["masonry", "table"]).default("masonry"),
+  }),
+});

@@ -34,11 +34,7 @@ export const cookieColorSchemeManager = (
       }
       document.cookie = `${key}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
     },
-    subscribe: () => {
-      // Cookie ベースのため購読は不要
-    },
-    unsubscribe: () => {
-      // Cookie ベースのため購読は不要
-    },
+    subscribe: () => {},
+    unsubscribe: () => {},
   };
 };

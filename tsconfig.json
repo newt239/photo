@@ -1,13 +1,12 @@
 {
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "crates"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
     "target": "esnext",
     "jsx": "react-jsx",
     "module": "esnext",
     "paths": {
-      "#/*": ["./src/*"],
-      "@wasm/json-parser": ["./crates/json-parser/pkg"]
+      "#/*": ["./src/*"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],

@@ -21,16 +21,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Generate Cloudflare Worker types
         run: pnpm run cf-typegen
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-        with:
-          workspaces: crates/json-parser
-      - name: Setup wasm-pack
-        uses: jetli/wasm-pack-action@0d096b08b4e5a7de8c28de67e11e945404e9eefa # v0.4.0
-        with:
-          version: v0.15.0
-      - name: Build WebAssembly
-        run: pnpm run wasm:build
       - name: Typecheck
         run: pnpm run typecheck
       - name: Oxlint

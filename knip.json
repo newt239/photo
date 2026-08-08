@@ -1,13 +1,7 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "entry": [
-    "src/start.ts!",
-    "src/router.tsx!",
-    "src/routes/**/*.{ts,tsx}!",
-    "src/workers/*.worker.ts!"
-  ],
-  "ignore": ["drizzle.config.ts", "crates/**"],
-  "ignoreBinaries": ["wasm-pack"],
+  "entry": ["src/routes/**/*.{ts,tsx}!"],
+  "ignore": ["drizzle.config.ts"],
   "ignoreDependencies": ["cloudflare"],
   "drizzle": false
 }

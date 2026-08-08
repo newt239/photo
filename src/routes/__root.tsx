@@ -3,8 +3,8 @@ import mantineCoreCss from "@mantine/core/styles.css?url";
 import mantineDropzoneCss from "@mantine/dropzone/styles.css?url";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 
-import ClerkProvider from "#/integrations/clerk/provider.tsx";
 import { cookieColorSchemeManager } from "#/lib/color-scheme.ts";
+import { ClerkProvider } from "#/providers/ClerkProvider.tsx";
 import { getColorSchemeCookie } from "#/server/color-scheme.ts";
 import appCss from "#/styles.css?url";
 
@@ -19,6 +19,9 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
         <HeadContent />
       </head>
       <body>
+        <a className="skip-link" href="#main">
+          本文へスキップする
+        </a>
         <MantineProvider defaultColorScheme={colorScheme} colorSchemeManager={colorSchemeManager}>
           <ClerkProvider>{children}</ClerkProvider>
         </MantineProvider>
@@ -42,6 +45,24 @@ export const Route = createRootRoute({
       {
         href: appCss,
         rel: "stylesheet",
+      },
+      {
+        href: "/favicon.svg",
+        rel: "icon",
+        type: "image/svg+xml",
+      },
+      {
+        href: "/favicon.ico",
+        rel: "icon",
+        sizes: "48x48",
+      },
+      {
+        href: "/apple-touch-icon.png",
+        rel: "apple-touch-icon",
+      },
+      {
+        href: "/manifest.json",
+        rel: "manifest",
       },
     ],
     meta: [

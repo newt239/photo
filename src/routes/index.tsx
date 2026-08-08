@@ -1,21 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PublicAlbumMasonry, type PublicAlbumData } from "#/components/PublicAlbumMasonry.tsx";
-import { PublicNotice } from "#/components/PublicNotice.tsx";
+import { Notice } from "#/components/atoms/Notice";
+import { AlbumMasonry } from "#/components/organisms/AlbumMasonry";
 import { listPublicAlbums } from "#/server/public.ts";
 
 const IndexPage = () => {
   const { albums } = Route.useLoaderData();
-  if (albums.length === 0) {
-    return <PublicNotice>公開アルバムはまだありません</PublicNotice>;
-  }
-  return <PublicAlbumMasonry albums={albums} />;
+  return (
+    <main id="main">
+      {albums.length === 0 ? (
+        <Notice>公開アルバムはまだありません</Notice>
+      ) : (
+        <AlbumMasonry albums={albums} />
+      )}
+    </main>
+  );
 };
 
 export const Route = createFileRoute("/")({
   component: IndexPage,
   head: () => ({ meta: [{ title: "photos.newt239.dev" }] }),
-  loader: async (): Promise<{ albums: PublicAlbumData[] }> => ({
+  loader: async () => ({
     albums: await listPublicAlbums(),
   }),
 });
