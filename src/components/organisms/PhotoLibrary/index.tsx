@@ -16,9 +16,9 @@ type PhotoLibraryProps = {
   photos: PhotoCardData[];
   albums: { id: string; title: string | null }[];
   order: "asc" | "desc";
-  view: "masonry" | "table";
+  view: "grid" | "table";
   onOrderChange: (next: "asc" | "desc") => void;
-  onViewChange: (next: "masonry" | "table") => void;
+  onViewChange: (next: "grid" | "table") => void;
   album?: { id: string; slug: string };
   emptyMessage?: string;
 };

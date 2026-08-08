@@ -104,6 +104,6 @@ export const Route = createFileRoute("/admin/albums/$slug")({
   loaderDeps: ({ search }) => ({ order: search.order }),
   validateSearch: z.object({
     order: z.enum(["asc", "desc"]).default("desc"),
-    view: z.enum(["masonry", "table"]).default("masonry"),
+    view: z.enum(["grid", "table"]).default("grid"),
   }),
 });

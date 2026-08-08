@@ -1,5 +1,13 @@
 import { AppShell, Divider, Group, NavLink, ScrollArea, Text } from "@mantine/core";
 import { Link, useMatchRoute } from "@tanstack/react-router";
+import {
+  FolderIcon,
+  FolderPlusIcon,
+  ImagesIcon,
+  MapPinIcon,
+  SettingsIcon,
+  UploadIcon,
+} from "lucide-react";
 
 type AdminNavbarProps = {
   albums: { id: string; slug: string; title: string | null }[];
@@ -17,6 +25,7 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           to="/admin"
           activeOptions={{ exact: true }}
           label="すべての写真"
+          leftSection={<ImagesIcon size={16} />}
           active={Boolean(matchRoute({ to: "/admin" }))}
           onClick={onNavigate}
         />
@@ -45,6 +54,7 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
                 <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
               )}
               label={album.title ?? "(無題)"}
+              leftSection={<FolderIcon size={16} />}
               active={Boolean(
                 matchRoute({ params: { slug: album.slug }, to: "/admin/albums/$slug" }),
               )}
@@ -61,6 +71,7 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           component={Link}
           to="/admin/photos/upload"
           label="写真をアップロードする"
+          leftSection={<UploadIcon size={16} />}
           active={Boolean(matchRoute({ to: "/admin/photos/upload" }))}
           onClick={onNavigate}
         />
@@ -68,6 +79,7 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           component={Link}
           to="/admin/albums/new"
           label="アルバムを作成する"
+          leftSection={<FolderPlusIcon size={16} />}
           active={Boolean(matchRoute({ to: "/admin/albums/new" }))}
           onClick={onNavigate}
         />
@@ -75,6 +87,7 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           component={Link}
           to="/admin/photos/geotag"
           label="位置情報を設定する"
+          leftSection={<MapPinIcon size={16} />}
           active={Boolean(matchRoute({ to: "/admin/photos/geotag" }))}
           onClick={onNavigate}
         />
@@ -83,6 +96,7 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           component={Link}
           to="/admin/settings"
           label="設定"
+          leftSection={<SettingsIcon size={16} />}
           active={Boolean(matchRoute({ to: "/admin/settings" }))}
           onClick={onNavigate}
         />
