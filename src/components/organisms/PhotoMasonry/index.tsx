@@ -1,11 +1,9 @@
 import { Text } from "@mantine/core";
 
 import { PhotoCard, type PhotoCardData } from "#/components/molecules/PhotoCard";
-import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
+import { masonryLayout } from "#/lib/masonry.ts";
 
 import classes from "./PhotoMasonry.module.css";
-
-const GAP = "var(--mantine-spacing-md)";
 
 export const PhotoMasonry = ({
   photos,
@@ -20,10 +18,27 @@ export const PhotoMasonry = ({
   selectedPhotoIds?: Set<string>;
   onSelect?: (photoId: string, extend: boolean) => void;
 }) => {
-  const { ref, width } = useContainerWidth();
-  const columns = width === 0 ? 4 : Math.max(1, Math.floor(width / 240));
-  const layout = masonryLayout(photos, columns);
-  const columnWidth = `((100cqw - ${columns - 1} * ${GAP}) / ${columns})`;
+  // 列数は CSS のコンテナクエリで決まるため 1〜8 列ぶんの位置を先に配っておく
+  const layouts = [1, 2, 3, 4, 5, 6, 7, 8].map((columns) => masonryLayout(photos, columns));
+  const positions = [
+    `.${classes.canvas}{${layouts
+      .map(
+        (layout, i) =>
+          `--h${i + 1}:${layout.totalHeight};--gr${i + 1}:${Math.max(0, layout.totalRows - 1)};`,
+      )
+      .join("")}}`,
+    ...photos.map(
+      (_, index) =>
+        `.${classes.item}[data-index="${index}"]{${layouts
+          .map((layout, i) => {
+            const placed = layout.items[index];
+            return placed
+              ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};--r${i + 1}:${placed.rowsAbove};`
+              : "";
+          })
+          .join("")}}`,
+    ),
+  ].join("");
 
   if (photos.length === 0) {
     return (
@@ -33,23 +48,11 @@ export const PhotoMasonry = ({
     );
   }
   return (
-    <div className={classes.masonry} ref={ref}>
-      <div
-        className={classes.canvas}
-        style={{
-          height: `calc(${columnWidth} * ${layout.totalHeight} + ${GAP} * ${Math.max(0, layout.totalRows - 1)})`,
-        }}
-      >
-        {layout.items.map((p) => (
-          <div
-            key={p.id}
-            className={classes.item}
-            style={{
-              left: `calc((${columnWidth} + ${GAP}) * ${p.column})`,
-              top: `calc(${columnWidth} * ${p.top} + ${GAP} * ${p.rowsAbove})`,
-              width: `calc(${columnWidth})`,
-            }}
-          >
+    <div className={classes.masonry}>
+      <style>{positions}</style>
+      <div className={classes.canvas}>
+        {photos.map((p, index) => (
+          <div key={p.id} className={classes.item} data-index={index}>
             <PhotoCard
               photo={p}
               albumSlug={albumSlug}

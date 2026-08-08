@@ -67,6 +67,7 @@
 - **データベース**: Cloudflare D1 + Drizzle ORM
 - **認証**: Clerk
 - **ストレージ**: Cloudflare R2（画像本体。DB には `storage_key` のみ保持）
+- **画像配信**: R2 の公開ドメイン `img.newt239.dev` から直接配信し、リサイズは `/cdn-cgi/image/` に任せる（Worker を経由しない）
 
 ### RSC は存在しない
 
@@ -74,6 +75,14 @@ TanStack Start は RSC を使いません。full-document SSR + hydration + serv
 
 - **loader の戻り値はクライアントに JSON としてシリアライズされます**。秘匿すべき情報を含めてはなりません
 - サーバー専用処理は server function（`createServerFn`）に置きます
+
+### 画像配信
+
+画像の URL は `src/lib/image-url.ts` の `photoImageUrl` で組み立ててください。URL を直接書いてはなりません。配信元は環境変数 `VITE_IMAGE_BASE_URL` で指定します。
+
+- 幅を渡すと `/cdn-cgi/image/` 経由でリサイズされ、渡さないと R2 の原本がそのまま返ります
+- 表示に使う幅の種類を増やすと変換の回数がその分増えます。`srcSet` の候補は必要最小限にしてください
+- HEIC は原本のままだと Chrome などで表示できないため、`finalizePhoto` がアップロード時に JPEG へ変換して保存します
 
 ### プロジェクト構造
 
@@ -103,6 +112,7 @@ src/
 - ルートはドット記法ではなくディレクトリで階層を表現してください。`<Outlet />` を持つレイアウトは `route.tsx`、末尾に `_` が付いたセグメント（例: `albums_/`）は親レイアウトにネストさせない非ネストルートです。`createFileRoute` の引数はディレクトリ構成と一致させてください。
 - コンポーネントは `components/<層>/` の下に PascalCase のディレクトリを作り、その下に `index.tsx` と CSS Module を置いてください（例: `components/molecules/PhotoCard/index.tsx` と `components/molecules/PhotoCard/PhotoCard.module.css`）。`index.tsx` 以外に再エクスポートだけのバレルファイルを作ってはなりません。
 - 層は再利用される回数ではなく粒度で決めてください。`atoms` は単一の要素で状態もドメイン知識も持たないもの、`molecules` は atoms を組み合わせた単一目的の UI、`organisms` は複数の状態や server function を扱う独立したセクションです。
+- 一覧の列数は JS で幅を計測して決めてはなりません。SSR した HTML と計測後で列数が変わり初期表示がちらつきます。列数ごとの位置を CSS カスタムプロパティとして出力し、どれを使うかは CSS のコンテナクエリに決めさせてください（`AlbumMasonry` / `PhotoGallery` / `PhotoMasonry` が実装例です）。
 - Atomic Design の templates（レイアウト）と pages は `components` に置かず、`src/routes` に書いてください。`route.tsx` がテンプレート、各ルートの `component` がページに相当します。
 - コンポーネント名は所在ではなく役割で付けてください（`ProfileSection` ではなく `UserProfile`、`PublicAlbumGallery` ではなく `PhotoGallery`）。
 - コンポーネント固有のスタイルはコンポーネント名の CSS Module（例: `PhotoCard.module.css`）に記述してください。
@@ -119,6 +129,8 @@ src/
 
 - **公開の単位はアルバム**。写真は自身の公開状態を持たず、visibility を持つのは album だけ。写真は公開アルバムに 1 つでも属していれば公開される
 - アクセス判定の順序: (1) オーナー本人なら常に可、(2) 公開アルバムに属していれば可、(3) 該当 share 行があれば可、いずれもなければ不可
+- **この判定が守るのはメタデータだけ**。画像本体は R2 の公開ドメイン `img.newt239.dev` から直接配信され、判定を通らない。URL を知っていれば非公開アルバムの写真も取得できる
+- 上記の結果として `storage_key` は秘匿値として扱う。非公開の写真の `storage_key` を公開ページの loader やレスポンスに含めてはならない
 - 画像などのバイナリを D1 に入れない。R2 に保存し、DB には `storage_key` のみ保持する
 - 新規テーブルには `user_id` 列とインデックスをデフォルトで入れる（将来の多ユーザー化に備えた shared-ready 設計）
 - `src/routeTree.gen.ts` は自動生成ファイルのため編集しない

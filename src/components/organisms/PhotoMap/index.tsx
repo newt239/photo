@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { thumbHashToDataURL } from "thumbhash";
+
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { DEFAULT_CENTER, DEFAULT_ZOOM, addOsmTileLayer } from "#/lib/leaflet.ts";
@@ -28,6 +30,24 @@ export const PhotoMap = ({ photos }: { photos: PhotoMapItem[] }) => {
   useEffect(() => {
     let cancelled = false;
     let map: Leaflet.Map | null = null;
+    // 全ピンを一度に読み込むと画像の変換が集中するため、地図に映った分だけ後から読み込む
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const pin = entry.target;
+          if (!entry.isIntersecting || !(pin instanceof HTMLImageElement)) {
+            continue;
+          }
+          const source = pin.dataset.src;
+          if (source) {
+            pin.src = source;
+            delete pin.dataset.src;
+          }
+          observer.unobserve(pin);
+        }
+      },
+      { root: containerRef.current, rootMargin: "128px" },
+    );
     import("leaflet").then((leaflet) => {
       const container = containerRef.current;
       if (cancelled || !container) {
@@ -38,8 +58,13 @@ export const PhotoMap = ({ photos }: { photos: PhotoMapItem[] }) => {
 
       for (const [position, photo] of photos.entries()) {
         const pin = document.createElement("img");
-        pin.src = photoImageUrl(photo.storageKey, 320);
+        pin.dataset.src = photoImageUrl(photo.storageKey, 320);
         pin.alt = "";
+        if (photo.placeholder) {
+          const bytes = Uint8Array.from(atob(photo.placeholder), (c) => c.codePointAt(0) ?? 0);
+          pin.style.backgroundImage = `url(${thumbHashToDataURL(bytes)})`;
+        }
+        observer.observe(pin);
         const marker = leaflet
           .marker([photo.latitude, photo.longitude], {
             alt: photo.alt ?? photo.caption ?? "",
@@ -66,6 +91,7 @@ export const PhotoMap = ({ photos }: { photos: PhotoMapItem[] }) => {
     });
     return () => {
       cancelled = true;
+      observer.disconnect();
       map?.remove();
     };
   }, [photos]);

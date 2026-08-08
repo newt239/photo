@@ -95,6 +95,33 @@ export const finalizePhoto = createServerFn({ method: "POST" })
       return { error: "アップロードされた画像を受け付けられません", success: false } as const;
     }
 
+    let storageKey = data.originalKey;
+    let { size: fileSize } = head;
+    let { mimeType } = data;
+    // HEIC は原本をそのまま配信すると Chrome などで表示できないため JPEG に置き換える
+    if (uploadedType === "image/heic" || uploadedType === "image/heif") {
+      const source = await env.MY_BUCKET.get(data.originalKey);
+      if (!source) {
+        return { error: "アップロードされた画像が見つかりません", success: false } as const;
+      }
+      // R2 の body は要素の型を持たないが実体はバイト列なのでそのまま渡す
+      // eslint-disable-next-line typescript/no-unsafe-argument
+      const converted = await env.IMAGES.input(source.body)
+        .output({ format: "image/jpeg", quality: 90 })
+        .catch(() => null);
+      if (!converted) {
+        await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
+        return { error: "画像を JPEG に変換できませんでした", success: false } as const;
+      }
+      storageKey = `users/${userId}/photos/${data.photoId}/original.jpg`;
+      const stored = await env.MY_BUCKET.put(storageKey, await converted.response().arrayBuffer(), {
+        httpMetadata: { contentType: "image/jpeg" },
+      });
+      await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
+      fileSize = stored.size;
+      mimeType = "image/jpeg";
+    }
+
     const db = drizzle(env.DB, { schema });
     try {
       await db.insert(photos).values({
@@ -103,7 +130,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         cameraMake: data.cameraMake ?? null,
         cameraModel: data.cameraModel ?? null,
         contentHash: data.contentHash,
-        fileSize: head.size,
+        fileSize,
         focalLength: data.focalLength ?? null,
         height: data.height,
         id: data.photoId,
@@ -111,12 +138,12 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         latitude: data.latitude ?? null,
         lensModel: data.lensModel ?? null,
         longitude: data.longitude ?? null,
-        mimeType: data.mimeType,
+        mimeType,
         orientation: data.orientation ?? null,
         placeholder: data.placeholder ?? null,
         rawExif: data.rawExif ?? null,
         shutterSpeed: data.shutterSpeed ?? null,
-        storageKey: data.originalKey,
+        storageKey,
         takenAt: data.takenAt ? new Date(data.takenAt) : null,
         takenAtOffsetMinutes: data.takenAtOffsetMinutes ?? null,
         userId,
@@ -124,7 +151,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
       });
     } catch (error) {
       console.error("finalizePhoto: photos への insert に失敗しました", error);
-      await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
+      await env.MY_BUCKET.delete(storageKey).catch(() => {});
       const [duplicate] = await db
         .select({ id: photos.id })
         .from(photos)

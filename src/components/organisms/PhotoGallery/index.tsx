@@ -6,8 +6,7 @@ import { thumbHashToDataURL } from "thumbhash";
 
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
-import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
-import { IMAGE_WIDTHS } from "#/lib/upload-constraints.ts";
+import { masonryLayout } from "#/lib/masonry.ts";
 
 import classes from "./PhotoGallery.module.css";
 
@@ -32,14 +31,23 @@ export const PhotoGallery = ({
 }) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const { ref, width } = useContainerWidth();
-  // 計測前は既定値で描画し、マウント後に画面幅で既定値と上限を決める
-  const columns =
-    width === 0
-      ? (size ?? 3)
-      : Math.min(size ?? (width <= 480 ? 2 : 3), Math.max(1, Math.floor(width / 120)));
-  const layout = masonryLayout(photos, columns);
-  const columnPx = width === 0 ? 0 : Math.round(width / columns);
+  // 列数は size 未指定なら CSS のコンテナクエリで決まるため 1〜3 列ぶんの位置を先に配っておく
+  const candidates = size === undefined ? [1, 2, 3] : [size];
+  const layouts = candidates.map((columns) => masonryLayout(photos, columns));
+  const positions = [
+    `.${classes.canvas}{${size === undefined ? "" : `--cols:${size};`}${layouts
+      .map((layout, i) => `--h${i + 1}:${layout.totalHeight};`)
+      .join("")}}`,
+    ...photos.map(
+      (_, position) =>
+        `.${classes.item}[data-index="${position}"]{${layouts
+          .map((layout, i) => {
+            const placed = layout.items[position];
+            return placed ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};` : "";
+          })
+          .join("")}}`,
+    ),
+  ].join("");
   const blurs = useMemo(
     () =>
       photos.map((p) =>
@@ -70,16 +78,14 @@ export const PhotoGallery = ({
   return (
     <>
       <div className={classes.page}>
-        <div className={classes.gallery} ref={ref}>
-          <div
-            className={classes.canvas}
-            style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
-          >
-            {layout.items.map((p, i) => {
-              const candidates = IMAGE_WIDTHS.filter((candidate) => candidate <= p.width);
+        <div className={`${classes.gallery} ${size === undefined ? classes.auto : ""}`}>
+          <style>{positions}</style>
+          <div className={classes.canvas}>
+            {photos.map((p, i) => {
+              const widths = [320, 640, 1024].filter((candidate) => candidate <= p.width);
               const srcSet =
-                columnPx > 0 && candidates.length > 0
-                  ? candidates
+                widths.length > 0
+                  ? widths
                       .map((candidate) => `${photoImageUrl(p.storageKey, candidate)} ${candidate}w`)
                       .join(", ")
                   : undefined;
@@ -88,18 +94,18 @@ export const PhotoGallery = ({
                   key={p.id}
                   type="button"
                   className={classes.item}
+                  data-index={i}
                   onClick={() => setIndex(i)}
                   aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
-                  style={{
-                    left: `${(p.column * 100) / columns}%`,
-                    top: `${(p.top * 100) / columns}cqw`,
-                    width: `${100 / columns}%`,
-                  }}
                 >
                   <img
                     src={photoImageUrl(p.storageKey, 1024)}
                     srcSet={srcSet}
-                    sizes={srcSet ? `${columnPx}px` : undefined}
+                    sizes={
+                      size === undefined
+                        ? "(max-width: 239px) 100vw, (max-width: 480px) 50vw, 33vw"
+                        : `calc(100vw / ${size})`
+                    }
                     alt=""
                     loading={i < EAGER_COUNT ? "eager" : "lazy"}
                     fetchPriority={i < EAGER_COUNT ? "high" : undefined}

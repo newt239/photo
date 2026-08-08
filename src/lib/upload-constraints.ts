@@ -10,5 +10,3 @@ export const ALLOWED_MIME_TYPES = [
 
 // Images バインディングが変換できる入力の上限に合わせている
 export const MAX_FILE_SIZE = 20 * 1024 * 1024;
-
-export const IMAGE_WIDTHS = [320, 640, 1024, 1600, 2048];

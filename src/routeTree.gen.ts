@@ -32,7 +32,6 @@ import { Route as AdminAlbumsSlugAddRouteImport } from './routes/admin/albums_/$
 import { Route as AdminAlbumsSlugSettingsRouteImport } from './routes/admin/albums_/$slug/settings'
 import { Route as ApiOgAlbumsSlugRouteImport } from './routes/api/og/albums/$slug'
 import { Route as AdminAlbumsSlugPhotosPhotoIdRouteImport } from './routes/admin/albums_/$slug/photos/$photoId'
-import { Route as ApiIUserIdPhotoIdFileRouteImport } from './routes/api/i/$userId/$photoId/$file'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -150,11 +149,6 @@ const AdminAlbumsSlugPhotosPhotoIdRoute =
     path: '/albums/$slug/photos/$photoId',
     getParentRoute: () => AdminRouteRoute,
   } as any)
-const ApiIUserIdPhotoIdFileRoute = ApiIUserIdPhotoIdFileRouteImport.update({
-  id: '/api/i/$userId/$photoId/$file',
-  path: '/api/i/$userId/$photoId/$file',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,7 +174,6 @@ export interface FileRoutesByFullPath {
   '/admin/albums/$slug/settings': typeof AdminAlbumsSlugSettingsRoute
   '/api/og/albums/$slug': typeof ApiOgAlbumsSlugRoute
   '/admin/albums/$slug/photos/$photoId': typeof AdminAlbumsSlugPhotosPhotoIdRoute
-  '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -204,7 +197,6 @@ export interface FileRoutesByTo {
   '/admin/albums/$slug/settings': typeof AdminAlbumsSlugSettingsRoute
   '/api/og/albums/$slug': typeof ApiOgAlbumsSlugRoute
   '/admin/albums/$slug/photos/$photoId': typeof AdminAlbumsSlugPhotosPhotoIdRoute
-  '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -231,7 +223,6 @@ export interface FileRoutesById {
   '/admin/albums_/$slug/settings': typeof AdminAlbumsSlugSettingsRoute
   '/api/og/albums/$slug': typeof ApiOgAlbumsSlugRoute
   '/admin/albums_/$slug/photos/$photoId': typeof AdminAlbumsSlugPhotosPhotoIdRoute
-  '/api/i/$userId/$photoId/$file': typeof ApiIUserIdPhotoIdFileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -259,7 +250,6 @@ export interface FileRouteTypes {
     | '/admin/albums/$slug/settings'
     | '/api/og/albums/$slug'
     | '/admin/albums/$slug/photos/$photoId'
-    | '/api/i/$userId/$photoId/$file'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -283,7 +273,6 @@ export interface FileRouteTypes {
     | '/admin/albums/$slug/settings'
     | '/api/og/albums/$slug'
     | '/admin/albums/$slug/photos/$photoId'
-    | '/api/i/$userId/$photoId/$file'
   id:
     | '__root__'
     | '/'
@@ -309,7 +298,6 @@ export interface FileRouteTypes {
     | '/admin/albums_/$slug/settings'
     | '/api/og/albums/$slug'
     | '/admin/albums_/$slug/photos/$photoId'
-    | '/api/i/$userId/$photoId/$file'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -321,7 +309,6 @@ export interface RootRouteChildren {
   RegisterSplatRoute: typeof RegisterSplatRoute
   ApiOgIndexRoute: typeof ApiOgIndexRoute
   ApiOgAlbumsSlugRoute: typeof ApiOgAlbumsSlugRoute
-  ApiIUserIdPhotoIdFileRoute: typeof ApiIUserIdPhotoIdFileRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -487,13 +474,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlbumsSlugPhotosPhotoIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/api/i/$userId/$photoId/$file': {
-      id: '/api/i/$userId/$photoId/$file'
-      path: '/api/i/$userId/$photoId/$file'
-      fullPath: '/api/i/$userId/$photoId/$file'
-      preLoaderRoute: typeof ApiIUserIdPhotoIdFileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -556,7 +536,6 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterSplatRoute: RegisterSplatRoute,
   ApiOgIndexRoute: ApiOgIndexRoute,
   ApiOgAlbumsSlugRoute: ApiOgAlbumsSlugRoute,
-  ApiIUserIdPhotoIdFileRoute: ApiIUserIdPhotoIdFileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
