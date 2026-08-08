@@ -7,7 +7,6 @@ import { thumbHashToDataURL } from "thumbhash";
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
-import { IMAGE_WIDTHS } from "#/lib/upload-constraints.ts";
 
 import classes from "./PhotoGallery.module.css";
 
@@ -76,7 +75,7 @@ export const PhotoGallery = ({
             style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
           >
             {layout.items.map((p, i) => {
-              const candidates = IMAGE_WIDTHS.filter((candidate) => candidate <= p.width);
+              const candidates = [320, 640, 1024].filter((candidate) => candidate <= p.width);
               const srcSet =
                 columnPx > 0 && candidates.length > 0
                   ? candidates

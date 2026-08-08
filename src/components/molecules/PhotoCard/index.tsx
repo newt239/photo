@@ -29,7 +29,7 @@ export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: Phot
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
       <img
         src={photoImageUrl(photo.storageKey, 640)}
-        srcSet={[320, 640, 1024]
+        srcSet={[320, 640]
           .filter((width) => width <= photo.width)
           .map((width) => `${photoImageUrl(photo.storageKey, width)} ${width}w`)
           .join(", ")}
