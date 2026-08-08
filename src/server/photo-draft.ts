@@ -8,8 +8,6 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { photos } from "#/db/schema.ts";
 
-const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
-
 const draftSchema = z
   .object({
     alt: z.string(),
@@ -26,7 +24,13 @@ const generatePhotoDraftInput = z.object({
 });
 
 const captionInstruction =
-  "caption は写真に写っているものを一言で表す30文字以内の短い説明にしてください。1文だけとし、句点は付けず、宣伝的な言い回しや主観的な評価は使わないでください。";
+  "caption はその写真がどこで何を撮ったものかが伝わる30文字以内の短い説明です。次のルールに従ってください。" +
+  "建造物や施設や観光地や自然物など固有の名前が推測できる場合は、その名前をそのまま書く。" +
+  "人が何かをしている場合は「◯◯する人」「◯◯の様子」のようにその行為を端的に書く。" +
+  "名前が特定できない場合でも「駅のホーム」「商店街の路地」「海沿いの堤防」のように場所の種類がわかる言葉を使う。" +
+  "被写体が明確な場合は被写体名を主語にし、撮影者が何に注目して撮ったかがわかるようにする。" +
+  "詩的な言い回しや作品タイトルのような表現、「美しい」「印象的な」などの主観的評価、宣伝的な言い回しは使わない。" +
+  "体言止めの1文だけとし、句点は付けない。";
 
 const altInstruction =
   "alt はスクリーンリーダー利用者が視覚情報なしで内容を理解できる代替テキストです。次のルールに従ってください。" +
@@ -46,7 +50,7 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
     }
     const db = drizzle(env.DB, { schema });
     const [photo] = await db
-      .select({ storageKey: photos.storageKey, thumbnailKey: photos.thumbnailKey })
+      .select({ storageKey: photos.storageKey })
       .from(photos)
       .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
       .limit(1);
@@ -54,20 +58,25 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
       return { error: "写真が見つかりません", success: false } as const;
     }
 
-    const obj = await env.MY_BUCKET.get(photo.thumbnailKey ?? photo.storageKey);
+    const obj = await env.MY_BUCKET.get(photo.storageKey);
     if (!obj) {
       return { error: "画像が見つかりません", success: false } as const;
     }
-    // Base64 に展開すると約 4/3 に膨らむため Worker のメモリ上限に触れる前に打ち切る
-    if (obj.size > MAX_IMAGE_BYTES) {
-      return { error: "画像が大きすぎて生成できません", success: false } as const;
+    // Base64 に展開すると約 4/3 に膨らむため AI に渡す前に縮小する
+    // eslint-disable-next-line typescript/no-unsafe-argument
+    const resized = await env.IMAGES.input(obj.body)
+      .transform({ fit: "scale-down", width: 1024 })
+      .output({ format: "image/jpeg", quality: 80 })
+      .catch(() => null);
+    if (!resized) {
+      return { error: "画像を変換できませんでした", success: false } as const;
     }
-    const bytes = new Uint8Array(await obj.arrayBuffer());
+    const bytes = new Uint8Array(await resized.response().arrayBuffer());
     let binary = "";
     for (let i = 0; i < bytes.length; i += 8192) {
       binary += String.fromCodePoint(...bytes.subarray(i, i + 8192));
     }
-    const dataUri = `data:${obj.httpMetadata?.contentType ?? "image/jpeg"};base64,${btoa(binary)}`;
+    const dataUri = `data:image/jpeg;base64,${btoa(binary)}`;
 
     const wantsCaption = data.fields.includes("caption");
     const wantsAlt = data.fields.includes("alt");

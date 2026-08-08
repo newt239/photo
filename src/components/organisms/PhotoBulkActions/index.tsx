@@ -26,6 +26,8 @@ type PhotoBulkActionsProps = {
   selectedCount: number;
   submitting: boolean;
   albums: { id: string; title: string | null }[];
+  modal: "add" | "create" | "delete" | null;
+  onModalChange: (next: "add" | "create" | "delete" | null) => void;
   onSelectAll: () => void;
   onCancel: () => void;
   onDelete: () => Promise<void>;
@@ -38,6 +40,8 @@ export const PhotoBulkActions = ({
   selectedCount,
   submitting,
   albums,
+  modal,
+  onModalChange,
   onSelectAll,
   onCancel,
   onDelete,
@@ -45,7 +49,6 @@ export const PhotoBulkActions = ({
   onCreateAlbum,
   onRemoveFromAlbum,
 }: PhotoBulkActionsProps) => {
-  const [modal, setModal] = useState<"add" | "create" | "delete" | null>(null);
   const [albumId, setAlbumId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
 
@@ -63,7 +66,7 @@ export const PhotoBulkActions = ({
         <Menu.Dropdown>
           <Menu.Label>選択</Menu.Label>
           <Menu.Item leftSection={<CheckCheckIcon size={14} />} onClick={onSelectAll}>
-            すべて選択する
+            このページをすべて選択する
           </Menu.Item>
           <Menu.Item leftSection={<XIcon size={14} />} onClick={onCancel}>
             選択を解除する
@@ -74,7 +77,7 @@ export const PhotoBulkActions = ({
             leftSection={<FolderPlusIcon size={14} />}
             onClick={() => {
               setAlbumId(null);
-              setModal("add");
+              onModalChange("add");
             }}
             disabled={albums.length === 0}
           >
@@ -84,7 +87,7 @@ export const PhotoBulkActions = ({
             leftSection={<PlusIcon size={14} />}
             onClick={() => {
               setTitle("");
-              setModal("create");
+              onModalChange("create");
             }}
           >
             新しいアルバムを作成する
@@ -103,7 +106,7 @@ export const PhotoBulkActions = ({
           <Menu.Item
             color="red"
             leftSection={<Trash2Icon size={14} />}
-            onClick={() => setModal("delete")}
+            onClick={() => onModalChange("delete")}
           >
             削除する
           </Menu.Item>
@@ -112,7 +115,7 @@ export const PhotoBulkActions = ({
 
       <Modal
         opened={modal === "add"}
-        onClose={() => setModal(null)}
+        onClose={() => onModalChange(null)}
         title="既存のアルバムに追加する"
         centered
       >
@@ -133,7 +136,7 @@ export const PhotoBulkActions = ({
             <Button
               variant="default"
               leftSection={<XIcon size={16} />}
-              onClick={() => setModal(null)}
+              onClick={() => onModalChange(null)}
               disabled={submitting}
             >
               キャンセルする
@@ -144,7 +147,7 @@ export const PhotoBulkActions = ({
               disabled={!albumId}
               onClick={() => {
                 if (albumId) {
-                  onAddToAlbum(albumId).then(() => setModal(null));
+                  onAddToAlbum(albumId).then(() => onModalChange(null));
                 }
               }}
             >
@@ -156,7 +159,7 @@ export const PhotoBulkActions = ({
 
       <Modal
         opened={modal === "create"}
-        onClose={() => setModal(null)}
+        onClose={() => onModalChange(null)}
         title="新しいアルバムを作成する"
         centered
       >
@@ -175,7 +178,7 @@ export const PhotoBulkActions = ({
             <Button
               variant="default"
               leftSection={<XIcon size={16} />}
-              onClick={() => setModal(null)}
+              onClick={() => onModalChange(null)}
               disabled={submitting}
             >
               キャンセルする
@@ -185,7 +188,7 @@ export const PhotoBulkActions = ({
               loading={submitting}
               disabled={!title.trim()}
               onClick={() => {
-                onCreateAlbum(title.trim()).then(() => setModal(null));
+                onCreateAlbum(title.trim()).then(() => onModalChange(null));
               }}
             >
               作成して {selectedCount} 枚を追加する
@@ -196,7 +199,7 @@ export const PhotoBulkActions = ({
 
       <Modal
         opened={modal === "delete"}
-        onClose={() => setModal(null)}
+        onClose={() => onModalChange(null)}
         title="写真を削除する"
         centered
       >
@@ -211,7 +214,7 @@ export const PhotoBulkActions = ({
             <Button
               variant="default"
               leftSection={<XIcon size={16} />}
-              onClick={() => setModal(null)}
+              onClick={() => onModalChange(null)}
               disabled={submitting}
             >
               キャンセルする
@@ -221,7 +224,7 @@ export const PhotoBulkActions = ({
               leftSection={<Trash2Icon size={16} />}
               loading={submitting}
               onClick={() => {
-                onDelete().then(() => setModal(null));
+                onDelete().then(() => onModalChange(null));
               }}
             >
               削除する

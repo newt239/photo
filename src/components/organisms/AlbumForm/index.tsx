@@ -1,13 +1,14 @@
 import { useState, type ReactNode } from "react";
 
-import { Button, Group, Stack, Text, TextInput, Textarea } from "@mantine/core";
+import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
 
 import { VisibilityControl } from "#/components/molecules/VisibilityControl";
 
 export type AlbumFormValues = {
   title: string;
   slug: string;
-  description: string;
+  periodStart: string;
+  periodEnd: string;
   visibility: "public" | "private";
 };
 
@@ -25,7 +26,7 @@ type AlbumFormProps = {
 };
 
 export const AlbumForm = ({
-  initialValues = { description: "", slug: "", title: "", visibility: "private" },
+  initialValues = { periodEnd: "", periodStart: "", slug: "", title: "", visibility: "private" },
   slugRequired = false,
   slugDescription,
   requireDirty = false,
@@ -38,20 +39,24 @@ export const AlbumForm = ({
 }: AlbumFormProps) => {
   const [title, setTitle] = useState(initialValues.title);
   const [slug, setSlug] = useState(initialValues.slug);
-  const [description, setDescription] = useState(initialValues.description);
+  const [periodStart, setPeriodStart] = useState(initialValues.periodStart);
+  const [periodEnd, setPeriodEnd] = useState(initialValues.periodEnd);
   const [visibility, setVisibility] = useState(initialValues.visibility);
   const dirty =
     title.trim() !== initialValues.title ||
     slug.trim() !== initialValues.slug ||
-    description.trim() !== initialValues.description ||
+    periodStart !== initialValues.periodStart ||
+    periodEnd !== initialValues.periodEnd ||
     visibility !== initialValues.visibility;
+  const periodInvalid = periodEnd !== "" && (periodStart === "" || periodStart > periodEnd);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit({
-          description: description.trim(),
+          periodEnd,
+          periodStart,
           slug: slug.trim(),
           title: title.trim(),
           visibility,
@@ -66,14 +71,23 @@ export const AlbumForm = ({
           onChange={(e) => setTitle(e.currentTarget.value)}
           maxLength={200}
         />
-        <Textarea
-          label="説明"
-          autosize
-          minRows={2}
-          value={description}
-          onChange={(e) => setDescription(e.currentTarget.value)}
-          maxLength={2000}
-        />
+        <Group grow align="flex-start">
+          <TextInput
+            label="開始年月"
+            type="month"
+            placeholder="2026-05"
+            value={periodStart}
+            onChange={(e) => setPeriodStart(e.currentTarget.value)}
+          />
+          <TextInput
+            label="終了年月"
+            type="month"
+            placeholder="2026-05"
+            value={periodEnd}
+            onChange={(e) => setPeriodEnd(e.currentTarget.value)}
+            error={periodInvalid ? "終了年月は開始年月以降にしてください" : undefined}
+          />
+        </Group>
         <TextInput
           label="URL"
           description={slugDescription}
@@ -100,6 +114,7 @@ export const AlbumForm = ({
             loading={submitting}
             disabled={
               title.trim().length === 0 ||
+              periodInvalid ||
               (slugRequired && slug.trim().length === 0) ||
               (requireDirty && !dirty)
             }

@@ -63,8 +63,9 @@ const AlbumSettingsPage = () => {
     try {
       const result = await updateAlbum({
         data: {
-          description: values.description || null,
           id: album.id,
+          periodEnd: values.periodEnd || null,
+          periodStart: values.periodStart || null,
           slug: values.slug,
           title: values.title,
           visibility: values.visibility,
@@ -107,7 +108,8 @@ const AlbumSettingsPage = () => {
       <AlbumForm
         key={album.slug}
         initialValues={{
-          description: album.description ?? "",
+          periodEnd: album.periodEnd ?? "",
+          periodStart: album.periodStart ?? "",
           slug: album.slug,
           title: album.title ?? "",
           visibility: album.visibility,
@@ -204,12 +206,11 @@ export const Route = createFileRoute("/admin/albums_/$slug/settings")({
     const { album, photos } = result;
     return {
       album: {
-        cover: album.coverStorageKey
-          ? { storageKey: album.coverStorageKey, thumbnailKey: album.coverThumbnailKey }
-          : null,
+        cover: album.coverStorageKey ? { storageKey: album.coverStorageKey } : null,
         coverPhotoId: album.coverPhotoId,
-        description: album.description,
         id: album.id,
+        periodEnd: album.periodEnd,
+        periodStart: album.periodStart,
         slug: album.slug,
         title: album.title,
         visibility: album.visibility,

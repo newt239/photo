@@ -1,5 +1,6 @@
 import { Checkbox, Table, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
+import { MapPinOffIcon } from "lucide-react";
 
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
@@ -13,7 +14,7 @@ type PhotoTableProps = {
   albumSlug?: string;
   emptyMessage?: string;
   selectedPhotoIds: Set<string>;
-  onSelect: (photoId: string) => void;
+  onSelect: (photoId: string, extend: boolean) => void;
 };
 
 export const PhotoTable = ({
@@ -45,19 +46,27 @@ export const PhotoTable = ({
         <Table.Tbody>
           {photos.map((p) => {
             const selected = selectedPhotoIds.has(p.id);
-            const src = photoImageUrl(p.thumbnailKey ?? p.storageKey);
+            const src = photoImageUrl(p.storageKey, 320);
             const label = p.caption ?? p.alt ?? "(キャプションなし)";
             return (
               <Table.Tr key={p.id} bg={selected ? "var(--mantine-color-blue-light)" : undefined}>
                 <Table.Td>
                   <Checkbox
                     checked={selected}
-                    onChange={() => onSelect(p.id)}
+                    readOnly
+                    onClick={(event) => onSelect(p.id, event.shiftKey)}
                     aria-label={p.caption ?? p.alt ?? "この写真を選択する"}
                   />
                 </Table.Td>
                 <Table.Td>
-                  <img className={classes.thumb} src={src} alt="" loading="lazy" />
+                  <div className={classes.frame}>
+                    <img className={classes.thumb} src={src} alt="" loading="lazy" />
+                    {!p.hasLocation && (
+                      <span className={classes.badge}>
+                        <MapPinOffIcon size={12} role="img" aria-label="位置情報が未設定" />
+                      </span>
+                    )}
+                  </div>
                 </Table.Td>
                 <Table.Td>
                   {albumSlug === undefined ? (

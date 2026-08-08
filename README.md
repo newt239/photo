@@ -69,3 +69,7 @@ pnpm wrangler d1 migrations apply photo --remote
 ```bash
 pnpm wrangler deploy
 ```
+
+## 共有シートからのアップロード
+
+`public/manifest.json` の `share_target` と `public/sw.js` により、インストールした PWA が共有シートに現れる。共有されたファイルは Service Worker が Cache API に退避し、アップロード画面が取り出して通常のアップロード経路に流す。iOS Safari は `share_target` を未サポートのため、Android / Chrome OS / デスクトップ Chrome でのみ利用できる。

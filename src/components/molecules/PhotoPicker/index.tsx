@@ -8,7 +8,6 @@ type PhotoPickerItem = {
   id: string;
   caption: string | null;
   storageKey: string;
-  thumbnailKey: string | null;
 };
 
 type PhotoPickerProps = {
@@ -35,7 +34,7 @@ export const PhotoPicker = ({
           data-checked={checked || undefined}
           data-disabled={already || undefined}
         >
-          <img src={photoImageUrl(p.thumbnailKey ?? p.storageKey)} alt="" loading="lazy" />
+          <img src={photoImageUrl(p.storageKey, 320)} alt="" loading="lazy" />
           <Checkbox
             className={classes.check}
             checked={already || checked}

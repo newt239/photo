@@ -3,6 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { Link, Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { AdminNavbar } from "#/components/organisms/AdminNavbar";
+import { KeyboardShortcutHelp } from "#/components/organisms/KeyboardShortcutHelp";
 import { listMyAlbums } from "#/server/albums.ts";
 import { fetchAuth } from "#/server/auth.ts";
 
@@ -21,6 +22,9 @@ const AdminLayout = () => {
           <Text component={Link} to="/admin" fw={700} c="inherit" td="none">
             photos.newt239.dev
           </Text>
+          <Group ml="auto" gap="xs">
+            <KeyboardShortcutHelp />
+          </Group>
         </Group>
       </AppShell.Header>
 

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -12,15 +12,13 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
 import { ensureUserRow } from "#/server/user.ts";
 
-const THUMB_MIME = "image/webp";
-
 const ID_CHUNK_SIZE = 90;
 
 const R2_DELETE_CHUNK_SIZE = 1000;
 
 const createPhotoUploadInput = z.object({
+  contentHash: z.string().regex(/^[0-9a-f]{64}$/),
   contentType: z.enum(ALLOWED_MIME_TYPES),
-  hasThumbnail: z.boolean().default(true),
   size: z.number().int().positive().max(MAX_FILE_SIZE),
 });
 
@@ -32,24 +30,20 @@ export const createPhotoUpload = createServerFn({ method: "POST" })
       return { error: "ログインしてください", success: false } as const;
     }
     await ensureUserRow(userId);
+    const db = drizzle(env.DB, { schema });
+    const [existing] = await db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(and(eq(photos.userId, userId), eq(photos.contentHash, data.contentHash)))
+      .limit(1);
+    if (existing) {
+      return { kind: "duplicate", photoId: existing.id, success: true } as const;
+    }
     const photoId = nanoid();
     const extension = MIME_EXT[data.contentType.toLowerCase()] ?? "bin";
     const originalKey = `users/${userId}/photos/${photoId}/original.${extension}`;
     const originalUrl = await signPutUrl(originalKey, data.contentType);
-    let thumbnailKey: string | null = null;
-    let thumbnailUrl: string | null = null;
-    if (data.hasThumbnail) {
-      thumbnailKey = `users/${userId}/photos/${photoId}/thumb.webp`;
-      thumbnailUrl = await signPutUrl(thumbnailKey, THUMB_MIME);
-    }
-    return {
-      originalKey,
-      originalUrl,
-      photoId,
-      success: true,
-      thumbnailKey,
-      thumbnailUrl,
-    } as const;
+    return { kind: "created", originalKey, originalUrl, photoId, success: true } as const;
   });
 
 const finalizePhotoInput = z.object({
@@ -57,6 +51,7 @@ const finalizePhotoInput = z.object({
   aperture: z.number().nullable().optional(),
   cameraMake: z.string().nullable().optional(),
   cameraModel: z.string().nullable().optional(),
+  contentHash: z.string().regex(/^[0-9a-f]{64}$/),
   fileSize: z.number().int().positive().max(MAX_FILE_SIZE),
   focalLength: z.number().nullable().optional(),
   height: z.number().int().positive(),
@@ -71,7 +66,7 @@ const finalizePhotoInput = z.object({
   rawExif: z.string().nullable().optional(),
   shutterSpeed: z.string().nullable().optional(),
   takenAt: z.string().datetime().nullable().optional(),
-  thumbnailKey: z.string().nullable(),
+  takenAtOffsetMinutes: z.number().int().min(-720).max(840).nullable().optional(),
   width: z.number().int().positive(),
 });
 
@@ -86,9 +81,6 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     if (!keyPattern.test(data.originalKey)) {
       return { error: "アップロード先が正しくありません", success: false } as const;
     }
-    if (data.thumbnailKey && !keyPattern.test(data.thumbnailKey)) {
-      return { error: "アップロード先が正しくありません", success: false } as const;
-    }
 
     const head = await env.MY_BUCKET.head(data.originalKey);
     if (!head) {
@@ -99,19 +91,17 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     const allowedType = ALLOWED_MIME_TYPES.some((mime) => mime === uploadedType);
     if (head.size > MAX_FILE_SIZE || !allowedType) {
       await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
-      if (data.thumbnailKey) {
-        await env.MY_BUCKET.delete(data.thumbnailKey).catch(() => {});
-      }
       return { error: "アップロードされた画像を受け付けられません", success: false } as const;
     }
 
+    const db = drizzle(env.DB, { schema });
     try {
-      const db = drizzle(env.DB, { schema });
       await db.insert(photos).values({
         altitude: data.altitude ?? null,
         aperture: data.aperture ?? null,
         cameraMake: data.cameraMake ?? null,
         cameraModel: data.cameraModel ?? null,
+        contentHash: data.contentHash,
         fileSize: head.size,
         focalLength: data.focalLength ?? null,
         height: data.height,
@@ -126,68 +116,29 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         shutterSpeed: data.shutterSpeed ?? null,
         storageKey: data.originalKey,
         takenAt: data.takenAt ? new Date(data.takenAt) : null,
-        thumbnailKey: data.thumbnailKey,
+        takenAtOffsetMinutes: data.takenAtOffsetMinutes ?? null,
         userId,
         width: data.width,
       });
     } catch (error) {
       console.error("finalizePhoto: photos への insert に失敗しました", error);
       await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
-      if (data.thumbnailKey) {
-        await env.MY_BUCKET.delete(data.thumbnailKey).catch(() => {});
+      const [duplicate] = await db
+        .select({ id: photos.id })
+        .from(photos)
+        .where(and(eq(photos.userId, userId), eq(photos.contentHash, data.contentHash)))
+        .limit(1);
+      if (duplicate) {
+        return {
+          duplicatePhotoId: duplicate.id,
+          error: "同じ写真が既にあります",
+          success: false,
+        } as const;
       }
       return { error: "写真を保存できませんでした", success: false } as const;
     }
 
     return { id: data.photoId, success: true } as const;
-  });
-
-const listMyPhotosInput = z.object({
-  limit: z.number().int().positive().max(200).optional(),
-  order: z.enum(["asc", "desc"]).default("desc"),
-});
-
-export const listMyPhotos = createServerFn({ method: "GET" })
-  .validator(listMyPhotosInput)
-  .handler(async ({ data }) => {
-    const { userId } = await auth();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
-    const direction = data.order === "asc" ? asc : desc;
-    const rows = await db
-      .select({
-        alt: photos.alt,
-        caption: photos.caption,
-        height: photos.height,
-        id: photos.id,
-        storageKey: photos.storageKey,
-        takenAt: photos.takenAt,
-        thumbnailKey: photos.thumbnailKey,
-        width: photos.width,
-      })
-      .from(photos)
-      .where(eq(photos.userId, userId))
-      .orderBy(
-        sql`${photos}.taken_at IS NULL`,
-        direction(photos.takenAt),
-        direction(photos.uploadedAt),
-      )
-      .limit(data.limit ?? 200);
-    return {
-      photos: rows.map((row) => ({
-        alt: row.alt,
-        caption: row.caption,
-        height: row.height,
-        id: row.id,
-        storageKey: row.storageKey,
-        takenAt: row.takenAt?.toISOString() ?? null,
-        thumbnailKey: row.thumbnailKey,
-        width: row.width,
-      })),
-      success: true,
-    } as const;
   });
 
 export const getPhoto = createServerFn({ method: "GET" })
@@ -298,7 +249,6 @@ export const listPhotosMissingLocation = createServerFn({ method: "GET" })
         id: photos.id,
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
-        thumbnailKey: photos.thumbnailKey,
       })
       .from(photos)
       .where(and(eq(photos.userId, userId), missingLocation))
@@ -311,7 +261,6 @@ export const listPhotosMissingLocation = createServerFn({ method: "GET" })
         id: row.id,
         storageKey: row.storageKey,
         takenAt: row.takenAt?.toISOString() ?? null,
-        thumbnailKey: row.thumbnailKey,
       })),
       success: true,
     } as const;
@@ -350,6 +299,38 @@ export const applyPhotoLocations = createServerFn({ method: "POST" })
     return { success: true, updated: results.flat().length } as const;
   });
 
+const draftItemSchema = z.object({
+  alt: z.string().max(500).nullable(),
+  caption: z.string().max(2000).nullable(),
+  id: z.string().min(1),
+});
+
+const updatePhotosInput = z.object({
+  items: z.array(draftItemSchema).min(1).max(100),
+});
+
+export const updatePhotos = createServerFn({ method: "POST" })
+  .validator(updatePhotosInput)
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const [first, ...rest] = data.items.map((item) =>
+      db
+        .update(photos)
+        .set({ alt: item.alt, caption: item.caption })
+        .where(and(eq(photos.id, item.id), eq(photos.userId, userId)))
+        .returning({ id: photos.id }),
+    );
+    if (!first) {
+      return { error: "EMPTY", success: false } as const;
+    }
+    const results = await db.batch([first, ...rest]);
+    return { success: true, updated: results.flat().length } as const;
+  });
+
 const updatePhotoInput = z.object({
   alt: z.string().max(500).nullable(),
   caption: z.string().max(2000).nullable(),
@@ -379,17 +360,54 @@ export const updatePhoto = createServerFn({ method: "POST" })
     return { id: data.id, success: true } as const;
   });
 
+const updatePhotoLocationInput = z
+  .object({
+    id: z.string().min(1),
+    latitude: z.number().min(-90).max(90).nullable(),
+    longitude: z.number().min(-180).max(180).nullable(),
+  })
+  .refine((value) => (value.latitude === null) === (value.longitude === null), {
+    message: "緯度と経度は両方を指定してください",
+  });
+
+export const updatePhotoLocation = createServerFn({ method: "POST" })
+  .validator(updatePhotoLocationInput)
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const [existing] = await db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
+      .limit(1);
+    if (!existing) {
+      return { error: "写真が見つかりません", success: false } as const;
+    }
+    await db
+      .update(photos)
+      .set(
+        data.latitude === null
+          ? { altitude: null, latitude: null, longitude: null }
+          : { latitude: data.latitude, longitude: data.longitude },
+      )
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
+    return { id: data.id, success: true } as const;
+  });
+
 export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photoIds: string[]) => {
   if (photoIds.length === 0) {
     return 0;
   }
   const db = drizzle(env.DB, { schema });
-  const rows: { id: string; storageKey: string; thumbnailKey: string | null }[] = [];
+  const rows: { id: string; storageKey: string }[] = [];
   for (let offset = 0; offset < photoIds.length; offset += ID_CHUNK_SIZE) {
     // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
     const chunk = photoIds.slice(offset, offset + ID_CHUNK_SIZE);
     const found = await db
-      .select({ id: photos.id, storageKey: photos.storageKey, thumbnailKey: photos.thumbnailKey })
+      .select({ id: photos.id, storageKey: photos.storageKey })
       .from(photos)
       .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
     rows.push(...found);
@@ -404,9 +422,7 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
     await db.delete(photos).where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
   }
 
-  const storageKeys = rows.flatMap((row) =>
-    row.thumbnailKey ? [row.storageKey, row.thumbnailKey] : [row.storageKey],
-  );
+  const storageKeys = rows.map((row) => row.storageKey);
   for (let offset = 0; offset < storageKeys.length; offset += R2_DELETE_CHUNK_SIZE) {
     // R2 の一括削除は 1 回あたり 1000 キーまでのため分割する
     const chunk = storageKeys.slice(offset, offset + R2_DELETE_CHUNK_SIZE);
@@ -420,7 +436,7 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
 });
 
 const deletePhotosInput = z.object({
-  ids: z.array(z.string().min(1)).min(1).max(200),
+  ids: z.array(z.string().min(1)).min(1).max(500),
 });
 
 export const deletePhotos = createServerFn({ method: "POST" })

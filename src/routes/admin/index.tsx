@@ -1,19 +1,62 @@
-import { Stack, Title } from "@mantine/core";
+import { Badge, Button, Group, Pagination, Stack, Text, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
+import { ChevronDownIcon, ChevronUpIcon, FilterIcon } from "lucide-react";
 import { z } from "zod";
 
+import { PhotoFilterBar, type PhotoFilters } from "#/components/molecules/PhotoFilterBar";
 import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
-import { listMyPhotos } from "#/server/photos.ts";
+import { listCameraModels, listMyPhotos } from "#/server/photo-list.ts";
 
 const AdminIndexPage = () => {
-  const { photos } = Route.useLoaderData();
+  const { cameras, photos, total } = Route.useLoaderData();
   const { albums } = useLoaderData({ from: "/admin" });
-  const { order, view } = Route.useSearch();
+  const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const [filterOpened, { toggle: toggleFilter }] = useDisclosure(false);
+  const { order, page, perPage, view } = search;
+  const from = total === 0 ? 0 : (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, total);
+
+  const changeFilters = (patch: PhotoFilters) => {
+    navigate({ replace: true, search: (prev) => ({ ...prev, ...patch, page: 1 }) });
+  };
+  const appliedCount = [
+    search.album,
+    search.camera,
+    search.geo,
+    search.missing,
+    search.month,
+    search.q,
+  ].filter((value) => value !== undefined).length;
 
   return (
     <Stack p="xl" gap="md">
-      <Title order={2}>写真</Title>
+      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+        <Title order={2}>写真</Title>
+        <Group gap="sm">
+          {appliedCount > 0 && <Badge variant="light">{`${appliedCount} 件の条件`}</Badge>}
+          <Button
+            variant="default"
+            leftSection={<FilterIcon size={16} />}
+            rightSection={
+              filterOpened ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />
+            }
+            onClick={toggleFilter}
+          >
+            絞り込む
+          </Button>
+        </Group>
+      </Group>
+
+      <PhotoFilterBar
+        filters={search}
+        albums={albums}
+        cameras={cameras}
+        opened={filterOpened}
+        appliedCount={appliedCount}
+        onChange={changeFilters}
+      />
 
       <PhotoLibrary
         photos={photos}
@@ -21,12 +64,28 @@ const AdminIndexPage = () => {
         order={order}
         view={view}
         onOrderChange={(next) => {
-          navigate({ replace: true, search: (prev) => ({ ...prev, order: next }) });
+          navigate({ replace: true, search: (prev) => ({ ...prev, order: next, page: 1 }) });
         }}
         onViewChange={(next) => {
           navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
         }}
+        emptyMessage={total === 0 ? "条件に合う写真はありません" : undefined}
       />
+
+      {total > 0 && (
+        <Group justify="space-between">
+          <Text size="sm" c="dimmed">
+            {`${total} 枚中 ${from}〜${to} 枚`}
+          </Text>
+          <Pagination
+            total={Math.ceil(total / perPage)}
+            value={page}
+            onChange={(next) => {
+              navigate({ search: (prev) => ({ ...prev, page: next }) });
+            }}
+          />
+        </Group>
+      )}
     </Stack>
   );
 };
@@ -34,16 +93,66 @@ const AdminIndexPage = () => {
 export const Route = createFileRoute("/admin/")({
   component: AdminIndexPage,
   head: () => ({ meta: [{ title: "写真 | photos.newt239.dev" }] }),
-  loader: async ({ deps }: { deps: { order: "asc" | "desc" } }) => {
-    const result = await listMyPhotos({ data: { order: deps.order } });
+  loader: async ({
+    deps,
+  }: {
+    deps: {
+      album?: string;
+      camera?: string;
+      geo?: "with" | "without";
+      missing?: "caption" | "alt";
+      month?: string;
+      order: "asc" | "desc";
+      page: number;
+      perPage: number;
+      q?: string;
+    };
+  }) => {
+    const [result, cameras] = await Promise.all([
+      listMyPhotos({
+        data: {
+          album: deps.album,
+          camera: deps.camera,
+          geo: deps.geo,
+          limit: deps.perPage,
+          missing: deps.missing,
+          month: deps.month,
+          offset: (deps.page - 1) * deps.perPage,
+          order: deps.order,
+          q: deps.q,
+        },
+      }),
+      listCameraModels(),
+    ]);
     if (!result.success) {
       throw notFound();
     }
-    return { photos: result.photos };
+    return { cameras, photos: result.photos, total: result.total };
   },
-  loaderDeps: ({ search }) => ({ order: search.order }),
+  loaderDeps: ({ search }) => ({
+    album: search.album,
+    camera: search.camera,
+    geo: search.geo,
+    missing: search.missing,
+    month: search.month,
+    order: search.order,
+    page: search.page,
+    perPage: search.perPage,
+    q: search.q,
+  }),
   validateSearch: z.object({
+    album: z.string().optional(),
+    camera: z.string().optional(),
+    geo: z.enum(["with", "without"]).optional(),
+    missing: z.enum(["caption", "alt"]).optional(),
+    month: z
+      .string()
+      .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/)
+      .optional(),
     order: z.enum(["asc", "desc"]).default("desc"),
+    page: z.number().int().min(1).catch(1).default(1),
+    perPage: z.number().int().min(12).max(200).catch(60).default(60),
+    q: z.string().max(100).optional(),
     view: z.enum(["grid", "table"]).default("grid"),
   }),
 });

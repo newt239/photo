@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { AlbumViewerControls } from "#/components/organisms/AlbumViewerControls";
 import { env } from "#/env.ts";
+import { formatAlbumPeriod } from "#/lib/format.ts";
 import { getPublicAlbumBySlug } from "#/server/public.ts";
 
 const PublicAlbumLayout = () => {
@@ -26,7 +27,7 @@ const PublicAlbumLayout = () => {
       </main>
       <AlbumViewerControls
         title={album.title}
-        description={album.description}
+        period={formatAlbumPeriod(album.periodStart, album.periodEnd)}
         hasGeotagged={photos.some((p) => p.latitude !== null && p.longitude !== null)}
         mode={mode}
         size={size}
@@ -54,6 +55,10 @@ export const Route = createFileRoute("/albums/$slug")({
   component: PublicAlbumLayout,
   head: ({ loaderData, params }) => {
     const title = loaderData?.album.title ?? "アルバム";
+    const period = loaderData
+      ? formatAlbumPeriod(loaderData.album.periodStart, loaderData.album.periodEnd)
+      : null;
+    const description = period ? `${period}に撮影した写真` : null;
     const url = `${env.VITE_SITE_URL}/albums/${encodeURIComponent(params.slug)}`;
     const version = loaderData ? new Date(loaderData.album.updatedAt).getTime() : 0;
     return {
@@ -65,10 +70,10 @@ export const Route = createFileRoute("/albums/$slug")({
           content: `${env.VITE_SITE_URL}/api/og/albums/${encodeURIComponent(params.slug)}?v=${version}`,
           property: "og:image",
         },
-        ...(loaderData?.album.description
+        ...(description
           ? [
-              { content: loaderData.album.description, name: "description" },
-              { content: loaderData.album.description, property: "og:description" },
+              { content: description, name: "description" },
+              { content: description, property: "og:description" },
             ]
           : []),
       ],
@@ -81,5 +86,5 @@ export const Route = createFileRoute("/albums/$slug")({
     }
     return result;
   },
-  validateSearch: z.object({ size: z.number().int().min(1).max(12).default(3) }),
+  validateSearch: z.object({ size: z.number().int().min(1).max(12).optional() }),
 });

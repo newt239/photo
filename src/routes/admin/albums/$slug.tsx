@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
 import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
+import { formatAlbumPeriod } from "#/lib/format.ts";
 import { getAlbumBySlug } from "#/server/albums.ts";
 
 const AlbumDetailPage = () => {
@@ -58,9 +59,9 @@ const AlbumDetailPage = () => {
             </Button>
           </Group>
         </Group>
-        {album.description && (
+        {formatAlbumPeriod(album.periodStart, album.periodEnd) && (
           <Text size="sm" c="dimmed">
-            {album.description}
+            {formatAlbumPeriod(album.periodStart, album.periodEnd)}
           </Text>
         )}
       </Stack>

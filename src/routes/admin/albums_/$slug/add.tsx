@@ -7,7 +7,7 @@ import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 import { PhotoPicker } from "#/components/molecules/PhotoPicker";
 import { UploadDropzone } from "#/components/organisms/UploadDropzone";
 import { addPhotosToAlbum, getAlbumBySlug } from "#/server/albums.ts";
-import { listMyPhotos } from "#/server/photos.ts";
+import { listMyPhotos } from "#/server/photo-list.ts";
 
 const AlbumAddPhotosPage = () => {
   const { album, existingPhotoIds, photos } = Route.useLoaderData();
@@ -155,7 +155,7 @@ export const Route = createFileRoute("/admin/albums_/$slug/add")({
   loader: async ({ params }: { params: { slug: string } }) => {
     const [detail, myPhotos] = await Promise.all([
       getAlbumBySlug({ data: { slug: params.slug } }),
-      listMyPhotos({ data: {} }),
+      listMyPhotos({ data: { limit: 200 } }),
     ]);
     if (!detail.success || !myPhotos.success) {
       throw notFound();
@@ -167,7 +167,6 @@ export const Route = createFileRoute("/admin/albums_/$slug/add")({
         caption: p.caption,
         id: p.id,
         storageKey: p.storageKey,
-        thumbnailKey: p.thumbnailKey,
       })),
     };
   },

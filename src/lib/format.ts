@@ -1,3 +1,14 @@
+const monthLabel = (value: string) => `${value.slice(0, 4)}年${Number(value.slice(5, 7))}月`;
+
+export const formatAlbumPeriod = (periodStart: string | null, periodEnd: string | null) => {
+  if (!periodStart) {
+    return null;
+  }
+  return !periodEnd || periodEnd === periodStart
+    ? monthLabel(periodStart)
+    : `${monthLabel(periodStart)}〜${monthLabel(periodEnd)}`;
+};
+
 export const formatDateTime = (value: Date | string | null) => {
   if (!value) {
     return null;

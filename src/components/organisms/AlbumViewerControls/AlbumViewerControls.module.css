@@ -200,12 +200,12 @@
     align-items: stretch;
   }
 
-  .row:not([data-geotagged]) {
-    display: none;
+  .sizeControl {
+    flex: none;
   }
 
-  .sizeControl {
-    display: none;
+  .slider {
+    max-width: none;
   }
 
   .segmented {

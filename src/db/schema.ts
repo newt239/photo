@@ -35,6 +35,7 @@ export const photos = sqliteTable(
     cameraMake: text("camera_make"),
     cameraModel: text("camera_model"),
     caption: text(),
+    contentHash: text("content_hash"),
     fileSize: integer("file_size").notNull(),
     focalLength: real("focal_length"),
     height: integer().notNull(),
@@ -49,7 +50,7 @@ export const photos = sqliteTable(
     shutterSpeed: text("shutter_speed"),
     storageKey: text("storage_key").notNull(),
     takenAt: integer("taken_at", { mode: "timestamp" }),
-    thumbnailKey: text("thumbnail_key"),
+    takenAtOffsetMinutes: integer("taken_at_offset_minutes"),
     uploadedAt: integer("uploaded_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
@@ -63,6 +64,7 @@ export const photos = sqliteTable(
     index("photos_taken_at_idx").on(t.takenAt),
     index("photos_user_id_taken_at_idx").on(t.userId, t.takenAt),
     index("photos_lat_lng_idx").on(t.latitude, t.longitude),
+    uniqueIndex("photos_user_content_hash_idx").on(t.userId, t.contentHash),
   ],
 );
 
@@ -75,8 +77,9 @@ export const albums = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
-    description: text(),
     id: text().primaryKey(),
+    periodEnd: text("period_end"),
+    periodStart: text("period_start"),
     slug: text().notNull(),
     title: text(),
     updatedAt: integer("updated_at", { mode: "timestamp" })
@@ -102,12 +105,11 @@ export const albumPhotos = sqliteTable(
     photoId: text("photo_id")
       .notNull()
       .references(() => photos.id, { onDelete: "cascade" }),
-    sortOrder: integer("sort_order"),
   },
   (t) => [
     primaryKey({ columns: [t.albumId, t.photoId] }),
     index("album_photos_photo_id_idx").on(t.photoId),
-    index("album_photos_cover_idx").on(t.albumId, t.sortOrder, t.addedAt),
+    index("album_photos_cover_idx").on(t.albumId, t.addedAt),
   ],
 );
 

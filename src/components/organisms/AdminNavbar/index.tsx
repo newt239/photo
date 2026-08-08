@@ -6,11 +6,22 @@ import {
   ImagesIcon,
   MapPinIcon,
   SettingsIcon,
+  SparklesIcon,
   UploadIcon,
 } from "lucide-react";
 
+import { formatAlbumPeriod } from "#/lib/format.ts";
+
+import classes from "./AdminNavbar.module.css";
+
 type AdminNavbarProps = {
-  albums: { id: string; slug: string; title: string | null }[];
+  albums: {
+    id: string;
+    slug: string;
+    title: string | null;
+    periodStart: string | null;
+    periodEnd: string | null;
+  }[];
   onNavigate: () => void;
 };
 
@@ -54,6 +65,8 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
                 <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
               )}
               label={album.title ?? "(無題)"}
+              description={formatAlbumPeriod(album.periodStart, album.periodEnd) ?? undefined}
+              classNames={{ label: classes.albumLabel }}
               leftSection={<FolderIcon size={16} />}
               active={Boolean(
                 matchRoute({ params: { slug: album.slug }, to: "/admin/albums/$slug" }),
@@ -89,6 +102,14 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           label="位置情報を設定する"
           leftSection={<MapPinIcon size={16} />}
           active={Boolean(matchRoute({ to: "/admin/photos/geotag" }))}
+          onClick={onNavigate}
+        />
+        <NavLink
+          component={Link}
+          to="/admin/photos/captions"
+          label="説明を生成する"
+          leftSection={<SparklesIcon size={16} />}
+          active={Boolean(matchRoute({ to: "/admin/photos/captions" }))}
           onClick={onNavigate}
         />
         <Divider my="xs" />

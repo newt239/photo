@@ -18,7 +18,7 @@ export const PhotoMasonry = ({
   albumSlug?: string;
   emptyMessage?: string;
   selectedPhotoIds?: Set<string>;
-  onSelect?: (photoId: string) => void;
+  onSelect?: (photoId: string, extend: boolean) => void;
 }) => {
   const { ref, width } = useContainerWidth();
   const columns = width === 0 ? 4 : Math.max(1, Math.floor(width / 240));

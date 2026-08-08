@@ -6,6 +6,7 @@ import { LayoutGridIcon, Share2Icon } from "lucide-react";
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
+import { IMAGE_WIDTHS } from "#/lib/upload-constraints.ts";
 
 import classes from "./PhotoGallery.module.css";
 
@@ -16,19 +17,27 @@ type PhotoGalleryItem = {
   caption: string | null;
   alt: string | null;
   storageKey: string;
-  thumbnailKey: string | null;
   width: number;
   height: number;
 };
 
-export const PhotoGallery = ({ photos, size }: { photos: PhotoGalleryItem[]; size: number }) => {
+export const PhotoGallery = ({
+  photos,
+  size,
+}: {
+  photos: PhotoGalleryItem[];
+  size: number | undefined;
+}) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const { ref, width } = useContainerWidth();
-  // 計測前は size をそのまま使い、マウント後に画面幅で頭打ちにする
+  // 計測前は既定値で描画し、マウント後に画面幅で既定値と上限を決める
   const columns =
-    width === 0 ? size : width <= 480 ? 2 : Math.min(size, Math.max(1, Math.floor(width / 160)));
+    width === 0
+      ? (size ?? 3)
+      : Math.min(size ?? (width <= 480 ? 2 : 3), Math.max(1, Math.floor(width / 120)));
   const layout = masonryLayout(photos, columns);
+  const columnPx = width === 0 ? 0 : Math.round(width / columns);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -55,30 +64,41 @@ export const PhotoGallery = ({ photos, size }: { photos: PhotoGalleryItem[]; siz
             className={classes.canvas}
             style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
           >
-            {layout.items.map((p, i) => (
-              <button
-                key={p.id}
-                type="button"
-                className={classes.item}
-                onClick={() => setIndex(i)}
-                aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
-                style={{
-                  left: `${(p.column * 100) / columns}%`,
-                  top: `${(p.top * 100) / columns}cqw`,
-                  width: `${100 / columns}%`,
-                }}
-              >
-                <img
-                  src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
-                  alt=""
-                  loading={i < EAGER_COUNT ? "eager" : "lazy"}
-                  fetchPriority={i < EAGER_COUNT ? "high" : undefined}
-                  decoding="async"
-                  style={{ aspectRatio: `${p.width} / ${p.height}` }}
-                />
-                {p.caption && <span className={classes.caption}>{p.caption}</span>}
-              </button>
-            ))}
+            {layout.items.map((p, i) => {
+              const candidates = IMAGE_WIDTHS.filter((candidate) => candidate <= p.width);
+              const srcSet =
+                columnPx > 0 && candidates.length > 0
+                  ? candidates
+                      .map((candidate) => `${photoImageUrl(p.storageKey, candidate)} ${candidate}w`)
+                      .join(", ")
+                  : undefined;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={classes.item}
+                  onClick={() => setIndex(i)}
+                  aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
+                  style={{
+                    left: `${(p.column * 100) / columns}%`,
+                    top: `${(p.top * 100) / columns}cqw`,
+                    width: `${100 / columns}%`,
+                  }}
+                >
+                  <img
+                    src={photoImageUrl(p.storageKey, 1024)}
+                    srcSet={srcSet}
+                    sizes={srcSet ? `${columnPx}px` : undefined}
+                    alt=""
+                    loading={i < EAGER_COUNT ? "eager" : "lazy"}
+                    fetchPriority={i < EAGER_COUNT ? "high" : undefined}
+                    decoding="async"
+                    style={{ aspectRatio: `${p.width} / ${p.height}` }}
+                  />
+                  {p.caption && <span className={classes.caption}>{p.caption}</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
         <nav className={classes.footer}>

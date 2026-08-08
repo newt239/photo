@@ -13,7 +13,6 @@ type PhotoMapItem = {
   caption: string | null;
   alt: string | null;
   storageKey: string;
-  thumbnailKey: string | null;
   latitude: number;
   longitude: number;
 };
@@ -36,7 +35,7 @@ export const PhotoMap = ({ photos }: { photos: PhotoMapItem[] }) => {
 
       for (const [position, photo] of photos.entries()) {
         const pin = document.createElement("img");
-        pin.src = photoImageUrl(photo.thumbnailKey ?? photo.storageKey);
+        pin.src = photoImageUrl(photo.storageKey, 320);
         pin.alt = "";
         const marker = leaflet
           .marker([photo.latitude, photo.longitude], {

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { formatAlbumPeriod } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
 
@@ -31,7 +32,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
         style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
       >
         {layout.items.map((album, index) => {
-          const coverKey = album.coverThumbnailKey ?? album.coverStorageKey;
+          const coverKey = album.coverStorageKey;
           return (
             <Link
               key={album.id}
@@ -46,7 +47,11 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
             >
               {coverKey ? (
                 <img
-                  src={photoImageUrl(coverKey)}
+                  src={photoImageUrl(coverKey, 640)}
+                  srcSet={[640, 1024, 1600]
+                    .map((candidate) => `${photoImageUrl(coverKey, candidate)} ${candidate}w`)
+                    .join(", ")}
+                  sizes="(max-width: 720px) 100vw, 352px"
                   alt=""
                   loading={index < EAGER_COUNT ? "eager" : "lazy"}
                   fetchPriority={index < EAGER_COUNT ? "high" : undefined}
@@ -56,7 +61,14 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
               ) : (
                 <div className={classes.placeholder} />
               )}
-              <span className={classes.title}>{album.title ?? "(無題)"}</span>
+              <span className={classes.caption}>
+                <span className={classes.title}>{album.title ?? "(無題)"}</span>
+                {formatAlbumPeriod(album.periodStart, album.periodEnd) ? (
+                  <span className={classes.description}>
+                    {formatAlbumPeriod(album.periodStart, album.periodEnd)}
+                  </span>
+                ) : null}
+              </span>
             </Link>
           );
         })}

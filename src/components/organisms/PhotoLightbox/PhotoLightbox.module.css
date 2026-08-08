@@ -39,6 +39,16 @@
   touch-action: none;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .stage {
+    cursor: grab;
+  }
+
+  .stage:active {
+    cursor: grabbing;
+  }
+}
+
 .canvas {
   position: absolute;
   inset: 0;

@@ -5,6 +5,14 @@ const OG_WIDTH = 1200;
 
 const OG_HEIGHT = 630;
 
+const TILE_COLUMNS = 4;
+
+const TILE_ROWS = 2;
+
+const TILE_WIDTH = OG_WIDTH / TILE_COLUMNS;
+
+const TILE_HEIGHT = OG_HEIGHT / TILE_ROWS;
+
 const escapeHtml = (value: string) =>
   value
     .replaceAll("&", "&amp;")
@@ -15,7 +23,7 @@ const escapeHtml = (value: string) =>
 const truncate = (value: string, max: number) =>
   value.length > max ? `${value.slice(0, max)}…` : value;
 
-const coverDataUrl = async (storageKey: string) => {
+const imageDataUrl = async (storageKey: string, width: number, height: number) => {
   const object = await env.MY_BUCKET.get(storageKey);
   if (!object) {
     return null;
@@ -23,7 +31,7 @@ const coverDataUrl = async (storageKey: string) => {
   // WebP を resvg が読めないため Images バインディングで JPEG に変換する
   const source = await object.blob();
   const transformed = await env.IMAGES.input(source.stream())
-    .transform({ fit: "cover", height: OG_HEIGHT, width: OG_WIDTH })
+    .transform({ fit: "cover", height, width })
     .output({ format: "image/jpeg", quality: 80 });
   const bytes = new Uint8Array(await transformed.response().arrayBuffer());
   let binary = "";
@@ -35,26 +43,54 @@ const coverDataUrl = async (storageKey: string) => {
 
 type RenderOgImageInput = {
   title: string;
-  description: string | null;
-  coverStorageKey: string | null;
+  subheading: string | null;
+  coverStorageKeys: string[];
 };
 
-const renderOgImage = async ({ title, description, coverStorageKey }: RenderOgImageInput) => {
+const renderOgImage = async ({ title, subheading: sub, coverStorageKeys }: RenderOgImageInput) => {
   const heading = truncate(title, 40);
-  const subheading = description ? truncate(description, 60) : "";
+  const subheading = sub ? truncate(sub, 60) : "";
+  const tiled = coverStorageKeys.length > 1;
 
-  const [boldFont, regularFont, cover] = await Promise.all([
+  const [boldFont, regularFont, covers] = await Promise.all([
     loadGoogleFont({ family: "Noto Sans JP", text: heading, weight: 700 }),
     loadGoogleFont({ family: "Noto Sans JP", text: subheading || "photos", weight: 400 }),
-    coverStorageKey ? coverDataUrl(coverStorageKey).catch(() => null) : null,
+    Promise.all(
+      coverStorageKeys.map((storageKey) =>
+        imageDataUrl(
+          storageKey,
+          tiled ? TILE_WIDTH : OG_WIDTH,
+          tiled ? TILE_HEIGHT : OG_HEIGHT,
+        ).catch(() => null),
+      ),
+    ),
   ]);
+  const sources = covers.filter((source) => source !== null);
+
+  const tiles =
+    tiled && sources.length > 0
+      ? Array.from(
+          { length: TILE_COLUMNS * TILE_ROWS },
+          (_, index) => sources[index % sources.length],
+        )
+      : [];
 
   // タグ間の空白も子ノードとして数えられるため要素を隙間なく連結する
   const html = [
     `<div style="display:flex;position:relative;width:${OG_WIDTH}px;height:${OG_HEIGHT}px;background:#111111;">`,
-    cover
-      ? `<img src="${cover}" width="${OG_WIDTH}" height="${OG_HEIGHT}" style="position:absolute;top:0;left:0;width:${OG_WIDTH}px;height:${OG_HEIGHT}px;object-fit:cover;" /><div style="display:flex;position:absolute;top:0;left:0;width:${OG_WIDTH}px;height:${OG_HEIGHT}px;background:linear-gradient(to bottom, rgba(0,0,0,0) 28%, rgba(0,0,0,0.72) 72%, rgba(0,0,0,0.95) 100%);"></div>`
-      : "",
+    sources.length === 0
+      ? ""
+      : tiled
+        ? [
+            `<div style="display:flex;flex-wrap:wrap;position:absolute;top:0;left:0;width:${OG_WIDTH}px;height:${OG_HEIGHT}px;">`,
+            ...tiles.map(
+              (tile) =>
+                `<img src="${tile}" width="${TILE_WIDTH}" height="${TILE_HEIGHT}" style="width:${TILE_WIDTH}px;height:${TILE_HEIGHT}px;object-fit:cover;" />`,
+            ),
+            `</div>`,
+            `<div style="display:flex;position:absolute;top:0;left:0;width:${OG_WIDTH}px;height:${OG_HEIGHT}px;background:linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.62) 60%, rgba(0,0,0,0.9) 100%);"></div>`,
+          ].join("")
+        : `<img src="${sources[0]}" width="${OG_WIDTH}" height="${OG_HEIGHT}" style="position:absolute;top:0;left:0;width:${OG_WIDTH}px;height:${OG_HEIGHT}px;object-fit:cover;" /><div style="display:flex;position:absolute;top:0;left:0;width:${OG_WIDTH}px;height:${OG_HEIGHT}px;background:linear-gradient(to bottom, rgba(0,0,0,0) 28%, rgba(0,0,0,0.72) 72%, rgba(0,0,0,0.95) 100%);"></div>`,
     `<div style="display:flex;flex-direction:column;position:absolute;left:72px;bottom:64px;width:${OG_WIDTH - 144}px;">`,
     `<div style="display:flex;font-family:'Noto Sans JP';font-weight:700;font-size:64px;line-height:1.25;color:#ffffff;">${escapeHtml(heading)}</div>`,
     subheading

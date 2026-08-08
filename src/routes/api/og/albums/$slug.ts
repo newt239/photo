@@ -5,6 +5,7 @@ import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "#/db/schema.ts";
 import { albums, photos } from "#/db/schema.ts";
+import { formatAlbumPeriod } from "#/lib/format.ts";
 import { ogImageResponse } from "#/server/og.ts";
 import { coverPhotoId } from "#/server/public.ts";
 
@@ -15,9 +16,9 @@ export const Route = createFileRoute("/api/og/albums/$slug")({
         const db = drizzle(env.DB, { schema });
         const [album] = await db
           .select({
-            coverStorageKey: photos.thumbnailKey,
-            description: albums.description,
-            fallbackStorageKey: photos.storageKey,
+            coverStorageKey: photos.storageKey,
+            periodEnd: albums.periodEnd,
+            periodStart: albums.periodStart,
             title: albums.title,
           })
           .from(albums)
@@ -29,8 +30,8 @@ export const Route = createFileRoute("/api/og/albums/$slug")({
         }
 
         return ogImageResponse(request, {
-          coverStorageKey: album.coverStorageKey ?? album.fallbackStorageKey,
-          description: album.description,
+          coverStorageKeys: album.coverStorageKey ? [album.coverStorageKey] : [],
+          subheading: formatAlbumPeriod(album.periodStart, album.periodEnd),
           title: album.title ?? "アルバム",
         });
       },
