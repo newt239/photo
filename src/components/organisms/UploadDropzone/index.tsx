@@ -6,6 +6,7 @@ import { useRouter } from "@tanstack/react-router";
 import { EraserIcon, SaveIcon, SparklesIcon } from "lucide-react";
 
 import { PhotoPreviewModal } from "#/components/molecules/PhotoPreviewModal";
+import { TimeZoneSelect } from "#/components/molecules/TimeZoneSelect";
 import { UploadDraftRow, type UploadDraftItem } from "#/components/molecules/UploadDraftRow";
 import { extractExif, probeDimensions } from "#/lib/image.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
@@ -31,6 +32,9 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   const [generatingField, setGeneratingField] = useState<"caption" | "alt" | null>(null);
   const [savingAll, setSavingAll] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [timeZone, setTimeZone] = useState(
+    () => new Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
   const router = useRouter();
   const editableCount = items.filter((it) => it.status === "done" && it.photoId).length;
   const unsavedCount = items.filter((it) => it.status === "done" && it.photoId && !it.saved).length;
@@ -48,7 +52,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     }
     try {
       updateItem(id, { progress: 5, status: "preparing" });
-      const [dims, exif] = await Promise.all([probeDimensions(file), extractExif(file)]);
+      const [dims, exif] = await Promise.all([probeDimensions(file), extractExif(file, timeZone)]);
       updateItem(id, { thumbUrl: URL.createObjectURL(file) });
 
       const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
@@ -232,6 +236,8 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
 
   return (
     <Stack gap="md">
+      <TimeZoneSelect value={timeZone} disabled={busy} onChange={setTimeZone} />
+
       <Dropzone
         onDrop={handleDrop}
         onReject={(rejections) => {

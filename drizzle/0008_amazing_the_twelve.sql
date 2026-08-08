@@ -1,0 +1,1 @@
+ALTER TABLE `photos` ADD `taken_at_offset_minutes` integer;

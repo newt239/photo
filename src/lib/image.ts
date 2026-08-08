@@ -4,6 +4,7 @@ type ImageMeta = {
   width: number;
   height: number;
   takenAt: string | null;
+  takenAtOffsetMinutes: number | null;
   latitude: number | null;
   longitude: number | null;
   altitude: number | null;
@@ -35,7 +36,51 @@ export const probeDimensions = async (file: File) => {
   }
 };
 
-export const extractExif = async (file: File): Promise<Omit<ImageMeta, "width" | "height">> => {
+const zoneOffsetMinutes = (utcMs: number, timeZone: string) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    month: "2-digit",
+    second: "2-digit",
+    timeZone,
+    year: "numeric",
+  }).formatToParts(new Date(utcMs));
+  const pick = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? "0");
+  const asUtc = Date.UTC(
+    pick("year"),
+    pick("month") - 1,
+    pick("day"),
+    pick("hour") % 24,
+    pick("minute"),
+    pick("second"),
+  );
+  return (asUtc - utcMs) / 60_000;
+};
+
+const zonedTakenAt = (local: Date, timeZone: string) => {
+  const naive = Date.UTC(
+    local.getFullYear(),
+    local.getMonth(),
+    local.getDate(),
+    local.getHours(),
+    local.getMinutes(),
+    local.getSeconds(),
+  );
+  // 夏時間の切り替え前後で 1 時間ずれるため求めたオフセットで解決し直す
+  const approximate = naive - zoneOffsetMinutes(naive, timeZone) * 60_000;
+  const offsetMinutes = zoneOffsetMinutes(approximate, timeZone);
+  return {
+    takenAt: new Date(naive - offsetMinutes * 60_000).toISOString(),
+    takenAtOffsetMinutes: offsetMinutes,
+  };
+};
+
+export const extractExif = async (
+  file: File,
+  timeZone: string,
+): Promise<Omit<ImageMeta, "width" | "height">> => {
   try {
     const tags = (await parse(file, {
       exif: true,
@@ -45,12 +90,13 @@ export const extractExif = async (file: File): Promise<Omit<ImageMeta, "width" |
     if (!tags) {
       return emptyExif();
     }
-    const takenAt =
+    const localTaken =
       tags.DateTimeOriginal instanceof Date
-        ? tags.DateTimeOriginal.toISOString()
+        ? tags.DateTimeOriginal
         : tags.CreateDate instanceof Date
-          ? tags.CreateDate.toISOString()
+          ? tags.CreateDate
           : null;
+    const zoned = localTaken === null ? null : zonedTakenAt(localTaken, timeZone);
     const { GPSAltitude, FocalLength, ISO, Orientation, ExposureTime } = tags;
     const aperture = tags.FNumber ?? tags.ApertureValue;
     const { latitude, longitude } = tags;
@@ -85,7 +131,8 @@ export const extractExif = async (file: File): Promise<Omit<ImageMeta, "width" |
             ? `${ExposureTime}s`
             : `1/${Math.round(1 / ExposureTime)}`
           : null,
-      takenAt,
+      takenAt: zoned?.takenAt ?? null,
+      takenAtOffsetMinutes: zoned?.takenAtOffsetMinutes ?? null,
     };
   } catch {
     return emptyExif();
@@ -106,6 +153,7 @@ const emptyExif = (): Omit<ImageMeta, "width" | "height"> => ({
   rawExif: null,
   shutterSpeed: null,
   takenAt: null,
+  takenAtOffsetMinutes: null,
 });
 
 const strOrNull = (v: unknown) => {

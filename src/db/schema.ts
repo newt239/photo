@@ -50,6 +50,7 @@ export const photos = sqliteTable(
     shutterSpeed: text("shutter_speed"),
     storageKey: text("storage_key").notNull(),
     takenAt: integer("taken_at", { mode: "timestamp" }),
+    takenAtOffsetMinutes: integer("taken_at_offset_minutes"),
     uploadedAt: integer("uploaded_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),

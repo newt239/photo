@@ -66,6 +66,7 @@ const finalizePhotoInput = z.object({
   rawExif: z.string().nullable().optional(),
   shutterSpeed: z.string().nullable().optional(),
   takenAt: z.string().datetime().nullable().optional(),
+  takenAtOffsetMinutes: z.number().int().min(-720).max(840).nullable().optional(),
   width: z.number().int().positive(),
 });
 
@@ -115,6 +116,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         shutterSpeed: data.shutterSpeed ?? null,
         storageKey: data.originalKey,
         takenAt: data.takenAt ? new Date(data.takenAt) : null,
+        takenAtOffsetMinutes: data.takenAtOffsetMinutes ?? null,
         userId,
         width: data.width,
       });
