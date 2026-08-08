@@ -136,7 +136,6 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
           longitude: row.match.longitude,
         }));
         // 1 リクエストあたりの件数を抑えるため分割して順に送信する
-        // eslint-disable-next-line no-await-in-loop
         const result = await applyPhotoLocations({ data: { items } });
         if (!result.success) {
           setErrorMessage(result.error);

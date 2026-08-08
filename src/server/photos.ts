@@ -388,7 +388,6 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
   for (let offset = 0; offset < photoIds.length; offset += ID_CHUNK_SIZE) {
     // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
     const chunk = photoIds.slice(offset, offset + ID_CHUNK_SIZE);
-    // eslint-disable-next-line no-await-in-loop
     const found = await db
       .select({ id: photos.id, storageKey: photos.storageKey, thumbnailKey: photos.thumbnailKey })
       .from(photos)
@@ -402,7 +401,6 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
   const deletableIds = rows.map((row) => row.id);
   for (let offset = 0; offset < deletableIds.length; offset += ID_CHUNK_SIZE) {
     const chunk = deletableIds.slice(offset, offset + ID_CHUNK_SIZE);
-    // eslint-disable-next-line no-await-in-loop
     await db.delete(photos).where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
   }
 
@@ -413,7 +411,6 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
     // R2 の一括削除は 1 回あたり 1000 キーまでのため分割する
     const chunk = storageKeys.slice(offset, offset + R2_DELETE_CHUNK_SIZE);
     try {
-      // eslint-disable-next-line no-await-in-loop
       await env.MY_BUCKET.delete(chunk);
     } catch (error) {
       console.error("deleteOwnedPhotos: R2 のオブジェクト削除に失敗しました", chunk, error);

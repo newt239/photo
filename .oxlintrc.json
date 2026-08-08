@@ -39,6 +39,7 @@
     "max-lines-per-function": "off",
     "max-statements": "off",
     "no-alert": "off",
+    "no-await-in-loop": "off",
     "no-console": ["warn", { "allow": ["warn", "error"] }],
     "no-continue": "off",
     "no-empty-function": "off",

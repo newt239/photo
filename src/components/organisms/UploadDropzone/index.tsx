@@ -145,7 +145,6 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       const uploadedIds: string[] = [];
       for (const { file, item } of batch) {
         // 進捗表示と負荷抑制のため意図的に 1 件ずつ逐次アップロードする
-        // eslint-disable-next-line no-await-in-loop
         const photoId = await uploadOne(file, item.id);
         if (photoId) {
           uploadedIds.push(photoId);
@@ -194,7 +193,6 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
               return;
             }
             // AI の同時実行を 3 件までに抑えるためキューから 1 件ずつ取り出して処理する
-            // eslint-disable-next-line no-await-in-loop
             await generateOne(target.id, target.photoId, field);
           }
         }),
@@ -247,7 +245,6 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       <Dropzone
         onDrop={handleDrop}
         onReject={(rejections) => {
-          // eslint-disable-next-line no-console
           console.warn("rejected files", rejections);
         }}
         accept={IMAGE_MIME_TYPE}
