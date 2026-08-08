@@ -214,6 +214,8 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
         caption: photos.caption,
         height: photos.height,
         id: photos.id,
+        latitude: photos.latitude,
+        longitude: photos.longitude,
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
         thumbnailKey: photos.thumbnailKey,
@@ -233,6 +235,7 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
       photos: photoRows.map((row) => ({
         alt: row.alt,
         caption: row.caption,
+        hasLocation: row.latitude !== null && row.longitude !== null,
         height: row.height,
         id: row.id,
         storageKey: row.storageKey,

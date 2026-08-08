@@ -1,5 +1,6 @@
 import { Checkbox } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
+import { MapPinOffIcon } from "lucide-react";
 
 import { photoImageUrl } from "#/lib/image-url.ts";
 
@@ -14,6 +15,7 @@ export type PhotoCardData = {
   width: number;
   height: number;
   takenAt: string | null;
+  hasLocation: boolean;
 };
 
 type PhotoCardProps = {
@@ -29,6 +31,11 @@ export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: Phot
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
       <img src={src} alt={photo.alt ?? photo.caption ?? ""} loading="lazy" decoding="async" />
+      {!photo.hasLocation && (
+        <span className={classes.badge}>
+          <MapPinOffIcon size={14} role="img" aria-label="位置情報が未設定" />
+        </span>
+      )}
       {photo.caption && <span className={classes.caption}>{photo.caption}</span>}
     </div>
   );

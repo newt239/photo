@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 
 import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
-import { LocationMap } from "#/components/molecules/LocationMap";
+import { PhotoLocationEditor } from "#/components/organisms/PhotoLocationEditor";
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { setAlbumCover } from "#/server/albums.ts";
@@ -420,29 +420,12 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
             </Button>
           </Group>
 
-          {photo.latitude !== null && photo.longitude !== null && (
-            <Card withBorder radius="md" padding="md">
-              <Stack gap="xs">
-                <Title order={4}>位置情報</Title>
-                <LocationMap latitude={photo.latitude} longitude={photo.longitude} />
-                {renderInfoList([
-                  { label: "緯度", value: photo.latitude.toFixed(6) },
-                  { label: "経度", value: photo.longitude.toFixed(6) },
-                  ...(photo.altitude === null
-                    ? []
-                    : [{ label: "標高", value: `${photo.altitude.toFixed(1)} m` }]),
-                ])}
-                <Anchor
-                  href={`https://www.google.com/maps?q=${photo.latitude},${photo.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  size="sm"
-                >
-                  Google Maps で開く
-                </Anchor>
-              </Stack>
-            </Card>
-          )}
+          <PhotoLocationEditor
+            photoId={photo.id}
+            latitude={photo.latitude}
+            longitude={photo.longitude}
+            altitude={photo.altitude}
+          />
 
           <Card withBorder radius="md" padding="md">
             <Stack gap="xs">

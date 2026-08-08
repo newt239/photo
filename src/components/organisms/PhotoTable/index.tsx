@@ -1,5 +1,6 @@
 import { Checkbox, Table, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
+import { MapPinOffIcon } from "lucide-react";
 
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
@@ -57,7 +58,14 @@ export const PhotoTable = ({
                   />
                 </Table.Td>
                 <Table.Td>
-                  <img className={classes.thumb} src={src} alt="" loading="lazy" />
+                  <div className={classes.frame}>
+                    <img className={classes.thumb} src={src} alt="" loading="lazy" />
+                    {!p.hasLocation && (
+                      <span className={classes.badge}>
+                        <MapPinOffIcon size={12} role="img" aria-label="位置情報が未設定" />
+                      </span>
+                    )}
+                  </div>
                 </Table.Td>
                 <Table.Td>
                   {albumSlug === undefined ? (

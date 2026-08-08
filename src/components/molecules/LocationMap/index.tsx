@@ -9,27 +9,37 @@ import type * as Leaflet from "leaflet";
 type LocationMapProps = {
   latitude: number;
   longitude: number;
+  zoom?: number;
+  onChange?: (latitude: number, longitude: number) => void;
 };
 
-export const LocationMap = ({ latitude, longitude }: LocationMapProps) => {
+export const LocationMap = ({ latitude, longitude, zoom = 14, onChange }: LocationMapProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<Leaflet.Map | null>(null);
+  const markerRef = useRef<Leaflet.CircleMarker | null>(null);
+  const latestRef = useRef({ latitude, longitude, onChange, zoom });
+  latestRef.current = { latitude, longitude, onChange, zoom };
 
   // Leaflet は window に依存し SSR では読み込めないため、マウント後に動的 import して地図を生成する
   useEffect(() => {
     let cancelled = false;
-    let map: Leaflet.Map | null = null;
     import("leaflet").then((leaflet) => {
       const container = containerRef.current;
       if (cancelled || !container) {
         return;
       }
-      map = new leaflet.Map(container, { scrollWheelZoom: false }).setView(
-        [latitude, longitude],
-        14,
+      const {
+        latitude: initialLatitude,
+        longitude: initialLongitude,
+        zoom: initialZoom,
+      } = latestRef.current;
+      const map = new leaflet.Map(container, { scrollWheelZoom: false }).setView(
+        [initialLatitude, initialLongitude],
+        initialZoom,
       );
       addOsmTileLayer(leaflet, map);
-      leaflet
-        .circleMarker([latitude, longitude], {
+      markerRef.current = leaflet
+        .circleMarker([initialLatitude, initialLongitude], {
           color: "#228be6",
           fillColor: "#228be6",
           fillOpacity: 0.75,
@@ -37,12 +47,29 @@ export const LocationMap = ({ latitude, longitude }: LocationMapProps) => {
           weight: 2,
         })
         .addTo(map);
+      map.on("click", (event) => {
+        latestRef.current.onChange?.(event.latlng.lat, event.latlng.lng);
+      });
+      mapRef.current = map;
     });
     return () => {
       cancelled = true;
-      map?.remove();
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
     };
+  }, []);
+
+  // 親が持つ座標の変化をマウント済みの地図へ反映する
+  useEffect(() => {
+    markerRef.current?.setLatLng([latitude, longitude]);
+    const map = mapRef.current;
+    if (map && !map.getBounds().contains([latitude, longitude])) {
+      map.setView([latitude, longitude]);
+    }
   }, [latitude, longitude]);
 
-  return <div ref={containerRef} className={classes.map} />;
+  return (
+    <div ref={containerRef} className={classes.map} data-editable={onChange ? true : undefined} />
+  );
 };

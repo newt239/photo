@@ -35,6 +35,21 @@
   opacity: 1;
 }
 
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-white);
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
 .caption {
   position: absolute;
   inset-inline: 0;

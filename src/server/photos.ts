@@ -161,6 +161,8 @@ export const listMyPhotos = createServerFn({ method: "GET" })
         caption: photos.caption,
         height: photos.height,
         id: photos.id,
+        latitude: photos.latitude,
+        longitude: photos.longitude,
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
         thumbnailKey: photos.thumbnailKey,
@@ -178,6 +180,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
       photos: rows.map((row) => ({
         alt: row.alt,
         caption: row.caption,
+        hasLocation: row.latitude !== null && row.longitude !== null,
         height: row.height,
         id: row.id,
         storageKey: row.storageKey,
@@ -374,6 +377,43 @@ export const updatePhoto = createServerFn({ method: "POST" })
     await db
       .update(photos)
       .set({ alt: data.alt, caption: data.caption })
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
+    return { id: data.id, success: true } as const;
+  });
+
+const updatePhotoLocationInput = z
+  .object({
+    id: z.string().min(1),
+    latitude: z.number().min(-90).max(90).nullable(),
+    longitude: z.number().min(-180).max(180).nullable(),
+  })
+  .refine((value) => (value.latitude === null) === (value.longitude === null), {
+    message: "緯度と経度は両方を指定してください",
+  });
+
+export const updatePhotoLocation = createServerFn({ method: "POST" })
+  .validator(updatePhotoLocationInput)
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const [existing] = await db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
+      .limit(1);
+    if (!existing) {
+      return { error: "写真が見つかりません", success: false } as const;
+    }
+    await db
+      .update(photos)
+      .set(
+        data.latitude === null
+          ? { altitude: null, latitude: null, longitude: null }
+          : { latitude: data.latitude, longitude: data.longitude },
+      )
       .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
     return { id: data.id, success: true } as const;
   });
