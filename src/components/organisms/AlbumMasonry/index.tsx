@@ -5,7 +5,7 @@ import { thumbHashToDataURL } from "thumbhash";
 
 import { formatAlbumPeriod } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
-import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
+import { masonryLayout } from "#/lib/masonry.ts";
 
 import classes from "./AlbumMasonry.module.css";
 
@@ -16,17 +16,26 @@ export type AlbumMasonryItem = Awaited<ReturnType<typeof listPublicAlbums>>[numb
 const EAGER_COUNT = 4;
 
 export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
-  const { ref, width } = useContainerWidth();
-  const columns = width === 0 ? 3 : Math.max(1, Math.floor(width / 352));
   // カバーが無いアルバムはプレースホルダーと同じ 4:3 として積む
-  const layout = masonryLayout(
-    albums.map((album) => ({
-      ...album,
-      height: album.coverHeight ?? 3,
-      width: album.coverWidth ?? 4,
-    })),
-    columns,
-  );
+  const sized = albums.map((album) => ({
+    ...album,
+    height: album.coverHeight ?? 3,
+    width: album.coverWidth ?? 4,
+  }));
+  // 列数は CSS のコンテナクエリで決まるため 1〜4 列ぶんの位置を先に配っておく
+  const layouts = [1, 2, 3, 4].map((columns) => masonryLayout(sized, columns));
+  const positions = [
+    `.${classes.canvas}{${layouts.map((layout, i) => `--h${i + 1}:${layout.totalHeight};`).join("")}}`,
+    ...sized.map(
+      (_, index) =>
+        `.${classes.item}[data-index="${index}"]{${layouts
+          .map((layout, i) => {
+            const placed = layout.items[index];
+            return placed ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};` : "";
+          })
+          .join("")}}`,
+    ),
+  ].join("");
   const blurs = useMemo(
     () =>
       new Map(
@@ -47,12 +56,10 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
   );
 
   return (
-    <div className={classes.gallery} ref={ref}>
-      <div
-        className={classes.canvas}
-        style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
-      >
-        {layout.items.map((album, index) => {
+    <div className={classes.gallery}>
+      <style>{positions}</style>
+      <div className={classes.canvas}>
+        {sized.map((album, index) => {
           const coverKey = album.coverStorageKey;
           return (
             <Link
@@ -60,11 +67,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
               to="/albums/$slug"
               params={{ slug: album.slug }}
               className={classes.item}
-              style={{
-                left: `${(album.column * 100) / columns}%`,
-                top: `${(album.top * 100) / columns}cqw`,
-                width: `${100 / columns}%`,
-              }}
+              data-index={index}
             >
               {coverKey ? (
                 <img
@@ -72,7 +75,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
                   srcSet={[640, 1024, 1600]
                     .map((candidate) => `${photoImageUrl(coverKey, candidate)} ${candidate}w`)
                     .join(", ")}
-                  sizes="(max-width: 720px) 100vw, 352px"
+                  sizes="(min-width: 1408px) 25vw, (min-width: 1056px) 33vw, (min-width: 704px) 50vw, 100vw"
                   alt=""
                   loading={index < EAGER_COUNT ? "eager" : "lazy"}
                   fetchPriority={index < EAGER_COUNT ? "high" : undefined}

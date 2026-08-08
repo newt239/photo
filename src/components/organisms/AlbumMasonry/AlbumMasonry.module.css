@@ -1,4 +1,5 @@
 .gallery {
+  container-name: albums;
   container-type: inline-size;
   width: 100%;
   min-height: 100dvh;
@@ -9,13 +10,53 @@
 .canvas {
   position: relative;
   width: 100%;
+  height: calc(var(--h1) * 100cqw);
 }
 
 .item {
   display: block;
   position: absolute;
+  left: calc(var(--c1) * 100%);
+  top: calc(var(--y1) * 100cqw);
+  width: 100%;
   color: inherit;
   text-decoration: none;
+}
+
+@container albums (min-width: 704px) {
+  .canvas {
+    height: calc(var(--h2) * 100cqw / 2);
+  }
+
+  .item {
+    left: calc(var(--c2) * 100% / 2);
+    top: calc(var(--y2) * 100cqw / 2);
+    width: calc(100% / 2);
+  }
+}
+
+@container albums (min-width: 1056px) {
+  .canvas {
+    height: calc(var(--h3) * 100cqw / 3);
+  }
+
+  .item {
+    left: calc(var(--c3) * 100% / 3);
+    top: calc(var(--y3) * 100cqw / 3);
+    width: calc(100% / 3);
+  }
+}
+
+@container albums (min-width: 1408px) {
+  .canvas {
+    height: calc(var(--h4) * 100cqw / 4);
+  }
+
+  .item {
+    left: calc(var(--c4) * 100% / 4);
+    top: calc(var(--y4) * 100cqw / 4);
+    width: calc(100% / 4);
+  }
 }
 
 .item img {
