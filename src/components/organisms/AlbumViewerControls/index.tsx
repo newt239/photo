@@ -81,27 +81,6 @@ export const AlbumViewerControls = ({
 
       {(hasGeotagged || showSize) && (
         <div className={classes.row} data-geotagged={hasGeotagged || undefined}>
-          {hasGeotagged && (
-            <div className={classes.segmented}>
-              <button
-                type="button"
-                className={classes.segment}
-                data-active={mode === "photo" || undefined}
-                onClick={() => onModeChange("photo")}
-              >
-                写真
-              </button>
-              <button
-                type="button"
-                className={classes.segment}
-                data-active={mode === "map" || undefined}
-                onClick={() => onModeChange("map")}
-              >
-                地図
-              </button>
-            </div>
-          )}
-
           {showSize && (
             <div className={classes.sizeControl}>
               <button
@@ -132,6 +111,27 @@ export const AlbumViewerControls = ({
                 aria-label="表示を大きくする"
               >
                 <ZoomInIcon size={16} />
+              </button>
+            </div>
+          )}
+
+          {hasGeotagged && (
+            <div className={classes.segmented}>
+              <button
+                type="button"
+                className={classes.segment}
+                data-active={mode === "photo" || undefined}
+                onClick={() => onModeChange("photo")}
+              >
+                写真
+              </button>
+              <button
+                type="button"
+                className={classes.segment}
+                data-active={mode === "map" || undefined}
+                onClick={() => onModeChange("map")}
+              >
+                地図
               </button>
             </div>
           )}
