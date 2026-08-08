@@ -1,5 +1,7 @@
-import { Group, Pagination, Stack, Text, Title } from "@mantine/core";
+import { Badge, Button, Group, Pagination, Stack, Text, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
+import { ChevronDownIcon, ChevronUpIcon, FilterIcon } from "lucide-react";
 import { z } from "zod";
 
 import { PhotoFilterBar, type PhotoFilters } from "#/components/molecules/PhotoFilterBar";
@@ -11,6 +13,7 @@ const AdminIndexPage = () => {
   const { albums } = useLoaderData({ from: "/admin" });
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const [filterOpened, { toggle: toggleFilter }] = useDisclosure(false);
   const { order, page, perPage, view } = search;
   const from = total === 0 ? 0 : (page - 1) * perPage + 1;
   const to = Math.min(page * perPage, total);
@@ -18,12 +21,42 @@ const AdminIndexPage = () => {
   const changeFilters = (patch: PhotoFilters) => {
     navigate({ replace: true, search: (prev) => ({ ...prev, ...patch, page: 1 }) });
   };
+  const appliedCount = [
+    search.album,
+    search.camera,
+    search.geo,
+    search.missing,
+    search.month,
+    search.q,
+  ].filter((value) => value !== undefined).length;
 
   return (
     <Stack p="xl" gap="md">
-      <Title order={2}>写真</Title>
+      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+        <Title order={2}>写真</Title>
+        <Group gap="sm">
+          {appliedCount > 0 && <Badge variant="light">{`${appliedCount} 件の条件`}</Badge>}
+          <Button
+            variant="default"
+            leftSection={<FilterIcon size={16} />}
+            rightSection={
+              filterOpened ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />
+            }
+            onClick={toggleFilter}
+          >
+            絞り込む
+          </Button>
+        </Group>
+      </Group>
 
-      <PhotoFilterBar filters={search} albums={albums} cameras={cameras} onChange={changeFilters} />
+      <PhotoFilterBar
+        filters={search}
+        albums={albums}
+        cameras={cameras}
+        opened={filterOpened}
+        appliedCount={appliedCount}
+        onChange={changeFilters}
+      />
 
       <PhotoLibrary
         photos={photos}

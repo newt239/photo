@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { Badge, Button, Collapse, Group, Select, Stack, TextInput } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { ChevronDownIcon, ChevronUpIcon, FilterIcon, SearchIcon, XIcon } from "lucide-react";
+import { Button, Collapse, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
+import { SearchIcon, XIcon } from "lucide-react";
 
 export type PhotoFilters = {
   album?: string;
@@ -17,20 +16,20 @@ type PhotoFilterBarProps = {
   filters: PhotoFilters;
   albums: { id: string; title: string | null }[];
   cameras: string[];
+  opened: boolean;
+  appliedCount: number;
   onChange: (patch: PhotoFilters) => void;
 };
 
-export const PhotoFilterBar = ({ filters, albums, cameras, onChange }: PhotoFilterBarProps) => {
-  const [opened, { toggle }] = useDisclosure(false);
+export const PhotoFilterBar = ({
+  filters,
+  albums,
+  cameras,
+  opened,
+  appliedCount,
+  onChange,
+}: PhotoFilterBarProps) => {
   const [draft, setDraft] = useState<PhotoFilters>(filters);
-  const appliedCount = [
-    filters.album,
-    filters.camera,
-    filters.geo,
-    filters.missing,
-    filters.month,
-    filters.q,
-  ].filter((value) => value !== undefined).length;
   const dirty =
     draft.album !== filters.album ||
     draft.camera !== filters.camera ||
@@ -40,21 +39,9 @@ export const PhotoFilterBar = ({ filters, albums, cameras, onChange }: PhotoFilt
     draft.q !== filters.q;
 
   return (
-    <Stack gap="sm">
-      <Group gap="sm">
-        <Button
-          variant="default"
-          leftSection={<FilterIcon size={16} />}
-          rightSection={opened ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />}
-          onClick={toggle}
-        >
-          絞り込む
-        </Button>
-        {appliedCount > 0 && <Badge variant="light">{`${appliedCount} 件の条件`}</Badge>}
-      </Group>
-
-      <Collapse expanded={opened}>
-        <Stack gap="sm">
+    <Collapse expanded={opened}>
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
           <Group gap="sm" align="flex-end">
             <TextInput
               label="キーワード"
@@ -134,10 +121,7 @@ export const PhotoFilterBar = ({ filters, albums, cameras, onChange }: PhotoFilt
             />
           </Group>
 
-          <Group gap="sm">
-            <Button disabled={!dirty} onClick={() => onChange(draft)}>
-              適用する
-            </Button>
+          <Group gap="sm" justify="flex-end">
             <Button
               variant="default"
               leftSection={<XIcon size={16} />}
@@ -157,9 +141,12 @@ export const PhotoFilterBar = ({ filters, albums, cameras, onChange }: PhotoFilt
             >
               条件を消す
             </Button>
+            <Button disabled={!dirty} onClick={() => onChange(draft)}>
+              適用する
+            </Button>
           </Group>
         </Stack>
-      </Collapse>
-    </Stack>
+      </Paper>
+    </Collapse>
   );
 };
