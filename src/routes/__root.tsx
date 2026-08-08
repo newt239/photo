@@ -108,6 +108,17 @@ export const Route = createRootRoute({
         name: "twitter:card",
       },
     ],
+    scripts: env.VITE_GA_MEASUREMENT_ID
+      ? [
+          {
+            async: true,
+            src: `https://www.googletagmanager.com/gtag/js?id=${env.VITE_GA_MEASUREMENT_ID}`,
+          },
+          {
+            children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${env.VITE_GA_MEASUREMENT_ID}");`,
+          },
+        ]
+      : [],
   }),
   loader: async () => ({
     colorScheme: await getColorSchemeCookie(),
