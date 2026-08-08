@@ -9,36 +9,25 @@ import {
   Modal,
   Stack,
   Text,
-  TextInput,
-  Textarea,
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { ArrowLeftIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 
-import { VisibilityControl } from "#/components/molecules/VisibilityControl";
+import { AlbumForm, type AlbumFormValues } from "#/components/organisms/AlbumForm";
 import { deleteAlbum, getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
 
 const AlbumSettingsPage = () => {
   const { album, photoCount } = Route.useLoaderData();
   const { slug } = Route.useParams();
   const router = useRouter();
-  const [title, setTitle] = useState(album.title ?? "");
-  const [albumSlug, setAlbumSlug] = useState(album.slug);
-  const [description, setDescription] = useState(album.description ?? "");
-  const [visibility, setVisibility] = useState(album.visibility);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const [deletePhotos, setDeletePhotos] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const dirty =
-    title.trim() !== (album.title ?? "") ||
-    albumSlug.trim() !== album.slug ||
-    description.trim() !== (album.description ?? "") ||
-    visibility !== album.visibility;
 
   const handleDelete = async () => {
     if (deleting) {
@@ -63,9 +52,8 @@ const AlbumSettingsPage = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (title.trim().length === 0 || albumSlug.trim().length === 0 || submitting) {
+  const handleSubmit = async (values: AlbumFormValues) => {
+    if (values.title.length === 0 || values.slug.length === 0 || submitting) {
       return;
     }
     setSubmitting(true);
@@ -74,11 +62,11 @@ const AlbumSettingsPage = () => {
     try {
       const result = await updateAlbum({
         data: {
-          description: description.trim() || null,
+          description: values.description || null,
           id: album.id,
-          slug: albumSlug.trim(),
-          title: title.trim(),
-          visibility,
+          slug: values.slug,
+          title: values.title,
+          visibility: values.visibility,
         },
       });
       if (result.success) {
@@ -115,54 +103,26 @@ const AlbumSettingsPage = () => {
         <Title order={2}>アルバムの設定</Title>
       </Group>
 
-      <form onSubmit={handleSubmit}>
-        <Stack gap="md">
-          <TextInput
-            label="名前"
-            required
-            value={title}
-            onChange={(e) => setTitle(e.currentTarget.value)}
-            maxLength={200}
-          />
-          <Textarea
-            label="説明"
-            autosize
-            minRows={2}
-            value={description}
-            onChange={(e) => setDescription(e.currentTarget.value)}
-            maxLength={2000}
-          />
-          <TextInput
-            label="URL"
-            description="公開ページのアドレスに使われます。英数字・ひらがな・カタカナ・漢字とハイフンが使えます"
-            required
-            value={albumSlug}
-            onChange={(e) => setAlbumSlug(e.currentTarget.value)}
-            maxLength={200}
-          />
-          <VisibilityControl value={visibility} onChange={setVisibility} />
-          {errorMessage && (
-            <Text size="sm" c="red">
-              {errorMessage}
-            </Text>
-          )}
-          <Group justify="flex-end" gap="sm">
-            {saved && (
-              <Text size="sm" c="dimmed">
-                保存しました
-              </Text>
-            )}
-            <Button
-              type="submit"
-              leftSection={<SaveIcon size={16} />}
-              loading={submitting}
-              disabled={!dirty || title.trim().length === 0 || albumSlug.trim().length === 0}
-            >
-              保存する
-            </Button>
-          </Group>
-        </Stack>
-      </form>
+      <AlbumForm
+        key={album.slug}
+        initialValues={{
+          description: album.description ?? "",
+          slug: album.slug,
+          title: album.title ?? "",
+          visibility: album.visibility,
+        }}
+        slugRequired
+        slugDescription="公開ページのアドレスに使われます。英数字・ひらがな・カタカナ・漢字とハイフンが使えます"
+        requireDirty
+        submitLabel="保存する"
+        submitIcon={<SaveIcon size={16} />}
+        submitting={submitting}
+        errorMessage={errorMessage}
+        statusMessage={saved ? "保存しました" : undefined}
+        onSubmit={(values) => {
+          handleSubmit(values);
+        }}
+      />
 
       <Divider my="sm" />
 
