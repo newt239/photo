@@ -85,31 +85,50 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
           role: "user",
         },
       ],
+      response_format: {
+        json_schema: {
+          properties: Object.fromEntries(data.fields.map((field) => [field, { type: "string" }])),
+          required: data.fields,
+          type: "object",
+        },
+        type: "json_schema",
+      },
       temperature: 0.2,
     });
 
-    const response = result.response.trim();
-    const start = response.indexOf("{");
-    const end = response.lastIndexOf("}");
+    // Workers AI は応答が JSON として解釈できる場合 response をパース済みのオブジェクトで返す
+    const rawResponse: string | { alt?: string; caption?: string } = result.response;
     let caption = "";
     let alt = "";
-    if (start !== -1 && end > start) {
-      try {
-        const parsed = draftSchema.parse(JSON.parse(response.slice(start, end + 1)));
-        caption = parsed.caption ?? "";
-        alt = parsed.alt ?? "";
-      } catch {
+    if (typeof rawResponse === "string") {
+      const response = rawResponse.trim();
+      const start = response.indexOf("{");
+      const end = response.lastIndexOf("}");
+      if (start !== -1 && end > start) {
+        try {
+          const parsed = draftSchema.parse(JSON.parse(response.slice(start, end + 1)));
+          caption = parsed.caption ?? "";
+          alt = parsed.alt ?? "";
+        } catch {
+          return { error: "AI の応答を解釈できませんでした", success: false } as const;
+        }
+      } else if (data.fields.length === 1) {
+        // JSON でない応答は単一項目の生成に限り本文をそのまま採用する
+        if (wantsCaption) {
+          caption = response;
+        } else {
+          alt = response;
+        }
+      } else {
         return { error: "AI の応答を解釈できませんでした", success: false } as const;
       }
-    } else if (data.fields.length === 1) {
-      // JSON でない応答は単一項目の生成に限り本文をそのまま採用する
-      if (wantsCaption) {
-        caption = response;
-      } else {
-        alt = response;
-      }
     } else {
-      return { error: "AI の応答を解釈できませんでした", success: false } as const;
+      const parsed = draftSchema.safeParse(rawResponse);
+      if (!parsed.success) {
+        return { error: "AI の応答を解釈できませんでした", success: false } as const;
+      }
+      caption = parsed.data.caption ?? "";
+      alt = parsed.data.alt ?? "";
     }
 
     return {
