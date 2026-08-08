@@ -35,6 +35,7 @@ export const photos = sqliteTable(
     cameraMake: text("camera_make"),
     cameraModel: text("camera_model"),
     caption: text(),
+    contentHash: text("content_hash"),
     fileSize: integer("file_size").notNull(),
     focalLength: real("focal_length"),
     height: integer().notNull(),
@@ -62,6 +63,7 @@ export const photos = sqliteTable(
     index("photos_taken_at_idx").on(t.takenAt),
     index("photos_user_id_taken_at_idx").on(t.userId, t.takenAt),
     index("photos_lat_lng_idx").on(t.latitude, t.longitude),
+    index("photos_user_content_hash_idx").on(t.userId, t.contentHash),
   ],
 );
 

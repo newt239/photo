@@ -17,6 +17,7 @@ const ID_CHUNK_SIZE = 90;
 const R2_DELETE_CHUNK_SIZE = 1000;
 
 const createPhotoUploadInput = z.object({
+  contentHash: z.string().regex(/^[0-9a-f]{64}$/),
   contentType: z.enum(ALLOWED_MIME_TYPES),
   size: z.number().int().positive().max(MAX_FILE_SIZE),
 });
@@ -29,11 +30,20 @@ export const createPhotoUpload = createServerFn({ method: "POST" })
       return { error: "ログインしてください", success: false } as const;
     }
     await ensureUserRow(userId);
+    const db = drizzle(env.DB, { schema });
+    const [existing] = await db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(and(eq(photos.userId, userId), eq(photos.contentHash, data.contentHash)))
+      .limit(1);
+    if (existing) {
+      return { kind: "duplicate", photoId: existing.id, success: true } as const;
+    }
     const photoId = nanoid();
     const extension = MIME_EXT[data.contentType.toLowerCase()] ?? "bin";
     const originalKey = `users/${userId}/photos/${photoId}/original.${extension}`;
     const originalUrl = await signPutUrl(originalKey, data.contentType);
-    return { originalKey, originalUrl, photoId, success: true } as const;
+    return { kind: "created", originalKey, originalUrl, photoId, success: true } as const;
   });
 
 const finalizePhotoInput = z.object({
@@ -41,6 +51,7 @@ const finalizePhotoInput = z.object({
   aperture: z.number().nullable().optional(),
   cameraMake: z.string().nullable().optional(),
   cameraModel: z.string().nullable().optional(),
+  contentHash: z.string().regex(/^[0-9a-f]{64}$/),
   fileSize: z.number().int().positive().max(MAX_FILE_SIZE),
   focalLength: z.number().nullable().optional(),
   height: z.number().int().positive(),
@@ -82,13 +93,14 @@ export const finalizePhoto = createServerFn({ method: "POST" })
       return { error: "アップロードされた画像を受け付けられません", success: false } as const;
     }
 
+    const db = drizzle(env.DB, { schema });
     try {
-      const db = drizzle(env.DB, { schema });
       await db.insert(photos).values({
         altitude: data.altitude ?? null,
         aperture: data.aperture ?? null,
         cameraMake: data.cameraMake ?? null,
         cameraModel: data.cameraModel ?? null,
+        contentHash: data.contentHash,
         fileSize: head.size,
         focalLength: data.focalLength ?? null,
         height: data.height,
@@ -108,6 +120,18 @@ export const finalizePhoto = createServerFn({ method: "POST" })
       });
     } catch {
       await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
+      const [duplicate] = await db
+        .select({ id: photos.id })
+        .from(photos)
+        .where(and(eq(photos.userId, userId), eq(photos.contentHash, data.contentHash)))
+        .limit(1);
+      if (duplicate) {
+        return {
+          duplicatePhotoId: duplicate.id,
+          error: "同じ写真が既にあります",
+          success: false,
+        } as const;
+      }
       return { error: "写真を保存できませんでした", success: false } as const;
     }
 
@@ -385,6 +409,50 @@ export const updatePhotoLocation = createServerFn({ method: "POST" })
       )
       .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
     return { id: data.id, success: true } as const;
+  });
+
+export const backfillContentHashes = createServerFn({ method: "POST" })
+  .validator(z.object({ limit: z.number().int().min(1).max(20).default(20) }))
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const targets = await db
+      .select({ id: photos.id, storageKey: photos.storageKey })
+      .from(photos)
+      .where(and(eq(photos.userId, userId), isNull(photos.contentHash)))
+      .limit(data.limit);
+
+    let processed = 0;
+    for (const target of targets) {
+      // R2 から 1 件ずつ読み込むためメモリを抑えて逐次処理する
+      // eslint-disable-next-line no-await-in-loop
+      const obj = await env.MY_BUCKET.get(target.storageKey);
+      if (!obj) {
+        continue;
+      }
+      // eslint-disable-next-line no-await-in-loop
+      const digest = await crypto.subtle.digest("SHA-256", await obj.arrayBuffer());
+      const contentHash = [...new Uint8Array(digest)]
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+      // eslint-disable-next-line no-await-in-loop
+      await db
+        .update(photos)
+        .set({ contentHash })
+        .where(and(eq(photos.id, target.id), eq(photos.userId, userId)))
+        .catch(() => {});
+      processed += 1;
+    }
+
+    const [remaining] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(photos)
+      .where(and(eq(photos.userId, userId), isNull(photos.contentHash)));
+
+    return { processed, remaining: remaining?.count ?? 0, success: true } as const;
   });
 
 export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photoIds: string[]) => {
