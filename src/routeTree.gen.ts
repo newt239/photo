@@ -14,6 +14,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as AlbumsSlugRouteRouteImport } from './routes/albums/$slug/route'
 import { Route as LoginSplatRouteImport } from './routes/login/$'
 import { Route as RegisterSplatRouteImport } from './routes/register/$'
@@ -56,6 +57,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStatsRoute = AdminStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AlbumsSlugRouteRoute = AlbumsSlugRouteRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin/': typeof AdminIndexRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin': typeof AdminIndexRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin/': typeof AdminIndexRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/albums/$slug'
     | '/admin/settings'
+    | '/admin/stats'
     | '/login/$'
     | '/register/$'
     | '/admin/'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sitemap.xml'
     | '/admin/settings'
+    | '/admin/stats'
     | '/login/$'
     | '/register/$'
     | '/admin'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/albums/$slug'
     | '/admin/settings'
+    | '/admin/stats'
     | '/login/$'
     | '/register/$'
     | '/admin/'
@@ -347,6 +359,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/stats': {
+      id: '/admin/stats'
+      path: '/stats'
+      fullPath: '/admin/stats'
+      preLoaderRoute: typeof AdminStatsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/albums/$slug': {
@@ -480,6 +499,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteRouteChildren {
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStatsRoute: typeof AdminStatsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlbumsSlugRoute: typeof AdminAlbumsSlugRoute
   AdminAlbumsNewRoute: typeof AdminAlbumsNewRoute
@@ -495,6 +515,7 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminStatsRoute: AdminStatsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlbumsSlugRoute: AdminAlbumsSlugRoute,
   AdminAlbumsNewRoute: AdminAlbumsNewRoute,
