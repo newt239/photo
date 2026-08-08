@@ -39,19 +39,23 @@
 }
 
 .stage {
+  position: relative;
   height: 50vh;
-  overflow: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
+  touch-action: none;
   border-radius: var(--mantine-radius-md);
   background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-8));
 }
 
-.stage[data-pannable] {
-  cursor: grab;
-}
+@media (hover: hover) and (pointer: fine) {
+  .stage {
+    cursor: grab;
+  }
 
-.stage[data-pannable]:active {
-  cursor: grabbing;
+  .stage:active {
+    cursor: grabbing;
+  }
 }
 
 @media (min-width: 62em) {
@@ -61,12 +65,12 @@
 }
 
 .canvas {
+  position: absolute;
+  inset: 0;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 100%;
-  min-height: 100%;
 }
 
 .canvas img {

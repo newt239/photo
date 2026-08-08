@@ -1,4 +1,4 @@
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import {
   ActionIcon,
@@ -31,6 +31,7 @@ import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
 import { PhotoLocationEditor } from "#/components/organisms/PhotoLocationEditor";
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
+import { usePhotoZoom } from "#/lib/photo-zoom.ts";
 import { setAlbumCover } from "#/server/albums.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
 import { updatePhoto } from "#/server/photos.ts";
@@ -135,11 +136,11 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     fileRows.push({ label: "アップロード日時", value: uploaded });
   }
 
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const panRef = useRef<{ left: number; top: number; x: number; y: number } | null>(null);
+  const { canvasRef, reset, scale, stageProps, stageRef, transform, zoomTo } = usePhotoZoom(
+    photo.id,
+  );
   const [caption, setCaption] = useState(photo.caption ?? "");
   const [alt, setAlt] = useState(photo.alt ?? "");
-  const [zoom, setZoom] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [settingCover, startSettingCover] = useTransition();
@@ -302,43 +303,8 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
 
       <div className={classes.layout}>
         <div className={classes.viewer}>
-          <div
-            ref={stageRef}
-            className={classes.stage}
-            data-pannable={zoom > 1 || undefined}
-            onPointerDown={(e) => {
-              const stage = stageRef.current;
-              if (!stage || zoom === 1 || e.pointerType !== "mouse") {
-                return;
-              }
-              panRef.current = {
-                left: stage.scrollLeft,
-                top: stage.scrollTop,
-                x: e.clientX,
-                y: e.clientY,
-              };
-              stage.setPointerCapture(e.pointerId);
-            }}
-            onPointerMove={(e) => {
-              const stage = stageRef.current;
-              const pan = panRef.current;
-              if (!stage || !pan) {
-                return;
-              }
-              stage.scrollLeft = pan.left - (e.clientX - pan.x);
-              stage.scrollTop = pan.top - (e.clientY - pan.y);
-            }}
-            onPointerUp={() => {
-              panRef.current = null;
-            }}
-            onPointerCancel={() => {
-              panRef.current = null;
-            }}
-          >
-            <div
-              className={classes.canvas}
-              style={{ height: `${zoom * 100}%`, width: `${zoom * 100}%` }}
-            >
+          <div ref={stageRef} className={classes.stage} {...stageProps}>
+            <div ref={canvasRef} className={classes.canvas} style={{ transform }}>
               <img src={imageSrc} alt={alt || caption || ""} draggable={false} />
             </div>
           </div>
@@ -346,27 +312,27 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
             <Group gap="xs" wrap="nowrap">
               <ActionIcon
                 variant="default"
-                onClick={() => setZoom((prev) => Math.max(1, prev - 0.5))}
-                disabled={zoom <= 1}
+                onClick={() => zoomTo(scale / 1.5)}
+                disabled={scale <= 0.25}
                 aria-label="縮小する"
               >
                 <ZoomOutIcon size={16} />
               </ActionIcon>
               <Text size="sm" c="dimmed" w={48} ta="center">
-                {Math.round(zoom * 100)}%
+                {Math.round(scale * 100)}%
               </Text>
               <ActionIcon
                 variant="default"
-                onClick={() => setZoom((prev) => Math.min(4, prev + 0.5))}
-                disabled={zoom >= 4}
+                onClick={() => zoomTo(scale * 1.5)}
+                disabled={scale >= 4}
                 aria-label="拡大する"
               >
                 <ZoomInIcon size={16} />
               </ActionIcon>
               <ActionIcon
                 variant="default"
-                onClick={() => setZoom(1)}
-                disabled={zoom === 1}
+                onClick={reset}
+                disabled={scale === 1}
                 aria-label="全体を表示する"
               >
                 <ExpandIcon size={16} />
