@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import {
   ActionIcon,
@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Group,
+  Menu,
   Stack,
   Text,
   Textarea,
@@ -14,9 +15,12 @@ import {
 import { Link, useRouter } from "@tanstack/react-router";
 import {
   ArrowLeftIcon,
+  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  EllipsisIcon,
   ExpandIcon,
+  ImageIcon,
   SaveIcon,
   SparklesIcon,
   ZoomInIcon,
@@ -25,11 +29,11 @@ import {
 
 import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
 import { LocationMap } from "#/components/molecules/LocationMap";
-import { VisibilityControl } from "#/components/molecules/VisibilityControl";
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
+import { setAlbumCover } from "#/server/albums.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
-import { updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
+import { updatePhoto } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
 
@@ -42,7 +46,6 @@ type PhotoDetailData = {
   height: number;
   mimeType: string;
   fileSize: number;
-  visibility: "public" | "private";
   takenAt: Date | string | null;
   uploadedAt: Date | string | null;
   cameraMake: string | null;
@@ -55,7 +58,13 @@ type PhotoDetailData = {
   latitude: number | null;
   longitude: number | null;
   altitude: number | null;
-  albums: { id: string; slug: string; title: string | null; visibility: "public" | "private" }[];
+  albums: {
+    id: string;
+    slug: string;
+    title: string | null;
+    visibility: "public" | "private";
+    coverPhotoId: string | null;
+  }[];
 };
 
 type InfoRow = { label: string; value: string };
@@ -133,28 +142,26 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
   const [zoom, setZoom] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [switching, setSwitching] = useState(false);
+  const [settingCover, startSettingCover] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dirty = caption.trim() !== (photo.caption ?? "") || alt.trim() !== (photo.alt ?? "");
+  const currentAlbum = photo.albums.find((album) => album.slug === albumSlug);
+  const isCover = currentAlbum?.coverPhotoId === photo.id;
 
-  const handleVisibility = async (visibility: "private" | "public") => {
-    if (switching || visibility === photo.visibility) {
-      return;
-    }
-    setSwitching(true);
-    setErrorMessage(null);
-    try {
-      const result = await updatePhotoVisibility({ data: { id: photo.id, visibility } });
-      if (result.success) {
-        await router.invalidate();
-      } else {
-        setErrorMessage(result.error);
+  const handleCover = (albumId: string) => {
+    startSettingCover(async () => {
+      setErrorMessage(null);
+      try {
+        const result = await setAlbumCover({ data: { albumId, photoId: photo.id } });
+        if (result.success) {
+          await router.invalidate();
+        } else {
+          setErrorMessage(result.error);
+        }
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : String(error));
       }
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setSwitching(false);
-    }
+    });
   };
 
   const handleGenerate = async () => {
@@ -267,6 +274,27 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
       <Group justify="space-between" align="center" wrap="nowrap">
         <div>{backButton}</div>
         <Group gap="xs" wrap="nowrap">
+          {currentAlbum && (
+            <Menu position="bottom-end" shadow="md" width={240}>
+              <Menu.Target>
+                <ActionIcon variant="default" disabled={settingCover} aria-label="この写真の操作">
+                  <EllipsisIcon size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>{currentAlbum.title ?? "(無題)"}</Menu.Label>
+                <Menu.Item
+                  leftSection={isCover ? <CheckIcon size={14} /> : <ImageIcon size={14} />}
+                  disabled={isCover || settingCover}
+                  onClick={() => {
+                    handleCover(currentAlbum.id);
+                  }}
+                >
+                  {isCover ? "このアルバムのカバーです" : "このアルバムのカバーにする"}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          )}
           {neighborButton(previousId, "previous")}
           {neighborButton(nextId, "next")}
         </Group>
@@ -351,13 +379,6 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
         </div>
 
         <Stack gap="md" className={classes.side}>
-          <VisibilityControl
-            value={photo.visibility}
-            onChange={(value) => {
-              handleVisibility(value);
-            }}
-            disabled={switching}
-          />
           <Textarea
             label="キャプション"
             autosize

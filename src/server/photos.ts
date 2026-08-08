@@ -128,7 +128,6 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         takenAt: data.takenAt ? new Date(data.takenAt) : null,
         thumbnailKey: data.thumbnailKey,
         userId,
-        visibility: "private",
         width: data.width,
       });
     } catch {
@@ -220,7 +219,6 @@ export const getPhoto = createServerFn({ method: "GET" })
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
         uploadedAt: photos.uploadedAt,
-        visibility: photos.visibility,
         width: photos.width,
       })
       .from(photos)
@@ -231,6 +229,7 @@ export const getPhoto = createServerFn({ method: "GET" })
     }
     const albumRows = await db
       .select({
+        coverPhotoId: albums.coverPhotoId,
         id: albums.id,
         slug: albums.slug,
         title: albums.title,
@@ -377,34 +376,6 @@ export const updatePhoto = createServerFn({ method: "POST" })
       .set({ alt: data.alt, caption: data.caption })
       .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
     return { id: data.id, success: true } as const;
-  });
-
-const updatePhotoVisibilityInput = z.object({
-  id: z.string().min(1),
-  visibility: z.enum(["public", "private"]),
-});
-
-export const updatePhotoVisibility = createServerFn({ method: "POST" })
-  .validator(updatePhotoVisibilityInput)
-  .handler(async ({ data }) => {
-    const { userId } = await auth();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
-    const [existing] = await db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
-      .limit(1);
-    if (!existing) {
-      return { error: "NOT_FOUND", success: false } as const;
-    }
-    await db
-      .update(photos)
-      .set({ visibility: data.visibility })
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
-    return { success: true, visibility: data.visibility } as const;
   });
 
 export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photoIds: string[]) => {

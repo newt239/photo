@@ -4,6 +4,7 @@ import { z } from "zod";
 export const env = createEnv({
   client: {
     VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+    VITE_SITE_URL: z.url(),
   },
 
   /**

@@ -8,6 +8,7 @@ import {
 import { z } from "zod";
 
 import { AlbumViewerControls } from "#/components/organisms/AlbumViewerControls";
+import { env } from "#/env.ts";
 import { getPublicAlbumBySlug } from "#/server/public.ts";
 
 const PublicAlbumLayout = () => {
@@ -51,9 +52,28 @@ const PublicAlbumLayout = () => {
 
 export const Route = createFileRoute("/albums/$slug")({
   component: PublicAlbumLayout,
-  head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
-  }),
+  head: ({ loaderData, params }) => {
+    const title = loaderData?.album.title ?? "アルバム";
+    const url = `${env.VITE_SITE_URL}/albums/${encodeURIComponent(params.slug)}`;
+    const version = loaderData ? new Date(loaderData.album.updatedAt).getTime() : 0;
+    return {
+      meta: [
+        { title: `${title} | photos.newt239.dev` },
+        { content: title, property: "og:title" },
+        { content: url, property: "og:url" },
+        {
+          content: `${env.VITE_SITE_URL}/api/og/albums/${encodeURIComponent(params.slug)}?v=${version}`,
+          property: "og:image",
+        },
+        ...(loaderData?.album.description
+          ? [
+              { content: loaderData.album.description, name: "description" },
+              { content: loaderData.album.description, property: "og:description" },
+            ]
+          : []),
+      ],
+    };
+  },
   loader: async ({ params }: { params: { slug: string } }) => {
     const result = await getPublicAlbumBySlug({ data: { slug: params.slug } });
     if (!result) {

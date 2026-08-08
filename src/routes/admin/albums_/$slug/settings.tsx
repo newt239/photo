@@ -15,6 +15,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { Link, createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { ArrowLeftIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 
+import { AlbumCover } from "#/components/organisms/AlbumCover";
 import { AlbumForm, type AlbumFormValues } from "#/components/organisms/AlbumForm";
 import { deleteAlbum, getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
 
@@ -126,6 +127,15 @@ const AlbumSettingsPage = () => {
 
       <Divider my="sm" />
 
+      <Stack gap="xs">
+        <Title order={3} size="h5">
+          カバー画像
+        </Title>
+        <AlbumCover albumId={album.id} selected={album.coverPhotoId !== null} photo={album.cover} />
+      </Stack>
+
+      <Divider my="sm" />
+
       <Group justify="space-between" align="center" wrap="wrap" gap="sm">
         <Stack gap={2}>
           <Text size="sm" fw={500}>
@@ -194,6 +204,10 @@ export const Route = createFileRoute("/admin/albums_/$slug/settings")({
     const { album, photos } = result;
     return {
       album: {
+        cover: album.coverStorageKey
+          ? { storageKey: album.coverStorageKey, thumbnailKey: album.coverThumbnailKey }
+          : null,
+        coverPhotoId: album.coverPhotoId,
         description: album.description,
         id: album.id,
         slug: album.slug,
