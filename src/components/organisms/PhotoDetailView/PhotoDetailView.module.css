@@ -42,7 +42,6 @@
   position: relative;
   height: 50vh;
   overflow: hidden;
-  overscroll-behavior: contain;
   touch-action: none;
   border-radius: var(--mantine-radius-md);
   background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-8));
