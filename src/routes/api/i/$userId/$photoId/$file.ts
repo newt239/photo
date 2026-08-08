@@ -13,10 +13,13 @@ const FILE_PATTERN = /^original\.(?:jpg|jpeg|png|webp|avif|heic|heif|gif)$/i;
 // 公開を取り消したあと手元のコピーが残り続けないよう 1 週間で切る
 const CACHE_CONTROL = "public, max-age=604800, immutable";
 
+// 非公開のアルバムの画像が共有キャッシュに残らないようオーナー本人には private を返す
+const OWNER_CACHE_CONTROL = "private, max-age=604800, immutable";
+
 // アクセス判定を通ってからしか参照しないため作り直す必要がない期間だけ持たせる
 const STORED_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
-const serveImage = async (key: string, width: number | null) => {
+const serveImage = async (key: string, width: number | null, cacheControl: string) => {
   const obj = await env.MY_BUCKET.get(key);
   if (!obj) {
     return new Response("Not Found", { status: 404 });
@@ -30,18 +33,18 @@ const serveImage = async (key: string, width: number | null) => {
         .transform({ fit: "scale-down", width })
         .output({ format: "image/webp", quality: 82 });
       headers.set("Content-Type", result.contentType());
-      headers.set("Cache-Control", CACHE_CONTROL);
+      headers.set("Cache-Control", cacheControl);
       headers.set("X-Content-Type-Options", "nosniff");
       // 同じ URL でも認証状態により 200 と 404 が変わるため共有キャッシュを分離する
       headers.set("Vary", "Cookie");
       return new Response(result.image(), { headers });
     } catch {
       // 変換できない画像でも表示が途切れないよう原本にフォールバックする
-      return serveImage(key, null);
+      return serveImage(key, null, cacheControl);
     }
   }
   obj.writeHttpMetadata(headers);
-  headers.set("Cache-Control", CACHE_CONTROL);
+  headers.set("Cache-Control", cacheControl);
   headers.set("ETag", obj.httpEtag);
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Vary", "Cookie");
@@ -69,7 +72,8 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
         const key = `users/${ownerId}/photos/${photoId}/${file}`;
 
         const { userId: requesterId } = await auth();
-        if (requesterId !== ownerId) {
+        const isOwner = requesterId === ownerId;
+        if (!isOwner) {
           const db = drizzle(env.DB, { schema });
           const [row] = await db
             .select({ one: sql`1` })
@@ -89,6 +93,7 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
           }
         }
 
+        const cacheControl = isOwner ? OWNER_CACHE_CONTROL : CACHE_CONTROL;
         url.search = width === null ? "" : `w=${width}`;
         const cacheKey = url.toString();
         const cache = await caches.open("photo-images");
@@ -96,11 +101,11 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
         // キャッシュから取り出した Response はヘッダーが不変になり後段のミドルウェアが失敗する
         if (cached) {
           const headers = new Headers(cached.headers);
-          headers.set("Cache-Control", CACHE_CONTROL);
+          headers.set("Cache-Control", cacheControl);
           return new Response(await cached.arrayBuffer(), { headers });
         }
 
-        const response = await serveImage(key, width);
+        const response = await serveImage(key, width, cacheControl);
         if (response.ok && width !== null) {
           const stored = response.clone();
           stored.headers.set("Cache-Control", STORED_CACHE_CONTROL);
