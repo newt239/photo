@@ -17,7 +17,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { ArrowLeftIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 
-import { VisibilitySegmentedControl } from "#/components/VisibilitySegmentedControl";
+import { VisibilityControl } from "#/components/molecules/VisibilityControl";
 import { deleteAlbum, getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
 
 const AlbumSettingsPage = () => {
@@ -140,7 +140,7 @@ const AlbumSettingsPage = () => {
             onChange={(e) => setAlbumSlug(e.currentTarget.value)}
             maxLength={200}
           />
-          <VisibilitySegmentedControl value={visibility} onChange={setVisibility} />
+          <VisibilityControl value={visibility} onChange={setVisibility} />
           {errorMessage && (
             <Text size="sm" c="red">
               {errorMessage}

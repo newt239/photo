@@ -1,7 +1,7 @@
 import { SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { AlbumCard } from "#/components/AlbumCard";
+import { AlbumCard } from "#/components/molecules/AlbumCard";
 import { listMyAlbums } from "#/server/albums.ts";
 
 const AlbumsIndexPage = () => {

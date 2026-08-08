@@ -1,6 +1,6 @@
 import { SegmentedControl, useMantineColorScheme } from "@mantine/core";
 
-export const ThemeSection = () => {
+export const ColorSchemeControl = () => {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
   return (
     <SegmentedControl

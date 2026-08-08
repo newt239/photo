@@ -2,16 +2,16 @@ import { useEffect, useRef } from "react";
 
 import { addOsmTileLayer } from "#/lib/leaflet.ts";
 
-import classes from "./PhotoLocationMap.module.css";
+import classes from "./LocationMap.module.css";
 
 import type * as Leaflet from "leaflet";
 
-type PhotoLocationMapProps = {
+type LocationMapProps = {
   latitude: number;
   longitude: number;
 };
 
-export const PhotoLocationMap = ({ latitude, longitude }: PhotoLocationMapProps) => {
+export const LocationMap = ({ latitude, longitude }: LocationMapProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Leaflet は window に依存し SSR では読み込めないため、マウント後に動的 import して地図を生成する

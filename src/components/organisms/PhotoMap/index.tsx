@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 
-import { PhotoLightbox } from "#/components/PhotoLightbox";
+import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { DEFAULT_CENTER, DEFAULT_ZOOM, addOsmTileLayer } from "#/lib/leaflet.ts";
 
-import classes from "./PublicAlbumMap.module.css";
+import classes from "./PhotoMap.module.css";
 
 import type * as Leaflet from "leaflet";
 
-type PublicAlbumMapPhoto = {
+type PhotoMapItem = {
   id: string;
   caption: string | null;
   alt: string | null;
@@ -18,7 +18,7 @@ type PublicAlbumMapPhoto = {
   longitude: number;
 };
 
-export const PublicAlbumMap = ({ photos }: { photos: PublicAlbumMapPhoto[] }) => {
+export const PhotoMap = ({ photos }: { photos: PhotoMapItem[] }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [index, setIndex] = useState<number | null>(null);
 

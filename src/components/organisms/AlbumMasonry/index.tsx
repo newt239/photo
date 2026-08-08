@@ -3,13 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
 
-import classes from "./PublicAlbumMasonry.module.css";
+import classes from "./AlbumMasonry.module.css";
 
 import type { listPublicAlbums } from "#/server/public.ts";
 
-export type PublicAlbumData = Awaited<ReturnType<typeof listPublicAlbums>>[number];
+export type AlbumMasonryItem = Awaited<ReturnType<typeof listPublicAlbums>>[number];
 
-export const PublicAlbumMasonry = ({ albums }: { albums: PublicAlbumData[] }) => {
+export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
   const { columns, ref } = useMasonryColumns(352);
 
   return (

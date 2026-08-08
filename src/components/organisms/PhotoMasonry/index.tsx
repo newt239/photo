@@ -1,11 +1,11 @@
 import { Text } from "@mantine/core";
 
-import { PhotoCard, type PhotoCardData } from "#/components/PhotoCard";
+import { PhotoCard, type PhotoCardData } from "#/components/molecules/PhotoCard";
 import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
 
-import classes from "./PhotoGrid.module.css";
+import classes from "./PhotoMasonry.module.css";
 
-export const PhotoGrid = ({
+export const PhotoMasonry = ({
   photos,
   albumSlug,
   emptyMessage = "写真はまだありません",

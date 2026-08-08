@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PublicAlbumMasonry } from "#/components/PublicAlbumMasonry";
-import { PublicNotice } from "#/components/PublicNotice";
+import { Notice } from "#/components/atoms/Notice";
+import { AlbumMasonry } from "#/components/organisms/AlbumMasonry";
 import { listPublicAlbums } from "#/server/public.ts";
 
 const IndexPage = () => {
   const { albums } = Route.useLoaderData();
   if (albums.length === 0) {
-    return <PublicNotice>公開アルバムはまだありません</PublicNotice>;
+    return <Notice>公開アルバムはまだありません</Notice>;
   }
-  return <PublicAlbumMasonry albums={albums} />;
+  return <AlbumMasonry albums={albums} />;
 };
 
 export const Route = createFileRoute("/")({

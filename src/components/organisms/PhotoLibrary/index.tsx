@@ -3,14 +3,14 @@ import { useState } from "react";
 import { Group, Text } from "@mantine/core";
 import { useRouter } from "@tanstack/react-router";
 
-import { PhotoBulkActions } from "#/components/PhotoBulkActions";
-import { PhotoGrid } from "#/components/PhotoGrid";
-import { PhotoTable } from "#/components/PhotoTable";
-import { PhotoViewControls } from "#/components/PhotoViewControls";
+import { PhotoViewControls } from "#/components/molecules/PhotoViewControls";
+import { PhotoBulkActions } from "#/components/organisms/PhotoBulkActions";
+import { PhotoMasonry } from "#/components/organisms/PhotoMasonry";
+import { PhotoTable } from "#/components/organisms/PhotoTable";
 import { addPhotosToAlbum, createAlbum, removePhotosFromAlbum } from "#/server/albums.ts";
 import { deletePhotos } from "#/server/photos.ts";
 
-import type { PhotoCardData } from "#/components/PhotoCard";
+import type { PhotoCardData } from "#/components/molecules/PhotoCard";
 
 type PhotoLibraryProps = {
   photos: PhotoCardData[];
@@ -195,7 +195,7 @@ export const PhotoLibrary = ({
           onSelect={toggle}
         />
       ) : (
-        <PhotoGrid
+        <PhotoMasonry
           photos={photos}
           albumSlug={album?.slug}
           emptyMessage={emptyMessage}

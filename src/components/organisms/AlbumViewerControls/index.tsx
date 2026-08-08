@@ -2,19 +2,19 @@ import { useEffect, useState } from "react";
 
 import { ChevronDownIcon, InfoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 
-import classes from "./PublicAlbumControls.module.css";
+import classes from "./AlbumViewerControls.module.css";
 
-type PublicAlbumControlsProps = {
+type AlbumViewerControlsProps = {
   title: string | null;
   description: string | null;
   hasGeotagged: boolean;
-  mode: string;
+  mode: "photo" | "map";
   size: number;
-  onModeChange: (mode: string) => void;
+  onModeChange: (mode: "photo" | "map") => void;
   onSizeChange: (size: number) => void;
 };
 
-export const PublicAlbumControls = ({
+export const AlbumViewerControls = ({
   title,
   description,
   hasGeotagged,
@@ -22,7 +22,7 @@ export const PublicAlbumControls = ({
   size,
   onModeChange,
   onSizeChange,
-}: PublicAlbumControlsProps) => {
+}: AlbumViewerControlsProps) => {
   const [minimized, setMinimized] = useState(true);
   const [maxSize, setMaxSize] = useState(1);
 

@@ -4,7 +4,7 @@ import { Button, Group, Stack, Text, TextInput, Textarea, Title } from "@mantine
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 
-import { VisibilitySegmentedControl } from "#/components/VisibilitySegmentedControl";
+import { VisibilityControl } from "#/components/molecules/VisibilityControl";
 import { createAlbum } from "#/server/albums.ts";
 
 const NewAlbumPage = () => {
@@ -72,7 +72,7 @@ const NewAlbumPage = () => {
             onChange={(e) => setSlug(e.currentTarget.value)}
             maxLength={200}
           />
-          <VisibilitySegmentedControl value={visibility} onChange={setVisibility} />
+          <VisibilityControl value={visibility} onChange={setVisibility} />
           {errorMessage && (
             <Text size="sm" c="red">
               {errorMessage}

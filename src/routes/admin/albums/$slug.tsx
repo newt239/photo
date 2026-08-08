@@ -3,8 +3,8 @@ import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { ExternalLinkIcon, ImagePlusIcon, SettingsIcon } from "lucide-react";
 import { z } from "zod";
 
-import { PhotoLibrary } from "#/components/PhotoLibrary";
-import { VisibilityIcon } from "#/components/VisibilityIcon";
+import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
+import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
 import { getAlbumBySlug } from "#/server/albums.ts";
 
 const AlbumDetailPage = () => {

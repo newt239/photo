@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/tanstack-react-start";
 import { Avatar, Group, Stack, Text } from "@mantine/core";
 
-export const ProfileSection = () => {
+export const UserProfile = () => {
   const { isLoaded, user } = useUser();
   if (!isLoaded || !user) {
     return (

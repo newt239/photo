@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { PublicAlbumControls } from "#/components/PublicAlbumControls";
+import { AlbumViewerControls } from "#/components/organisms/AlbumViewerControls";
 import { getPublicAlbumBySlug } from "#/server/public.ts";
 
 const PublicAlbumLayout = () => {
@@ -21,7 +21,7 @@ const PublicAlbumLayout = () => {
   return (
     <>
       <Outlet />
-      <PublicAlbumControls
+      <AlbumViewerControls
         title={album.title}
         description={album.description}
         hasGeotagged={photos.some((p) => p.latitude !== null && p.longitude !== null)}

@@ -22,9 +22,9 @@ import {
   ZoomOutIcon,
 } from "lucide-react";
 
-import { PhotoLocationMap } from "#/components/PhotoLocationMap";
-import { VisibilityIcon } from "#/components/VisibilityIcon";
-import { VisibilitySegmentedControl } from "#/components/VisibilitySegmentedControl";
+import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
+import { LocationMap } from "#/components/molecules/LocationMap";
+import { VisibilityControl } from "#/components/molecules/VisibilityControl";
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { generatePhotoDraft, updatePhoto, updatePhotoVisibility } from "#/server/photos.ts";
@@ -299,7 +299,7 @@ export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Pro
         </div>
 
         <Stack gap="md" className={classes.side}>
-          <VisibilitySegmentedControl
+          <VisibilityControl
             value={photo.visibility}
             onChange={(value) => {
               handleVisibility(value);
@@ -351,7 +351,7 @@ export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Pro
             <Card withBorder radius="md" padding="md">
               <Stack gap="xs">
                 <Title order={4}>位置情報</Title>
-                <PhotoLocationMap latitude={photo.latitude} longitude={photo.longitude} />
+                <LocationMap latitude={photo.latitude} longitude={photo.longitude} />
                 {renderInfoList([
                   { label: "緯度", value: photo.latitude.toFixed(6) },
                   { label: "経度", value: photo.longitude.toFixed(6) },

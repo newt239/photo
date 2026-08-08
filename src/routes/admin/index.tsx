@@ -2,7 +2,7 @@ import { Stack, Title } from "@mantine/core";
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { PhotoLibrary } from "#/components/PhotoLibrary";
+import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
 import { listMyPhotos } from "#/server/photos.ts";
 
 const AdminIndexPage = () => {

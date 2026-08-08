@@ -6,7 +6,7 @@ import { photoImageUrl } from "#/lib/image-url.ts";
 
 import classes from "./PhotoTable.module.css";
 
-import type { PhotoCardData } from "#/components/PhotoCard";
+import type { PhotoCardData } from "#/components/molecules/PhotoCard";
 
 type PhotoTableProps = {
   photos: PhotoCardData[];

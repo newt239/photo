@@ -3,13 +3,13 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { LayoutGridIcon, Share2Icon } from "lucide-react";
 
-import { PhotoLightbox } from "#/components/PhotoLightbox";
+import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { useMasonryColumns } from "#/lib/use-masonry-columns.ts";
 
-import classes from "./PublicAlbumGallery.module.css";
+import classes from "./PhotoGallery.module.css";
 
-type PublicGalleryPhoto = {
+type PhotoGalleryItem = {
   id: string;
   caption: string | null;
   alt: string | null;
@@ -19,13 +19,7 @@ type PublicGalleryPhoto = {
   height: number;
 };
 
-export const PublicAlbumGallery = ({
-  photos,
-  size,
-}: {
-  photos: PublicGalleryPhoto[];
-  size: number;
-}) => {
+export const PhotoGallery = ({ photos, size }: { photos: PhotoGalleryItem[]; size: number }) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const { columns: maxColumns, ref, width } = useMasonryColumns(160);

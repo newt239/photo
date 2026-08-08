@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
-import { PhotoDetailView } from "#/components/PhotoDetailView";
+import { PhotoDetailView } from "#/components/organisms/PhotoDetailView";
 import { getPhoto, getPhotoNeighbors } from "#/server/photos.ts";
 
 const AlbumPhotoDetailPage = () => {

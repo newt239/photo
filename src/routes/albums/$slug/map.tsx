@@ -1,8 +1,8 @@
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
-import { PublicAlbumMap } from "#/components/PublicAlbumMap";
-import { PublicNotice } from "#/components/PublicNotice";
+import { Notice } from "#/components/atoms/Notice";
+import { PhotoMap } from "#/components/organisms/PhotoMap";
 
 const PublicAlbumMapPage = () => {
   const { photos } = useLoaderData({ from: "/albums/$slug" });
@@ -13,9 +13,9 @@ const PublicAlbumMapPage = () => {
   );
 
   if (geotagged.length === 0) {
-    return <PublicNotice>位置情報のある写真がありません</PublicNotice>;
+    return <Notice>位置情報のある写真がありません</Notice>;
   }
-  return <PublicAlbumMap photos={geotagged} />;
+  return <PhotoMap photos={geotagged} />;
 };
 
 export const Route = createFileRoute("/albums/$slug/map")({

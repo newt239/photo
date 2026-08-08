@@ -1,9 +1,9 @@
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ProfileSection } from "#/components/ProfileSection";
-import { SignOutButton } from "#/components/SignOutButton";
-import { ThemeSection } from "#/components/ThemeSection";
+import { SignOutButton } from "#/components/atoms/SignOutButton";
+import { ColorSchemeControl } from "#/components/molecules/ColorSchemeControl";
+import { UserProfile } from "#/components/molecules/UserProfile";
 
 const SettingsPage = () => (
   <Stack p="xl" gap="xl">
@@ -13,14 +13,14 @@ const SettingsPage = () => (
       <Text fw={600} size="sm">
         プロフィール
       </Text>
-      <ProfileSection />
+      <UserProfile />
     </Stack>
 
     <Stack gap="sm">
       <Text fw={600} size="sm">
         カラーテーマ
       </Text>
-      <ThemeSection />
+      <ColorSchemeControl />
     </Stack>
 
     <Stack gap="sm">
