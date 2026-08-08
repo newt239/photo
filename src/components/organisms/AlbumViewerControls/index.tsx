@@ -10,7 +10,7 @@ type AlbumViewerControlsProps = {
   description: string | null;
   hasGeotagged: boolean;
   mode: "photo" | "map";
-  size: number;
+  size: number | undefined;
   onModeChange: (mode: "photo" | "map") => void;
   onSizeChange: (size: number) => void;
 };
@@ -25,21 +25,19 @@ export const AlbumViewerControls = ({
   onSizeChange,
 }: AlbumViewerControlsProps) => {
   const [minimized, setMinimized] = useState(true);
-  const [maxSize, setMaxSize] = useState(1);
+  const [viewport, setViewport] = useState(0);
 
-  const update = useThrottledCallback(
-    () => setMaxSize(Math.max(1, Math.floor(window.innerWidth / 160))),
-    100,
-  );
+  const update = useThrottledCallback(() => setViewport(window.innerWidth), 100);
 
-  // スライダーの上限は画面幅から決まる数値のためブラウザ API で計測し resize を監視する
+  // スライダーの上限と既定値は画面幅から決まるためブラウザ API で計測し resize を監視する
   useEffect(() => {
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, [update]);
 
-  const current = Math.min(size, maxSize);
+  const maxSize = Math.min(12, Math.max(1, Math.floor(viewport / 120)));
+  const current = Math.min(size ?? (viewport <= 480 ? 2 : 3), maxSize);
   const showSize = mode === "photo" && maxSize > 1;
 
   if (minimized) {

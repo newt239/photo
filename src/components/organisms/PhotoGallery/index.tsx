@@ -21,13 +21,21 @@ type PhotoGalleryItem = {
   height: number;
 };
 
-export const PhotoGallery = ({ photos, size }: { photos: PhotoGalleryItem[]; size: number }) => {
+export const PhotoGallery = ({
+  photos,
+  size,
+}: {
+  photos: PhotoGalleryItem[];
+  size: number | undefined;
+}) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const { ref, width } = useContainerWidth();
-  // 計測前は size をそのまま使い、マウント後に画面幅で頭打ちにする
+  // 計測前は既定値で描画し、マウント後に画面幅で既定値と上限を決める
   const columns =
-    width === 0 ? size : width <= 480 ? 2 : Math.min(size, Math.max(1, Math.floor(width / 160)));
+    width === 0
+      ? (size ?? 3)
+      : Math.min(size ?? (width <= 480 ? 2 : 3), Math.max(1, Math.floor(width / 120)));
   const layout = masonryLayout(photos, columns);
 
   const handleShare = async () => {

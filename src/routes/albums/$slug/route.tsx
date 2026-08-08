@@ -81,5 +81,5 @@ export const Route = createFileRoute("/albums/$slug")({
     }
     return result;
   },
-  validateSearch: z.object({ size: z.number().int().min(1).max(12).default(3) }),
+  validateSearch: z.object({ size: z.number().int().min(1).max(12).optional() }),
 });
