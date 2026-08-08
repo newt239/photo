@@ -23,10 +23,20 @@
 .collapsed {
   width: auto;
   max-width: min(calc(100vw - 2rem), 22rem);
+  padding: 0.5rem 0.75rem;
   appearance: none;
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.collapsed .title {
+  -webkit-line-clamp: 1;
+}
+
+.collapsed .iconButton {
+  width: 2rem;
+  height: 2rem;
 }
 
 .collapsed:focus-visible {
@@ -178,7 +188,7 @@
 
   .collapsed {
     left: auto;
-    max-width: calc(100vw - 2rem);
+    max-width: calc(100vw - 12.5rem);
   }
 
   .title {
