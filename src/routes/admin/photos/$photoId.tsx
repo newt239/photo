@@ -1,56 +1,13 @@
-import { ActionIcon, Button } from "@mantine/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
-import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import { PhotoDetailView } from "#/components/organisms/PhotoDetailView";
 import { getPhoto, getPhotoNeighbors } from "#/server/photos.ts";
 
 const PhotoDetailPage = () => {
   const { neighbors, photo } = Route.useLoaderData();
-  const { nextId, previousId } = neighbors;
   return (
-    <PhotoDetailView
-      photo={photo}
-      backLink={
-        <Button
-          component={Link}
-          to="/admin"
-          variant="subtle"
-          size="xs"
-          w="fit-content"
-          leftSection={<ArrowLeftIcon size={14} />}
-        >
-          写真一覧に戻る
-        </Button>
-      }
-      previousLink={
-        previousId ? (
-          <ActionIcon
-            variant="default"
-            aria-label="前の写真"
-            renderRoot={(props) => (
-              <Link {...props} to="/admin/photos/$photoId" params={{ photoId: previousId }} />
-            )}
-          >
-            <ChevronLeftIcon size={16} />
-          </ActionIcon>
-        ) : undefined
-      }
-      nextLink={
-        nextId ? (
-          <ActionIcon
-            variant="default"
-            aria-label="次の写真"
-            renderRoot={(props) => (
-              <Link {...props} to="/admin/photos/$photoId" params={{ photoId: nextId }} />
-            )}
-          >
-            <ChevronRightIcon size={16} />
-          </ActionIcon>
-        ) : undefined
-      }
-    />
+    <PhotoDetailView photo={photo} previousId={neighbors.previousId} nextId={neighbors.nextId} />
   );
 };
 

@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState } from "react";
 
 import {
   ActionIcon,
@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { Link, useRouter } from "@tanstack/react-router";
 import {
+  ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ExpandIcon,
@@ -75,12 +76,12 @@ const renderInfoList = (rows: InfoRow[]) => (
 
 type Props = {
   photo: PhotoDetailData;
-  backLink?: ReactNode;
-  previousLink?: ReactNode;
-  nextLink?: ReactNode;
+  albumSlug?: string;
+  previousId: string | null;
+  nextId: string | null;
 };
 
-export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Props) => {
+export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props) => {
   const router = useRouter();
   const imageSrc = photoImageUrl(photo.storageKey);
   const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
@@ -202,21 +203,71 @@ export const PhotoDetailView = ({ photo, backLink, previousLink, nextLink }: Pro
     }
   };
 
+  const backButton =
+    albumSlug === undefined ? (
+      <Button
+        component={Link}
+        to="/admin"
+        variant="subtle"
+        size="xs"
+        w="fit-content"
+        leftSection={<ArrowLeftIcon size={14} />}
+      >
+        写真一覧に戻る
+      </Button>
+    ) : (
+      <Button
+        variant="subtle"
+        size="xs"
+        w="fit-content"
+        leftSection={<ArrowLeftIcon size={14} />}
+        renderRoot={(props) => (
+          <Link {...props} to="/admin/albums/$slug" params={{ slug: albumSlug }} />
+        )}
+      >
+        アルバムに戻る
+      </Button>
+    );
+
+  const neighborButton = (photoId: string | null, direction: "previous" | "next") => {
+    const label = direction === "previous" ? "前の写真" : "次の写真";
+    const icon =
+      direction === "previous" ? <ChevronLeftIcon size={16} /> : <ChevronRightIcon size={16} />;
+    if (photoId === null) {
+      return (
+        <ActionIcon variant="default" disabled aria-label={label}>
+          {icon}
+        </ActionIcon>
+      );
+    }
+    return (
+      <ActionIcon
+        variant="default"
+        aria-label={label}
+        renderRoot={(props) =>
+          albumSlug === undefined ? (
+            <Link {...props} to="/admin/photos/$photoId" params={{ photoId }} />
+          ) : (
+            <Link
+              {...props}
+              to="/admin/albums/$slug/photos/$photoId"
+              params={{ photoId, slug: albumSlug }}
+            />
+          )
+        }
+      >
+        {icon}
+      </ActionIcon>
+    );
+  };
+
   return (
     <Stack p="xl" gap="md">
       <Group justify="space-between" align="center" wrap="nowrap">
-        <div>{backLink}</div>
+        <div>{backButton}</div>
         <Group gap="xs" wrap="nowrap">
-          {previousLink ?? (
-            <ActionIcon variant="default" disabled aria-label="前の写真">
-              <ChevronLeftIcon size={16} />
-            </ActionIcon>
-          )}
-          {nextLink ?? (
-            <ActionIcon variant="default" disabled aria-label="次の写真">
-              <ChevronRightIcon size={16} />
-            </ActionIcon>
-          )}
+          {neighborButton(previousId, "previous")}
+          {neighborButton(nextId, "next")}
         </Group>
       </Group>
 
