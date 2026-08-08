@@ -24,6 +24,27 @@
     }
   ],
   "start_url": ".",
+  "share_target": {
+    "action": "/admin/photos/upload",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "photos",
+          "accept": [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/avif",
+            "image/heic",
+            "image/heif",
+            "image/gif"
+          ]
+        }
+      ]
+    }
+  },
   "display": "standalone",
   "theme_color": "#1f2933",
   "background_color": "#1f2933"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button, Group, Paper, Stack, Table, Text } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
@@ -149,6 +149,32 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       setBusy(false);
     }
   };
+
+  // 共有シートから受け取ったファイルは Service Worker が Cache API に退避している
+  useEffect(() => {
+    caches.open("share-target").then(async (cache) => {
+      const keys = await cache.keys();
+      if (keys.length === 0) {
+        return;
+      }
+      const files = await Promise.all(
+        keys.map(async (key) => {
+          const response = await cache.match(key);
+          if (!response) {
+            return null;
+          }
+          const blob = await response.blob();
+          const name = decodeURIComponent(response.headers.get("x-filename") ?? "shared");
+          return new File([blob], name, { type: blob.type });
+        }),
+      );
+      // 再読み込みで二重にアップロードされないよう取り込む前に消す
+      await Promise.all(keys.map((key) => cache.delete(key)));
+      await handleDrop(files.filter((file) => file !== null));
+    });
+    // マウント時に一度だけ取り込むため handleDrop は依存に含めない
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const generateOne = async (id: string, photoId: string, field: "caption" | "alt") => {
     updateItem(id, { error: undefined, generating: field });
