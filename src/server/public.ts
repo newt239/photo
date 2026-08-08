@@ -23,7 +23,6 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
     .select({
       coverHeight: photos.height,
       coverStorageKey: photos.storageKey,
-      coverThumbnailKey: photos.thumbnailKey,
       coverWidth: photos.width,
       createdAt: albums.createdAt,
       description: albums.description,
@@ -69,7 +68,6 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
         latitude: photos.latitude,
         longitude: photos.longitude,
         storageKey: photos.storageKey,
-        thumbnailKey: photos.thumbnailKey,
         width: photos.width,
       })
       .from(albumPhotos)

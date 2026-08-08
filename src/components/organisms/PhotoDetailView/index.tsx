@@ -94,7 +94,7 @@ type Props = {
 
 export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props) => {
   const router = useRouter();
-  const imageSrc = photoImageUrl(photo.storageKey);
+  const imageSrc = photoImageUrl(photo.storageKey, 2048);
   const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
   const exifRows: InfoRow[] = [];
   if (camera) {
@@ -338,7 +338,12 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
                 <ExpandIcon size={16} />
               </ActionIcon>
             </Group>
-            <Anchor href={imageSrc} target="_blank" rel="noopener noreferrer" size="sm">
+            <Anchor
+              href={photoImageUrl(photo.storageKey)}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="sm"
+            >
               原寸で開く
             </Anchor>
           </Group>

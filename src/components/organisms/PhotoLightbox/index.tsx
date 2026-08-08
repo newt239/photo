@@ -92,7 +92,7 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
               <div ref={canvasRef} className={classes.canvas} style={{ transform }}>
                 <img
                   className={classes.image}
-                  src={photoImageUrl(photo.storageKey)}
+                  src={photoImageUrl(photo.storageKey, 2048)}
                   alt={photo.alt ?? photo.caption ?? ""}
                   draggable={false}
                 />

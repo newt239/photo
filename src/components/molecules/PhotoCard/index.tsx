@@ -11,7 +11,6 @@ export type PhotoCardData = {
   caption: string | null;
   alt: string | null;
   storageKey: string;
-  thumbnailKey: string | null;
   width: number;
   height: number;
   takenAt: string | null;
@@ -26,11 +25,19 @@ type PhotoCardProps = {
 };
 
 export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: PhotoCardProps) => {
-  const key = photo.thumbnailKey ?? photo.storageKey;
-  const src = photoImageUrl(key);
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
-      <img src={src} alt={photo.alt ?? photo.caption ?? ""} loading="lazy" decoding="async" />
+      <img
+        src={photoImageUrl(photo.storageKey, 640)}
+        srcSet={[320, 640, 1024]
+          .filter((width) => width <= photo.width)
+          .map((width) => `${photoImageUrl(photo.storageKey, width)} ${width}w`)
+          .join(", ")}
+        sizes="(max-width: 768px) 50vw, 240px"
+        alt={photo.alt ?? photo.caption ?? ""}
+        loading="lazy"
+        decoding="async"
+      />
       {!photo.hasLocation && (
         <span className={classes.badge}>
           <MapPinOffIcon size={14} role="img" aria-label="位置情報が未設定" />

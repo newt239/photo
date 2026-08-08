@@ -29,7 +29,6 @@ type GeotagCandidate = {
   caption: string | null;
   alt: string | null;
   storageKey: string;
-  thumbnailKey: string | null;
   takenAt: string | null;
 };
 
@@ -268,7 +267,7 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
                           </Table.Td>
                           <Table.Td>
                             <img
-                              src={photoImageUrl(photo.thumbnailKey ?? photo.storageKey)}
+                              src={photoImageUrl(photo.storageKey, 320)}
                               alt={photo.alt ?? photo.caption ?? ""}
                               width={56}
                               height={56}

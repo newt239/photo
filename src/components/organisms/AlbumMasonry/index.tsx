@@ -31,7 +31,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
         style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
       >
         {layout.items.map((album, index) => {
-          const coverKey = album.coverThumbnailKey ?? album.coverStorageKey;
+          const coverKey = album.coverStorageKey;
           return (
             <Link
               key={album.id}
@@ -46,7 +46,11 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
             >
               {coverKey ? (
                 <img
-                  src={photoImageUrl(coverKey)}
+                  src={photoImageUrl(coverKey, 640)}
+                  srcSet={[640, 1024, 1600]
+                    .map((candidate) => `${photoImageUrl(coverKey, candidate)} ${candidate}w`)
+                    .join(", ")}
+                  sizes="(max-width: 720px) 100vw, 352px"
                   alt=""
                   loading={index < EAGER_COUNT ? "eager" : "lazy"}
                   fetchPriority={index < EAGER_COUNT ? "high" : undefined}

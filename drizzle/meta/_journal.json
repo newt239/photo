@@ -43,6 +43,13 @@
       "when": 1786189296185,
       "tag": "0005_tidy_nemesis",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786189789728,
+      "tag": "0006_dusty_steel_serpent",
+      "breakpoints": true
     }
   ]
 }

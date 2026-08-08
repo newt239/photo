@@ -12,7 +12,7 @@ import classes from "./AlbumCover.module.css";
 type AlbumCoverProps = {
   albumId: string;
   selected: boolean;
-  photo: { storageKey: string; thumbnailKey: string | null } | null;
+  photo: { storageKey: string } | null;
 };
 
 export const AlbumCover = ({ albumId, selected, photo }: AlbumCoverProps) => {
@@ -48,7 +48,7 @@ export const AlbumCover = ({ albumId, selected, photo }: AlbumCoverProps) => {
     <Stack gap="sm">
       <Group gap="md" align="flex-start" wrap="nowrap">
         <div className={classes.preview}>
-          <img src={photoImageUrl(photo.thumbnailKey ?? photo.storageKey)} alt="" />
+          <img src={photoImageUrl(photo.storageKey, 640)} alt="" />
         </div>
         <Stack gap="xs" align="flex-start">
           <Text size="sm" c="dimmed">

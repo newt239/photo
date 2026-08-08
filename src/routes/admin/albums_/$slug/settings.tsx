@@ -204,9 +204,7 @@ export const Route = createFileRoute("/admin/albums_/$slug/settings")({
     const { album, photos } = result;
     return {
       album: {
-        cover: album.coverStorageKey
-          ? { storageKey: album.coverStorageKey, thumbnailKey: album.coverThumbnailKey }
-          : null,
+        cover: album.coverStorageKey ? { storageKey: album.coverStorageKey } : null,
         coverPhotoId: album.coverPhotoId,
         description: album.description,
         id: album.id,

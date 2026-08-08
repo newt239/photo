@@ -155,7 +155,6 @@ export const listMyAlbums = createServerFn({ method: "GET" })
       .select({
         coverPhotoId: albums.coverPhotoId,
         coverStorageKey: photos.storageKey,
-        coverThumbnailKey: photos.thumbnailKey,
         createdAt: albums.createdAt,
         description: albums.description,
         id: albums.id,
@@ -192,7 +191,6 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
       .select({
         coverPhotoId: albums.coverPhotoId,
         coverStorageKey: photos.storageKey,
-        coverThumbnailKey: photos.thumbnailKey,
         description: albums.description,
         id: albums.id,
         slug: albums.slug,
@@ -218,7 +216,6 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
         longitude: photos.longitude,
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
-        thumbnailKey: photos.thumbnailKey,
         width: photos.width,
       })
       .from(albumPhotos)
@@ -240,7 +237,6 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
         id: row.id,
         storageKey: row.storageKey,
         takenAt: row.takenAt?.toISOString() ?? null,
-        thumbnailKey: row.thumbnailKey,
         width: row.width,
       })),
       success: true,

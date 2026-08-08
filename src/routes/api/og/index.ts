@@ -16,7 +16,6 @@ export const Route = createFileRoute("/api/og/")({
         const rows = await db
           .select({
             storageKey: photos.storageKey,
-            thumbnailKey: photos.thumbnailKey,
           })
           .from(albums)
           .innerJoin(photos, eq(photos.id, coverPhotoId))
@@ -25,7 +24,7 @@ export const Route = createFileRoute("/api/og/")({
           .limit(8);
 
         return ogImageResponse(request, {
-          coverStorageKeys: rows.map((row) => row.thumbnailKey ?? row.storageKey),
+          coverStorageKeys: rows.map((row) => row.storageKey),
           description: null,
           title: "photos.newt239.dev",
         });

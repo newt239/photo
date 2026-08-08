@@ -6,7 +6,7 @@ import { LayoutGridIcon, Share2Icon } from "lucide-react";
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { masonryLayout, useContainerWidth } from "#/lib/masonry.ts";
-import { THUMBNAIL_MAX_EDGE } from "#/lib/upload-constraints.ts";
+import { IMAGE_WIDTHS } from "#/lib/upload-constraints.ts";
 
 import classes from "./PhotoGallery.module.css";
 
@@ -17,7 +17,6 @@ type PhotoGalleryItem = {
   caption: string | null;
   alt: string | null;
   storageKey: string;
-  thumbnailKey: string | null;
   width: number;
   height: number;
 };
@@ -66,12 +65,12 @@ export const PhotoGallery = ({
             style={{ height: `${(layout.totalHeight * 100) / columns}cqw` }}
           >
             {layout.items.map((p, i) => {
-              const thumbnailWidth = Math.round(
-                p.width * Math.min(1, THUMBNAIL_MAX_EDGE / Math.max(p.width, p.height)),
-              );
+              const candidates = IMAGE_WIDTHS.filter((candidate) => candidate <= p.width);
               const srcSet =
-                columnPx > 0 && p.thumbnailKey !== null && thumbnailWidth < p.width
-                  ? `${photoImageUrl(p.thumbnailKey)} ${thumbnailWidth}w, ${photoImageUrl(p.storageKey)} ${p.width}w`
+                columnPx > 0 && candidates.length > 0
+                  ? candidates
+                      .map((candidate) => `${photoImageUrl(p.storageKey, candidate)} ${candidate}w`)
+                      .join(", ")
                   : undefined;
               return (
                 <button
@@ -87,7 +86,7 @@ export const PhotoGallery = ({
                   }}
                 >
                   <img
-                    src={photoImageUrl(p.thumbnailKey ?? p.storageKey)}
+                    src={photoImageUrl(p.storageKey, 1024)}
                     srcSet={srcSet}
                     sizes={srcSet ? `${columnPx}px` : undefined}
                     alt=""

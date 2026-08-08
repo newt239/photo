@@ -12,18 +12,17 @@ export type AlbumCardData = {
   title: string | null;
   description: string | null;
   visibility: "public" | "private";
-  coverThumbnailKey: string | null;
   coverStorageKey: string | null;
 };
 
 export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
-  const coverKey = album.coverThumbnailKey ?? album.coverStorageKey;
+  const coverKey = album.coverStorageKey;
   return (
     <Link to="/admin/albums/$slug" params={{ slug: album.slug }} className={classes.link}>
       <Card withBorder radius="md" padding={0} className={classes.card}>
         <div className={classes.cover}>
           {coverKey ? (
-            <img src={photoImageUrl(coverKey)} alt="" loading="lazy" />
+            <img src={photoImageUrl(coverKey, 640)} alt="" loading="lazy" />
           ) : (
             <div className={classes.placeholder}>
               <Text size="xs" c="dimmed">

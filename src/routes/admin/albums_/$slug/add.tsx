@@ -167,7 +167,6 @@ export const Route = createFileRoute("/admin/albums_/$slug/add")({
         caption: p.caption,
         id: p.id,
         storageKey: p.storageKey,
-        thumbnailKey: p.thumbnailKey,
       })),
     };
   },

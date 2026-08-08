@@ -12,15 +12,12 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
 import { ensureUserRow } from "#/server/user.ts";
 
-const THUMB_MIME = "image/webp";
-
 const ID_CHUNK_SIZE = 90;
 
 const R2_DELETE_CHUNK_SIZE = 1000;
 
 const createPhotoUploadInput = z.object({
   contentType: z.enum(ALLOWED_MIME_TYPES),
-  hasThumbnail: z.boolean().default(true),
   size: z.number().int().positive().max(MAX_FILE_SIZE),
 });
 
@@ -36,20 +33,7 @@ export const createPhotoUpload = createServerFn({ method: "POST" })
     const extension = MIME_EXT[data.contentType.toLowerCase()] ?? "bin";
     const originalKey = `users/${userId}/photos/${photoId}/original.${extension}`;
     const originalUrl = await signPutUrl(originalKey, data.contentType);
-    let thumbnailKey: string | null = null;
-    let thumbnailUrl: string | null = null;
-    if (data.hasThumbnail) {
-      thumbnailKey = `users/${userId}/photos/${photoId}/thumb.webp`;
-      thumbnailUrl = await signPutUrl(thumbnailKey, THUMB_MIME);
-    }
-    return {
-      originalKey,
-      originalUrl,
-      photoId,
-      success: true,
-      thumbnailKey,
-      thumbnailUrl,
-    } as const;
+    return { originalKey, originalUrl, photoId, success: true } as const;
   });
 
 const finalizePhotoInput = z.object({
@@ -71,7 +55,6 @@ const finalizePhotoInput = z.object({
   rawExif: z.string().nullable().optional(),
   shutterSpeed: z.string().nullable().optional(),
   takenAt: z.string().datetime().nullable().optional(),
-  thumbnailKey: z.string().nullable(),
   width: z.number().int().positive(),
 });
 
@@ -86,9 +69,6 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     if (!keyPattern.test(data.originalKey)) {
       return { error: "アップロード先が正しくありません", success: false } as const;
     }
-    if (data.thumbnailKey && !keyPattern.test(data.thumbnailKey)) {
-      return { error: "アップロード先が正しくありません", success: false } as const;
-    }
 
     const head = await env.MY_BUCKET.head(data.originalKey);
     if (!head) {
@@ -99,9 +79,6 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     const allowedType = ALLOWED_MIME_TYPES.some((mime) => mime === uploadedType);
     if (head.size > MAX_FILE_SIZE || !allowedType) {
       await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
-      if (data.thumbnailKey) {
-        await env.MY_BUCKET.delete(data.thumbnailKey).catch(() => {});
-      }
       return { error: "アップロードされた画像を受け付けられません", success: false } as const;
     }
 
@@ -126,15 +103,11 @@ export const finalizePhoto = createServerFn({ method: "POST" })
         shutterSpeed: data.shutterSpeed ?? null,
         storageKey: data.originalKey,
         takenAt: data.takenAt ? new Date(data.takenAt) : null,
-        thumbnailKey: data.thumbnailKey,
         userId,
         width: data.width,
       });
     } catch {
       await env.MY_BUCKET.delete(data.originalKey).catch(() => {});
-      if (data.thumbnailKey) {
-        await env.MY_BUCKET.delete(data.thumbnailKey).catch(() => {});
-      }
       return { error: "写真を保存できませんでした", success: false } as const;
     }
 
@@ -165,7 +138,6 @@ export const listMyPhotos = createServerFn({ method: "GET" })
         longitude: photos.longitude,
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
-        thumbnailKey: photos.thumbnailKey,
         width: photos.width,
       })
       .from(photos)
@@ -185,7 +157,6 @@ export const listMyPhotos = createServerFn({ method: "GET" })
         id: row.id,
         storageKey: row.storageKey,
         takenAt: row.takenAt?.toISOString() ?? null,
-        thumbnailKey: row.thumbnailKey,
         width: row.width,
       })),
       success: true,
@@ -300,7 +271,6 @@ export const listPhotosMissingLocation = createServerFn({ method: "GET" })
         id: photos.id,
         storageKey: photos.storageKey,
         takenAt: photos.takenAt,
-        thumbnailKey: photos.thumbnailKey,
       })
       .from(photos)
       .where(and(eq(photos.userId, userId), missingLocation))
@@ -313,7 +283,6 @@ export const listPhotosMissingLocation = createServerFn({ method: "GET" })
         id: row.id,
         storageKey: row.storageKey,
         takenAt: row.takenAt?.toISOString() ?? null,
-        thumbnailKey: row.thumbnailKey,
       })),
       success: true,
     } as const;
@@ -423,13 +392,13 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
     return 0;
   }
   const db = drizzle(env.DB, { schema });
-  const rows: { id: string; storageKey: string; thumbnailKey: string | null }[] = [];
+  const rows: { id: string; storageKey: string }[] = [];
   for (let offset = 0; offset < photoIds.length; offset += ID_CHUNK_SIZE) {
     // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
     const chunk = photoIds.slice(offset, offset + ID_CHUNK_SIZE);
     // eslint-disable-next-line no-await-in-loop
     const found = await db
-      .select({ id: photos.id, storageKey: photos.storageKey, thumbnailKey: photos.thumbnailKey })
+      .select({ id: photos.id, storageKey: photos.storageKey })
       .from(photos)
       .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
     rows.push(...found);
@@ -445,9 +414,7 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
     await db.delete(photos).where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
   }
 
-  const storageKeys = rows.flatMap((row) =>
-    row.thumbnailKey ? [row.storageKey, row.thumbnailKey] : [row.storageKey],
-  );
+  const storageKeys = rows.map((row) => row.storageKey);
   for (let offset = 0; offset < storageKeys.length; offset += R2_DELETE_CHUNK_SIZE) {
     // R2 の一括削除は 1 回あたり 1000 キーまでのため分割する
     // eslint-disable-next-line no-await-in-loop

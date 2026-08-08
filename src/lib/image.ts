@@ -1,7 +1,5 @@
 import { parse } from "exifr";
 
-import { THUMBNAIL_MAX_EDGE } from "#/lib/upload-constraints.ts";
-
 type ImageMeta = {
   width: number;
   height: number;
@@ -116,39 +114,4 @@ const strOrNull = (v: unknown) => {
   }
   const trimmed = v.trim();
   return trimmed.length > 0 ? trimmed : null;
-};
-export const generateThumbnail = async (
-  file: File,
-  maxEdge = THUMBNAIL_MAX_EDGE,
-  quality = 0.82,
-) => {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    await new Promise<void>((resolve, reject) => {
-      img.addEventListener("load", () => resolve());
-      img.addEventListener("error", () => reject(new Error("IMAGE_LOAD_FAILED")));
-      img.src = url;
-    });
-    const { naturalWidth: w, naturalHeight: h } = img;
-    const scale = Math.min(1, maxEdge / Math.max(w, h));
-    const tw = Math.round(w * scale);
-    const th = Math.round(h * scale);
-    const canvas = document.createElement("canvas");
-    canvas.width = tw;
-    canvas.height = th;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      return null;
-    }
-    ctx.drawImage(img, 0, 0, tw, th);
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((b) => resolve(b), "image/webp", quality);
-    });
-    return blob;
-  } catch {
-    return null;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
 };

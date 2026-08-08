@@ -17,7 +17,7 @@ import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useRouter } from "@tanstack/react-router";
 import { EraserIcon, SaveIcon, SparklesIcon } from "lucide-react";
 
-import { extractExif, generateThumbnail, probeDimensions } from "#/lib/image.ts";
+import { extractExif, probeDimensions } from "#/lib/image.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
 import { createPhotoUpload, finalizePhoto, updatePhoto } from "#/server/photos.ts";
@@ -70,20 +70,13 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     }
     try {
       updateItem(id, { progress: 5, status: "preparing" });
-      const [dims, exif, thumb] = await Promise.all([
-        probeDimensions(file),
-        extractExif(file),
-        generateThumbnail(file),
-      ]);
-      if (thumb) {
-        updateItem(id, { thumbUrl: URL.createObjectURL(thumb) });
-      }
+      const [dims, exif] = await Promise.all([probeDimensions(file), extractExif(file)]);
+      updateItem(id, { thumbUrl: URL.createObjectURL(file) });
 
       updateItem(id, { progress: 25 });
       const prep = await createPhotoUpload({
         data: {
           contentType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
-          hasThumbnail: Boolean(thumb),
           size: file.size,
         },
       });
@@ -95,11 +88,6 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       updateItem(id, { progress: 40, status: "uploading" });
       await putToR2(prep.originalUrl, file, contentType);
 
-      if (thumb && prep.thumbnailUrl) {
-        updateItem(id, { progress: 70 });
-        await putToR2(prep.thumbnailUrl, thumb, "image/webp");
-      }
-
       updateItem(id, { progress: 85, status: "saving" });
       const saved = await finalizePhoto({
         data: {
@@ -108,7 +96,6 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
           mimeType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
           originalKey: prep.originalKey,
           photoId: prep.photoId,
-          thumbnailKey: prep.thumbnailKey,
           width: dims.width,
           ...exif,
         },
