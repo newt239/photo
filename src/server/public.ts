@@ -7,11 +7,14 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 
-const coverPhotoId = sql`(
-    SELECT ap.photo_id FROM album_photos ap
-    WHERE ap.album_id = ${albums}.id
-    ORDER BY ap.sort_order ASC, ap.added_at ASC
-    LIMIT 1
+export const coverPhotoId = sql`(
+    SELECT COALESCE(
+      ${albums}.cover_photo_id,
+      (SELECT ap.photo_id FROM album_photos ap
+        WHERE ap.album_id = ${albums}.id
+        ORDER BY ap.sort_order ASC, ap.added_at ASC
+        LIMIT 1)
+    )
   )`;
 
 export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async () => {
@@ -48,6 +51,7 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
         id: albums.id,
         slug: albums.slug,
         title: albums.title,
+        updatedAt: albums.updatedAt,
       })
       .from(albums)
       .where(and(eq(albums.slug, data.slug), eq(albums.visibility, "public")))

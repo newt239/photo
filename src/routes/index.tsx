@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Notice } from "#/components/atoms/Notice";
 import { AlbumMasonry } from "#/components/organisms/AlbumMasonry";
+import { env } from "#/env.ts";
 import { listPublicAlbums } from "#/server/public.ts";
 
 const IndexPage = () => {
@@ -19,7 +20,14 @@ const IndexPage = () => {
 
 export const Route = createFileRoute("/")({
   component: IndexPage,
-  head: () => ({ meta: [{ title: "photos.newt239.dev" }] }),
+  head: () => ({
+    meta: [
+      { title: "photos.newt239.dev" },
+      { content: "撮った写真を並べて置いておく場所", name: "description" },
+      { content: "撮った写真を並べて置いておく場所", property: "og:description" },
+      { content: env.VITE_SITE_URL, property: "og:url" },
+    ],
+  }),
   loader: async () => ({
     albums: await listPublicAlbums(),
   }),

@@ -3,6 +3,7 @@ import mantineCoreCss from "@mantine/core/styles.css?url";
 import mantineDropzoneCss from "@mantine/dropzone/styles.css?url";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 
+import { env } from "#/env.ts";
 import { cookieColorSchemeManager } from "#/lib/color-scheme.ts";
 import { ClerkProvider } from "#/providers/ClerkProvider.tsx";
 import { getColorSchemeCookie } from "#/server/color-scheme.ts";
@@ -78,7 +79,46 @@ export const Route = createRootRoute({
       {
         title: "photos.newt239.dev",
       },
+      {
+        content: "photos.newt239.dev",
+        property: "og:site_name",
+      },
+      {
+        content: "website",
+        property: "og:type",
+      },
+      {
+        content: "photos.newt239.dev",
+        property: "og:title",
+      },
+      {
+        content: `${env.VITE_SITE_URL}/api/og`,
+        property: "og:image",
+      },
+      {
+        content: "1200",
+        property: "og:image:width",
+      },
+      {
+        content: "630",
+        property: "og:image:height",
+      },
+      {
+        content: "summary_large_image",
+        name: "twitter:card",
+      },
     ],
+    scripts: env.VITE_GA_MEASUREMENT_ID
+      ? [
+          {
+            async: true,
+            src: `https://www.googletagmanager.com/gtag/js?id=${env.VITE_GA_MEASUREMENT_ID}`,
+          },
+          {
+            children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${env.VITE_GA_MEASUREMENT_ID}");`,
+          },
+        ]
+      : [],
   }),
   loader: async () => ({
     colorScheme: await getColorSchemeCookie(),

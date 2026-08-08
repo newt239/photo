@@ -56,7 +56,6 @@ export const photos = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    visibility: text({ enum: ["public", "private"] }).notNull(),
     width: integer().notNull(),
   },
   (t) => [

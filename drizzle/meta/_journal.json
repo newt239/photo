@@ -29,6 +29,13 @@
       "when": 1786163674431,
       "tag": "0003_lean_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786174896412,
+      "tag": "0004_lumpy_calypso",
+      "breakpoints": true
     }
   ]
 }

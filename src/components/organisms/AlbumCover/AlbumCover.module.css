@@ -1,0 +1,15 @@
+.preview {
+  width: 220px;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-gray-1);
+  flex-shrink: 0;
+}
+
+.preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

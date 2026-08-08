@@ -1,7 +1,7 @@
 import { auth } from "@clerk/tanstack-react-start/server";
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "cloudflare:workers";
-import { and, eq, exists, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "#/db/schema.ts";
@@ -40,23 +40,20 @@ export const Route = createFileRoute("/api/i/$userId/$photoId/$file")({
         }
 
         const db = drizzle(env.DB, { schema });
-        const joinCondition = eq(albumPhotos.albumId, albums.id);
-        const publicAlbumCondition = and(
-          eq(albumPhotos.photoId, photos.id),
-          eq(albums.visibility, "public"),
-        );
-        const publicAlbumQuery = db
+        const [row] = await db
           .select({ one: sql`1` })
           .from(albumPhotos)
-          .innerJoin(albums, joinCondition)
-          .where(publicAlbumCondition);
-        const photoCondition = and(eq(photos.id, photoId), eq(photos.userId, ownerId));
-        const [row] = await db
-          .select({ inPublicAlbum: exists(publicAlbumQuery), visibility: photos.visibility })
-          .from(photos)
-          .where(photoCondition)
+          .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
+          .innerJoin(photos, eq(photos.id, albumPhotos.photoId))
+          .where(
+            and(
+              eq(albumPhotos.photoId, photoId),
+              eq(photos.userId, ownerId),
+              eq(albums.visibility, "public"),
+            ),
+          )
           .limit(1);
-        if (!row || (row.visibility !== "public" && !row.inPublicAlbum)) {
+        if (!row) {
           return new Response("Not Found", { status: 404 });
         }
         // 公開を取り消した直後もキャッシュから配信され続けないよう短めにする

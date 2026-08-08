@@ -23,4 +23,8 @@
     "binding": "AI",
     "remote": true,
   },
+  "images": {
+    "binding": "IMAGES",
+    "remote": true,
+  },
 }

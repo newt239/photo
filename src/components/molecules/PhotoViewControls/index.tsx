@@ -8,9 +8,9 @@ import {
 
 type PhotoViewControlsProps = {
   order: "asc" | "desc";
-  view: "masonry" | "table";
+  view: "grid" | "table";
   onOrderChange: (order: "asc" | "desc") => void;
-  onViewChange: (view: "masonry" | "table") => void;
+  onViewChange: (view: "grid" | "table") => void;
 };
 
 export const PhotoViewControls = ({
@@ -29,7 +29,7 @@ export const PhotoViewControls = ({
           label: (
             <Group gap={6} wrap="nowrap" justify="center">
               <ArrowDownWideNarrowIcon size={14} />
-              撮影が新しい順
+              新しい順
             </Group>
           ),
           value: "desc",
@@ -38,7 +38,7 @@ export const PhotoViewControls = ({
           label: (
             <Group gap={6} wrap="nowrap" justify="center">
               <ArrowUpNarrowWideIcon size={14} />
-              撮影が古い順
+              古い順
             </Group>
           ),
           value: "asc",
@@ -49,16 +49,16 @@ export const PhotoViewControls = ({
     <SegmentedControl
       size="xs"
       value={view}
-      onChange={(value) => onViewChange(value === "table" ? "table" : "masonry")}
+      onChange={(value) => onViewChange(value === "table" ? "table" : "grid")}
       data={[
         {
           label: (
             <Group gap={6} wrap="nowrap" justify="center">
               <LayoutGridIcon size={14} />
-              マソンリー
+              グリッド
             </Group>
           ),
-          value: "masonry",
+          value: "grid",
         },
         {
           label: (

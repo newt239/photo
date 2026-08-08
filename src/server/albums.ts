@@ -18,10 +18,13 @@ const ID_CHUNK_SIZE = 90;
 const INSERT_CHUNK_SIZE = 45;
 
 const coverPhotoId = sql`(
-    SELECT ap.photo_id FROM album_photos ap
-    WHERE ap.album_id = ${albums}.id
-    ORDER BY ap.sort_order ASC, ap.added_at ASC
-    LIMIT 1
+    SELECT COALESCE(
+      ${albums}.cover_photo_id,
+      (SELECT ap.photo_id FROM album_photos ap
+        WHERE ap.album_id = ${albums}.id
+        ORDER BY ap.sort_order ASC, ap.added_at ASC
+        LIMIT 1)
+    )
   )`;
 
 const findOwnedAlbum = async (
@@ -30,7 +33,7 @@ const findOwnedAlbum = async (
   userId: string,
 ) => {
   const [album] = await db
-    .select({ id: albums.id })
+    .select({ coverPhotoId: albums.coverPhotoId, id: albums.id })
     .from(albums)
     .where(and(eq(albums.id, albumId), eq(albums.userId, userId)))
     .limit(1);
@@ -186,8 +189,18 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
     }
     const db = drizzle(env.DB, { schema });
     const [album] = await db
-      .select()
+      .select({
+        coverPhotoId: albums.coverPhotoId,
+        coverStorageKey: photos.storageKey,
+        coverThumbnailKey: photos.thumbnailKey,
+        description: albums.description,
+        id: albums.id,
+        slug: albums.slug,
+        title: albums.title,
+        visibility: albums.visibility,
+      })
       .from(albums)
+      .leftJoin(photos, eq(photos.id, coverPhotoId))
       .where(and(eq(albums.slug, data.slug), eq(albums.userId, userId)))
       .limit(1);
     if (!album) {
@@ -229,6 +242,44 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
       })),
       success: true,
     } as const;
+  });
+
+const setAlbumCoverInput = z.object({
+  albumId: z.string().min(1),
+  photoId: z.string().min(1).nullable(),
+});
+
+export const setAlbumCover = createServerFn({ method: "POST" })
+  .validator(setAlbumCoverInput)
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+
+    const album = await findOwnedAlbum(db, data.albumId, userId);
+    if (!album) {
+      return { error: "アルバムが見つかりません", success: false } as const;
+    }
+
+    if (data.photoId) {
+      const [member] = await db
+        .select({ photoId: albumPhotos.photoId })
+        .from(albumPhotos)
+        .where(and(eq(albumPhotos.albumId, album.id), eq(albumPhotos.photoId, data.photoId)))
+        .limit(1);
+      if (!member) {
+        return { error: "この写真はアルバムに含まれていません", success: false } as const;
+      }
+    }
+
+    await db
+      .update(albums)
+      .set({ coverPhotoId: data.photoId, updatedAt: new Date() })
+      .where(eq(albums.id, album.id));
+
+    return { success: true } as const;
   });
 
 const addPhotosInput = z.object({
@@ -280,6 +331,8 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
       inserted += result.length;
     }
 
+    await db.update(albums).set({ updatedAt: new Date() }).where(eq(albums.id, album.id));
+
     return { inserted, success: true } as const;
   });
 
@@ -313,6 +366,12 @@ export const removePhotosFromAlbum = createServerFn({ method: "POST" })
         .returning({ photoId: albumPhotos.photoId });
       removed += result.length;
     }
+
+    const coverRemoved = album.coverPhotoId !== null && data.photoIds.includes(album.coverPhotoId);
+    await db
+      .update(albums)
+      .set({ coverPhotoId: coverRemoved ? null : album.coverPhotoId, updatedAt: new Date() })
+      .where(eq(albums.id, album.id));
 
     return { removed, success: true } as const;
   });
