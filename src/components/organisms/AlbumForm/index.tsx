@@ -83,7 +83,6 @@ export const AlbumForm = ({
             label="終了年月"
             type="month"
             placeholder="2026-05"
-            description="開始と同じ場合は空欄で構いません"
             value={periodEnd}
             onChange={(e) => setPeriodEnd(e.currentTarget.value)}
             error={periodInvalid ? "終了年月は開始年月以降にしてください" : undefined}

@@ -396,50 +396,6 @@ export const updatePhotoLocation = createServerFn({ method: "POST" })
     return { id: data.id, success: true } as const;
   });
 
-export const backfillContentHashes = createServerFn({ method: "POST" })
-  .validator(z.object({ limit: z.number().int().min(1).max(20).default(20) }))
-  .handler(async ({ data }) => {
-    const { userId } = await auth();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
-    const targets = await db
-      .select({ id: photos.id, storageKey: photos.storageKey })
-      .from(photos)
-      .where(and(eq(photos.userId, userId), isNull(photos.contentHash)))
-      .limit(data.limit);
-
-    let processed = 0;
-    for (const target of targets) {
-      // R2 から 1 件ずつ読み込むためメモリを抑えて逐次処理する
-      // eslint-disable-next-line no-await-in-loop
-      const obj = await env.MY_BUCKET.get(target.storageKey);
-      if (!obj) {
-        continue;
-      }
-      // eslint-disable-next-line no-await-in-loop
-      const digest = await crypto.subtle.digest("SHA-256", await obj.arrayBuffer());
-      const contentHash = [...new Uint8Array(digest)]
-        .map((byte) => byte.toString(16).padStart(2, "0"))
-        .join("");
-      // eslint-disable-next-line no-await-in-loop
-      await db
-        .update(photos)
-        .set({ contentHash })
-        .where(and(eq(photos.id, target.id), eq(photos.userId, userId)))
-        .catch(() => {});
-      processed += 1;
-    }
-
-    const [remaining] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(photos)
-      .where(and(eq(photos.userId, userId), isNull(photos.contentHash)));
-
-    return { processed, remaining: remaining?.count ?? 0, success: true } as const;
-  });
-
 export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photoIds: string[]) => {
   if (photoIds.length === 0) {
     return 0;
