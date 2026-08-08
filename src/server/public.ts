@@ -12,7 +12,7 @@ export const coverPhotoId = sql`(
       ${albums}.cover_photo_id,
       (SELECT ap.photo_id FROM album_photos ap
         WHERE ap.album_id = ${albums}.id
-        ORDER BY ap.sort_order ASC, ap.added_at ASC
+        ORDER BY ap.added_at ASC
         LIMIT 1)
     )
   )`;

@@ -102,12 +102,11 @@ export const albumPhotos = sqliteTable(
     photoId: text("photo_id")
       .notNull()
       .references(() => photos.id, { onDelete: "cascade" }),
-    sortOrder: integer("sort_order"),
   },
   (t) => [
     primaryKey({ columns: [t.albumId, t.photoId] }),
     index("album_photos_photo_id_idx").on(t.photoId),
-    index("album_photos_cover_idx").on(t.albumId, t.sortOrder, t.addedAt),
+    index("album_photos_cover_idx").on(t.albumId, t.addedAt),
   ],
 );
 
