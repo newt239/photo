@@ -9,8 +9,10 @@ import {
   UploadIcon,
 } from "lucide-react";
 
+import classes from "./AdminNavbar.module.css";
+
 type AdminNavbarProps = {
-  albums: { id: string; slug: string; title: string | null }[];
+  albums: { id: string; slug: string; title: string | null; description: string | null }[];
   onNavigate: () => void;
 };
 
@@ -53,7 +55,12 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
               renderRoot={(props) => (
                 <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
               )}
-              label={album.title ?? "(無題)"}
+              label={
+                album.description
+                  ? `${album.title ?? "(無題)"} - ${album.description}`
+                  : (album.title ?? "(無題)")
+              }
+              classNames={{ label: classes.albumLabel }}
               leftSection={<FolderIcon size={16} />}
               active={Boolean(
                 matchRoute({ params: { slug: album.slug }, to: "/admin/albums/$slug" }),

@@ -56,7 +56,12 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
               ) : (
                 <div className={classes.placeholder} />
               )}
-              <span className={classes.title}>{album.title ?? "(無題)"}</span>
+              <span className={classes.caption}>
+                <span className={classes.title}>{album.title ?? "(無題)"}</span>
+                {album.description ? (
+                  <span className={classes.description}>{album.description}</span>
+                ) : null}
+              </span>
             </Link>
           );
         })}

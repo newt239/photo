@@ -28,8 +28,9 @@ export const Route = createFileRoute("/api/og/albums/$slug")({
           return new Response("Not Found", { status: 404 });
         }
 
+        const coverStorageKey = album.coverStorageKey ?? album.fallbackStorageKey;
         return ogImageResponse(request, {
-          coverStorageKey: album.coverStorageKey ?? album.fallbackStorageKey,
+          coverStorageKeys: coverStorageKey ? [coverStorageKey] : [],
           description: album.description,
           title: album.title ?? "アルバム",
         });
