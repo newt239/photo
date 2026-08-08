@@ -112,11 +112,11 @@ const renderOgImage = async ({ title, subheading: sub, coverStorageKeys }: Rende
 
 export const ogImageResponse = async (request: Request, input: RenderOgImageInput) => {
   const headers = {
-    "Cache-Control": "public, max-age=31536000, immutable",
+    "Cache-Control": "public, max-age=86400",
     "Content-Type": "image/png",
     "X-Content-Type-Options": "nosniff",
   };
-  const cache = await caches.open("og");
+  const cache = await caches.open("og-image");
   const cached = await cache.match(request);
   // キャッシュとキャッシュに入れた Response はヘッダーが不変になり後段のミドルウェアが失敗する
   if (cached) {

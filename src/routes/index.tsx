@@ -21,12 +21,7 @@ const IndexPage = () => {
 export const Route = createFileRoute("/")({
   component: IndexPage,
   head: () => ({
-    meta: [
-      { title: "photos.newt239.dev" },
-      { content: "撮った写真を並べて置いておく場所", name: "description" },
-      { content: "撮った写真を並べて置いておく場所", property: "og:description" },
-      { content: env.VITE_SITE_URL, property: "og:url" },
-    ],
+    meta: [{ title: "photos.newt239.dev" }, { content: env.VITE_SITE_URL, property: "og:url" }],
   }),
   loader: async () => ({
     albums: await listPublicAlbums(),
