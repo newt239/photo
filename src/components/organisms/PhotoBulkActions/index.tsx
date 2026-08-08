@@ -63,7 +63,7 @@ export const PhotoBulkActions = ({
         <Menu.Dropdown>
           <Menu.Label>選択</Menu.Label>
           <Menu.Item leftSection={<CheckCheckIcon size={14} />} onClick={onSelectAll}>
-            すべて選択する
+            このページをすべて選択する
           </Menu.Item>
           <Menu.Item leftSection={<XIcon size={14} />} onClick={onCancel}>
             選択を解除する

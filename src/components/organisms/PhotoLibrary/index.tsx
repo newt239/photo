@@ -162,7 +162,9 @@ export const PhotoLibrary = ({
             selectedCount={selected.size}
             submitting={submitting}
             albums={album ? albums.filter((a) => a.id !== album.id) : albums}
-            onSelectAll={() => setSelected(new Set(photos.map((p) => p.id)))}
+            onSelectAll={() =>
+              setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]))
+            }
             onCancel={() => {
               setSelected(new Set());
               setError(null);

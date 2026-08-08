@@ -1,7 +1,7 @@
 import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -138,55 +138,6 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     }
 
     return { id: data.photoId, success: true } as const;
-  });
-
-const listMyPhotosInput = z.object({
-  limit: z.number().int().positive().max(200).optional(),
-  order: z.enum(["asc", "desc"]).default("desc"),
-});
-
-export const listMyPhotos = createServerFn({ method: "GET" })
-  .validator(listMyPhotosInput)
-  .handler(async ({ data }) => {
-    const { userId } = await auth();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
-    const direction = data.order === "asc" ? asc : desc;
-    const rows = await db
-      .select({
-        alt: photos.alt,
-        caption: photos.caption,
-        height: photos.height,
-        id: photos.id,
-        latitude: photos.latitude,
-        longitude: photos.longitude,
-        storageKey: photos.storageKey,
-        takenAt: photos.takenAt,
-        width: photos.width,
-      })
-      .from(photos)
-      .where(eq(photos.userId, userId))
-      .orderBy(
-        sql`${photos}.taken_at IS NULL`,
-        direction(photos.takenAt),
-        direction(photos.uploadedAt),
-      )
-      .limit(data.limit ?? 200);
-    return {
-      photos: rows.map((row) => ({
-        alt: row.alt,
-        caption: row.caption,
-        hasLocation: row.latitude !== null && row.longitude !== null,
-        height: row.height,
-        id: row.id,
-        storageKey: row.storageKey,
-        takenAt: row.takenAt?.toISOString() ?? null,
-        width: row.width,
-      })),
-      success: true,
-    } as const;
   });
 
 export const getPhoto = createServerFn({ method: "GET" })
@@ -494,7 +445,7 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
 });
 
 const deletePhotosInput = z.object({
-  ids: z.array(z.string().min(1)).min(1).max(200),
+  ids: z.array(z.string().min(1)).min(1).max(500),
 });
 
 export const deletePhotos = createServerFn({ method: "POST" })
