@@ -122,32 +122,6 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
                 <div className={classes.group}>
                   <button
                     type="button"
-                    className={classes.button}
-                    onClick={() => move(-1)}
-                    disabled={photos.length < 2}
-                    aria-label="前の写真を表示する"
-                  >
-                    <ChevronLeftIcon size={14} />
-                    <span className={classes.buttonLabel}>前へ戻る</span>
-                  </button>
-                  <span className={classes.counter}>
-                    {index + 1} / {photos.length}
-                  </span>
-                  <button
-                    type="button"
-                    className={classes.button}
-                    onClick={() => move(1)}
-                    disabled={photos.length < 2}
-                    aria-label="次の写真を表示する"
-                  >
-                    <span className={classes.buttonLabel}>次へ進む</span>
-                    <ChevronRightIcon size={14} />
-                  </button>
-                </div>
-
-                <div className={`${classes.group} ${classes.zoomGroup}`}>
-                  <button
-                    type="button"
                     className={classes.iconButton}
                     onClick={() => zoomTo(scale / 1.5)}
                     disabled={scale <= 0.25}
@@ -171,6 +145,32 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
                     aria-label="拡大する"
                   >
                     <ZoomInIcon size={16} />
+                  </button>
+                </div>
+
+                <div className={classes.group}>
+                  <button
+                    type="button"
+                    className={classes.button}
+                    onClick={() => move(-1)}
+                    disabled={photos.length < 2}
+                    aria-label="前の写真を表示する"
+                  >
+                    <ChevronLeftIcon size={14} />
+                    <span className={classes.buttonLabel}>前へ戻る</span>
+                  </button>
+                  <span className={classes.counter}>
+                    {index + 1} / {photos.length}
+                  </span>
+                  <button
+                    type="button"
+                    className={classes.button}
+                    onClick={() => move(1)}
+                    disabled={photos.length < 2}
+                    aria-label="次の写真を表示する"
+                  >
+                    <span className={classes.buttonLabel}>次へ進む</span>
+                    <ChevronRightIcon size={14} />
                   </button>
                 </div>
               </div>

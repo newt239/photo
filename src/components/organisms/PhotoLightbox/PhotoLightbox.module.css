@@ -228,10 +228,6 @@
   .group {
     justify-content: space-between;
   }
-
-  .zoomGroup {
-    order: -1;
-  }
 }
 
 @media (hover: hover) {
