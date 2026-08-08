@@ -90,8 +90,13 @@ export const usePhotoZoom = (photoKey: string | null) => {
   useEffect(() => {
     const stage = stageRef.current;
     const handleWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) {
+        return;
+      }
       event.preventDefault();
-      zoomTo(viewRef.current.scale * Math.exp(-event.deltaY / 300), {
+      const delta = (event.deltaY || event.deltaX) * (event.deltaMode === 0 ? 1 : 16);
+      const step = Math.min(25, Math.max(-25, delta)) / 100;
+      zoomTo(viewRef.current.scale * Math.exp(-step), {
         x: event.clientX,
         y: event.clientY,
       });

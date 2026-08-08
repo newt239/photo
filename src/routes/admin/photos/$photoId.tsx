@@ -7,7 +7,12 @@ import { getPhoto, getPhotoNeighbors } from "#/server/photos.ts";
 const PhotoDetailPage = () => {
   const { neighbors, photo } = Route.useLoaderData();
   return (
-    <PhotoDetailView photo={photo} previousId={neighbors.previousId} nextId={neighbors.nextId} />
+    <PhotoDetailView
+      key={photo.id}
+      photo={photo}
+      previousId={neighbors.previousId}
+      nextId={neighbors.nextId}
+    />
   );
 };
 

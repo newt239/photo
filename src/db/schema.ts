@@ -46,6 +46,7 @@ export const photos = sqliteTable(
     longitude: real(),
     mimeType: text("mime_type").notNull(),
     orientation: integer(),
+    placeholder: text(),
     rawExif: text("raw_exif"),
     shutterSpeed: text("shutter_speed"),
     storageKey: text("storage_key").notNull(),

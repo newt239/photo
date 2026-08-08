@@ -1,6 +1,7 @@
 import { AppShell, Divider, Group, NavLink, ScrollArea, Text } from "@mantine/core";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import {
+  ChartColumnIcon,
   FolderIcon,
   FolderPlusIcon,
   ImagesIcon,
@@ -113,6 +114,14 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           onClick={onNavigate}
         />
         <Divider my="xs" />
+        <NavLink
+          component={Link}
+          to="/admin/stats"
+          label="統計"
+          leftSection={<ChartColumnIcon size={16} />}
+          active={Boolean(matchRoute({ to: "/admin/stats" }))}
+          onClick={onNavigate}
+        />
         <NavLink
           component={Link}
           to="/admin/settings"

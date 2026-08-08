@@ -1,6 +1,9 @@
+import { useMemo } from "react";
+
 import { FocusTrap, Portal, RemoveScroll } from "@mantine/core";
 import { useFocusReturn, useHotkeys } from "@mantine/hooks";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { thumbHashToDataURL } from "thumbhash";
 
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { usePhotoZoom } from "#/lib/photo-zoom.ts";
@@ -11,7 +14,10 @@ type LightboxPhoto = {
   id: string;
   caption: string | null;
   alt: string | null;
+  placeholder: string | null;
   storageKey: string;
+  width: number;
+  height: number;
 };
 
 type PhotoLightboxProps = {
@@ -25,6 +31,13 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
   const photo = index === null ? undefined : photos[index];
   const { canvasRef, reset, scale, stageProps, stageRef, transform, zoomTo } = usePhotoZoom(
     photo?.id ?? null,
+  );
+  const blur = useMemo(
+    () =>
+      photo?.placeholder
+        ? thumbHashToDataURL(Uint8Array.from(atob(photo.placeholder), (c) => c.codePointAt(0) ?? 0))
+        : null,
+    [photo?.placeholder],
   );
 
   const handleClose = () => {
@@ -87,7 +100,15 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
                   className={classes.image}
                   src={photoImageUrl(photo.storageKey, 2048)}
                   alt={photo.alt ?? photo.caption ?? ""}
+                  width={photo.width}
+                  height={photo.height}
                   draggable={false}
+                  style={{
+                    backgroundImage: blur ? `url(${blur})` : undefined,
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: "contain",
+                  }}
                 />
               </div>
             </div>
@@ -99,32 +120,6 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
 
               <div className={classes.actions}>
                 <div className={classes.group}>
-                  <button
-                    type="button"
-                    className={classes.button}
-                    onClick={() => move(-1)}
-                    disabled={photos.length < 2}
-                    aria-label="前の写真を表示する"
-                  >
-                    <ChevronLeftIcon size={14} />
-                    <span className={classes.buttonLabel}>前へ戻る</span>
-                  </button>
-                  <span className={classes.counter}>
-                    {index + 1} / {photos.length}
-                  </span>
-                  <button
-                    type="button"
-                    className={classes.button}
-                    onClick={() => move(1)}
-                    disabled={photos.length < 2}
-                    aria-label="次の写真を表示する"
-                  >
-                    <span className={classes.buttonLabel}>次へ進む</span>
-                    <ChevronRightIcon size={14} />
-                  </button>
-                </div>
-
-                <div className={`${classes.group} ${classes.zoomGroup}`}>
                   <button
                     type="button"
                     className={classes.iconButton}
@@ -150,6 +145,32 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
                     aria-label="拡大する"
                   >
                     <ZoomInIcon size={16} />
+                  </button>
+                </div>
+
+                <div className={classes.group}>
+                  <button
+                    type="button"
+                    className={classes.button}
+                    onClick={() => move(-1)}
+                    disabled={photos.length < 2}
+                    aria-label="前の写真を表示する"
+                  >
+                    <ChevronLeftIcon size={14} />
+                    <span className={classes.buttonLabel}>前へ戻る</span>
+                  </button>
+                  <span className={classes.counter}>
+                    {index + 1} / {photos.length}
+                  </span>
+                  <button
+                    type="button"
+                    className={classes.button}
+                    onClick={() => move(1)}
+                    disabled={photos.length < 2}
+                    aria-label="次の写真を表示する"
+                  >
+                    <span className={classes.buttonLabel}>次へ進む</span>
+                    <ChevronRightIcon size={14} />
                   </button>
                 </div>
               </div>
