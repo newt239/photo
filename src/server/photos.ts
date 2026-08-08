@@ -298,6 +298,38 @@ export const applyPhotoLocations = createServerFn({ method: "POST" })
     return { success: true, updated: results.flat().length } as const;
   });
 
+const draftItemSchema = z.object({
+  alt: z.string().max(500).nullable(),
+  caption: z.string().max(2000).nullable(),
+  id: z.string().min(1),
+});
+
+const updatePhotosInput = z.object({
+  items: z.array(draftItemSchema).min(1).max(100),
+});
+
+export const updatePhotos = createServerFn({ method: "POST" })
+  .validator(updatePhotosInput)
+  .handler(async ({ data }) => {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: "ログインしてください", success: false } as const;
+    }
+    const db = drizzle(env.DB, { schema });
+    const [first, ...rest] = data.items.map((item) =>
+      db
+        .update(photos)
+        .set({ alt: item.alt, caption: item.caption })
+        .where(and(eq(photos.id, item.id), eq(photos.userId, userId)))
+        .returning({ id: photos.id }),
+    );
+    if (!first) {
+      return { error: "EMPTY", success: false } as const;
+    }
+    const results = await db.batch([first, ...rest]);
+    return { success: true, updated: results.flat().length } as const;
+  });
+
 const updatePhotoInput = z.object({
   alt: z.string().max(500).nullable(),
   caption: z.string().max(2000).nullable(),

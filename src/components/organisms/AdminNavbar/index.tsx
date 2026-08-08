@@ -6,6 +6,7 @@ import {
   ImagesIcon,
   MapPinIcon,
   SettingsIcon,
+  SparklesIcon,
   UploadIcon,
 } from "lucide-react";
 
@@ -96,6 +97,14 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
           label="位置情報を設定する"
           leftSection={<MapPinIcon size={16} />}
           active={Boolean(matchRoute({ to: "/admin/photos/geotag" }))}
+          onClick={onNavigate}
+        />
+        <NavLink
+          component={Link}
+          to="/admin/photos/captions"
+          label="説明を生成する"
+          leftSection={<SparklesIcon size={16} />}
+          active={Boolean(matchRoute({ to: "/admin/photos/captions" }))}
           onClick={onNavigate}
         />
         <Divider my="xs" />
