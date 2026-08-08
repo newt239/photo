@@ -112,6 +112,7 @@ src/
 - ルートはドット記法ではなくディレクトリで階層を表現してください。`<Outlet />` を持つレイアウトは `route.tsx`、末尾に `_` が付いたセグメント（例: `albums_/`）は親レイアウトにネストさせない非ネストルートです。`createFileRoute` の引数はディレクトリ構成と一致させてください。
 - コンポーネントは `components/<層>/` の下に PascalCase のディレクトリを作り、その下に `index.tsx` と CSS Module を置いてください（例: `components/molecules/PhotoCard/index.tsx` と `components/molecules/PhotoCard/PhotoCard.module.css`）。`index.tsx` 以外に再エクスポートだけのバレルファイルを作ってはなりません。
 - 層は再利用される回数ではなく粒度で決めてください。`atoms` は単一の要素で状態もドメイン知識も持たないもの、`molecules` は atoms を組み合わせた単一目的の UI、`organisms` は複数の状態や server function を扱う独立したセクションです。
+- 一覧の列数は JS で幅を計測して決めてはなりません。SSR した HTML と計測後で列数が変わり初期表示がちらつきます。列数ごとの位置を CSS カスタムプロパティとして出力し、どれを使うかは CSS のコンテナクエリに決めさせてください（`AlbumMasonry` / `PhotoGallery` / `PhotoMasonry` が実装例です）。
 - Atomic Design の templates（レイアウト）と pages は `components` に置かず、`src/routes` に書いてください。`route.tsx` がテンプレート、各ルートの `component` がページに相当します。
 - コンポーネント名は所在ではなく役割で付けてください（`ProfileSection` ではなく `UserProfile`、`PublicAlbumGallery` ではなく `PhotoGallery`）。
 - コンポーネント固有のスタイルはコンポーネント名の CSS Module（例: `PhotoCard.module.css`）に記述してください。

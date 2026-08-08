@@ -1,13 +1,105 @@
 .masonry {
+  container-name: library;
   container-type: inline-size;
   width: 100%;
 }
 
 .canvas {
+  --gap: var(--mantine-spacing-md);
+  --cols: 1;
+  --col-width: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
   position: relative;
   width: 100%;
+  height: calc(var(--col-width) * var(--h1) + var(--gap) * var(--gr1));
 }
 
 .item {
   position: absolute;
+  left: calc((var(--col-width) + var(--gap)) * var(--c1));
+  top: calc(var(--col-width) * var(--y1) + var(--gap) * var(--r1));
+  width: var(--col-width);
+}
+
+@container library (min-width: 480px) {
+  .canvas {
+    --cols: 2;
+    height: calc(var(--col-width) * var(--h2) + var(--gap) * var(--gr2));
+  }
+
+  .item {
+    left: calc((var(--col-width) + var(--gap)) * var(--c2));
+    top: calc(var(--col-width) * var(--y2) + var(--gap) * var(--r2));
+  }
+}
+
+@container library (min-width: 720px) {
+  .canvas {
+    --cols: 3;
+    height: calc(var(--col-width) * var(--h3) + var(--gap) * var(--gr3));
+  }
+
+  .item {
+    left: calc((var(--col-width) + var(--gap)) * var(--c3));
+    top: calc(var(--col-width) * var(--y3) + var(--gap) * var(--r3));
+  }
+}
+
+@container library (min-width: 960px) {
+  .canvas {
+    --cols: 4;
+    height: calc(var(--col-width) * var(--h4) + var(--gap) * var(--gr4));
+  }
+
+  .item {
+    left: calc((var(--col-width) + var(--gap)) * var(--c4));
+    top: calc(var(--col-width) * var(--y4) + var(--gap) * var(--r4));
+  }
+}
+
+@container library (min-width: 1200px) {
+  .canvas {
+    --cols: 5;
+    height: calc(var(--col-width) * var(--h5) + var(--gap) * var(--gr5));
+  }
+
+  .item {
+    left: calc((var(--col-width) + var(--gap)) * var(--c5));
+    top: calc(var(--col-width) * var(--y5) + var(--gap) * var(--r5));
+  }
+}
+
+@container library (min-width: 1440px) {
+  .canvas {
+    --cols: 6;
+    height: calc(var(--col-width) * var(--h6) + var(--gap) * var(--gr6));
+  }
+
+  .item {
+    left: calc((var(--col-width) + var(--gap)) * var(--c6));
+    top: calc(var(--col-width) * var(--y6) + var(--gap) * var(--r6));
+  }
+}
+
+@container library (min-width: 1680px) {
+  .canvas {
+    --cols: 7;
+    height: calc(var(--col-width) * var(--h7) + var(--gap) * var(--gr7));
+  }
+
+  .item {
+    left: calc((var(--col-width) + var(--gap)) * var(--c7));
+    top: calc(var(--col-width) * var(--y7) + var(--gap) * var(--r7));
+  }
+}
+
+@container library (min-width: 1920px) {
+  .canvas {
+    --cols: 8;
+    height: calc(var(--col-width) * var(--h8) + var(--gap) * var(--gr8));
+  }
+
+  .item {
+    left: calc((var(--col-width) + var(--gap)) * var(--c8));
+    top: calc(var(--col-width) * var(--y8) + var(--gap) * var(--r8));
+  }
 }

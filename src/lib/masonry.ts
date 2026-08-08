@@ -1,27 +1,3 @@
-import { useRef, useState } from "react";
-
-import { useIsomorphicEffect } from "@mantine/hooks";
-
-export const useContainerWidth = () => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [width, setWidth] = useState(0);
-
-  // 列数はコンテナの実寸からしか決まらないため描画前に計測し ResizeObserver で追従する
-  useIsomorphicEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      setWidth(entries[0]?.contentRect.width ?? 0);
-    });
-    const container = ref.current;
-    if (container) {
-      setWidth(container.getBoundingClientRect().width);
-      observer.observe(container);
-    }
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, width };
-};
-
 export const masonryLayout = <T extends { height: number; width: number }>(
   items: T[],
   columns: number,
