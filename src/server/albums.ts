@@ -1,7 +1,7 @@
 import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, ne, sql, type SQL } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -168,13 +168,30 @@ export const updateAlbum = createServerFn({ method: "POST" })
   });
 
 export const listMyAlbums = createServerFn({ method: "GET" })
-  .validator(z.object({ limit: z.number().int().positive().max(200).optional() }))
+  .validator(
+    z.object({
+      limit: z.number().int().positive().max(200).optional(),
+      q: z.string().max(100).optional(),
+      year: z
+        .string()
+        .regex(/^\d{4}$/)
+        .optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { userId } = await auth();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
     const db = drizzle(env.DB, { schema });
+    const conditions: SQL[] = [eq(albums.userId, userId)];
+    if (data.q) {
+      const pattern = `%${data.q.replaceAll(/[%_\\]/g, String.raw`\$&`)}%`;
+      conditions.push(sql`${albums}.title LIKE ${pattern} ESCAPE '\'`);
+    }
+    if (data.year) {
+      conditions.push(like(albums.periodStart, `${data.year}-%`));
+    }
     const rows = await db
       .select({
         coverPhotoId: albums.coverPhotoId,
@@ -193,7 +210,7 @@ export const listMyAlbums = createServerFn({ method: "GET" })
       })
       .from(albums)
       .leftJoin(photos, eq(photos.id, coverPhotoId))
-      .where(eq(albums.userId, userId))
+      .where(and(...conditions))
       .orderBy(
         sql`${albums}.period_start IS NULL`,
         desc(albums.periodStart),
