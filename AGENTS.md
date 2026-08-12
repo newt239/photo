@@ -57,17 +57,20 @@
 
 Clerk の本番インスタンスは primary domain `newt239.dev` とそのサブドメインしか redirect 先として許可しないため、`*.workers.dev` のプレビュー URL では本番キーだとログインできません。プレビューでは Clerk の Development インスタンスを使います。
 
-Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。このバージョンは接続先の Worker `photos` の上に載ります。`wrangler.jsonc` に別環境を書いても CI が Worker 名を `photos` に上書きするため、別 Worker には出せません。そのためキーはバージョン単位で上書きします。
+Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。このバージョンは接続先の Worker `photos` の上に載ります。`wrangler.jsonc` に別環境を書いても CI が Worker 名を `photos` に上書きするため、別 Worker には出せません。
+
+本番の secret と同じ名前を `--var` で上書きしてはなりません。一度それで本番の `CLERK_SECRET_KEY` と `VITE_CLERK_PUBLISHABLE_KEY` が Worker から消え、全リクエストが 500 になりました。プレビュー用の値は別名で渡し、コード側で優先します。
 
 Version command は次のとおりです。
 
 ```
-npx wrangler versions upload --var VITE_CLERK_PUBLISHABLE_KEY:$VITE_CLERK_PUBLISHABLE_KEY_PREVIEW --var CLERK_SECRET_KEY:$CLERK_SECRET_KEY_PREVIEW
+npx wrangler versions upload --var CLERK_PUBLISHABLE_KEY_PREVIEW:$VITE_CLERK_PUBLISHABLE_KEY_PREVIEW --var CLERK_SECRET_KEY_PREVIEW:$CLERK_SECRET_KEY_PREVIEW
 ```
 
-- ビルド変数に Development の `VITE_CLERK_PUBLISHABLE_KEY_PREVIEW` と `CLERK_SECRET_KEY_PREVIEW` を追加します。本番用の変数は触りません
-- `photos` のランタイムには `VITE_CLERK_PUBLISHABLE_KEY` が secret として載っており、Clerk のサーバー側はビルド時の埋め込みよりこちらを優先します。`--var` で上書きするのはこのためです
-- publishable key はバンドルにも焼き込まれるため、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ差し替えます
+- `src/start.ts` が `clerkMiddleware` に `CLERK_PUBLISHABLE_KEY_PREVIEW` / `CLERK_SECRET_KEY_PREVIEW` を優先して渡します。無ければ本番の値にフォールバックします
+- この 2 つは `VITE_` を付けません。`VITE_` を付けるとビルド時にバンドルへ焼き込まれ、ビルド変数が production と preview で共通なので本番のビルドにも入ってしまいます
+- 同じ理由で、この 2 つを Worker の secret として登録してはなりません。バージョン単位の `--var` でのみ渡します
+- publishable key はバンドルにも焼き込まれるため、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ `VITE_CLERK_PUBLISHABLE_KEY` を差し替えます
 - `--var` はバージョン単位の平文の変数になり、ダッシュボードから値が見えます。本番の値をここに渡してはなりません
 - D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
 

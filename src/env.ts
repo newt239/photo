@@ -38,7 +38,10 @@ export const env = createEnv({
   },
 
   server: {
+    // プレビューだけ Clerk の Development インスタンスを使うためバージョン単位で渡される
+    CLERK_PUBLISHABLE_KEY_PREVIEW: z.string().optional(),
     CLERK_SECRET_KEY: z.string().min(1),
+    CLERK_SECRET_KEY_PREVIEW: z.string().optional(),
     CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
     R2_ACCESS_KEY_ID: z.string().min(1),
     R2_SECRET_ACCESS_KEY: z.string().min(1),
