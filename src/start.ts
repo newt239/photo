@@ -1,7 +1,13 @@
 import { clerkMiddleware } from "@clerk/tanstack-react-start/server";
 import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/react-start";
 
-import { env } from "#/env.ts";
+// このファイルはクライアントのバンドルにも入るため env.ts のサーバー変数には触れない
+const previewClerkKeys = import.meta.env.SSR
+  ? {
+      publishableKey: process.env.CLERK_PUBLISHABLE_KEY_PREVIEW,
+      secretKey: process.env.CLERK_SECRET_KEY_PREVIEW,
+    }
+  : {};
 
 const securityHeadersMiddleware = createMiddleware({ type: "request" }).server(async ({ next }) => {
   const result = await next();
@@ -18,9 +24,6 @@ export const startInstance = createStart(() => ({
   requestMiddleware: [
     securityHeadersMiddleware,
     createCsrfMiddleware({ filter: (ctx) => ctx.handlerType === "serverFn" }),
-    clerkMiddleware({
-      publishableKey: env.CLERK_PUBLISHABLE_KEY_PREVIEW ?? env.VITE_CLERK_PUBLISHABLE_KEY,
-      secretKey: env.CLERK_SECRET_KEY_PREVIEW ?? env.CLERK_SECRET_KEY,
-    }),
+    clerkMiddleware(previewClerkKeys),
   ],
 }));
