@@ -53,6 +53,24 @@
 
 `drizzle/` にマイグレーションを追加した変更をデプロイする際は、必ず `--remote` の適用を先に実行してください。適用を忘れると本番のスキーマだけが古いまま残り、ローカルでは再現しない実行時エラーになります。未適用のマイグレーションは `pnpm wrangler d1 migrations list photo --remote` で確認できます。
 
+### プレビューデプロイ
+
+Clerk の本番インスタンスは primary domain `newt239.dev` とそのサブドメインしか redirect 先として許可しないため、`*.workers.dev` のプレビュー URL では本番キーだとログインできません。プレビューでは Clerk の Development インスタンスを使います。
+
+Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。このバージョンは接続先の Worker `photos` の上に載ります。`wrangler.jsonc` に別環境を書いても CI が Worker 名を `photos` に上書きするため、別 Worker には出せません。そのためキーはバージョン単位で上書きします。
+
+Version command は次のとおりです。
+
+```
+npx wrangler versions upload --var VITE_CLERK_PUBLISHABLE_KEY:$VITE_CLERK_PUBLISHABLE_KEY_PREVIEW --var CLERK_SECRET_KEY:$CLERK_SECRET_KEY_PREVIEW
+```
+
+- ビルド変数に Development の `VITE_CLERK_PUBLISHABLE_KEY_PREVIEW` と `CLERK_SECRET_KEY_PREVIEW` を追加します。本番用の変数は触りません
+- `photos` のランタイムには `VITE_CLERK_PUBLISHABLE_KEY` が secret として載っており、Clerk のサーバー側はビルド時の埋め込みよりこちらを優先します。`--var` で上書きするのはこのためです
+- publishable key はバンドルにも焼き込まれるため、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ差し替えます
+- `--var` はバージョン単位の平文の変数になり、ダッシュボードから値が見えます。本番の値をここに渡してはなりません
+- D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
+
 ## アーキテクチャ
 
 ### 技術スタック
