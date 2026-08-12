@@ -59,8 +59,9 @@ Clerk の本番インスタンスは primary domain `newt239.dev` とそのサ�
 
 Workers Builds のトリガーは production と preview で別々にビルド変数とデプロイコマンドを持てます。Worker は 1 つのままで、preview トリガー側だけ Development のキーに差し替えます。
 
-- preview トリガーのビルド変数に Development の `VITE_CLERK_PUBLISHABLE_KEY` と `CLERK_SECRET_KEY` を設定します
-- `CLERK_SECRET_KEY` はランタイムに読むためビルド変数だけでは届きません。preview のデプロイコマンドを `pnpm wrangler versions upload --var CLERK_SECRET_KEY:$CLERK_SECRET_KEY` にして、そのバージョンだけ上書きします
+- preview トリガーのビルド変数に Development の `VITE_CLERK_PUBLISHABLE_KEY` と `CLERK_SECRET_KEY_PREVIEW` を設定します
+- secret key はランタイムに読むためビルド変数だけでは届きません。preview のデプロイコマンドを `pnpm wrangler versions upload --var CLERK_SECRET_KEY_PREVIEW:$CLERK_SECRET_KEY_PREVIEW` にして、そのバージョンにだけ渡します
+- 本番の Worker secret `CLERK_SECRET_KEY` と名前を分けているのは、同名の `--var` で上書きできるか不明なためです。`src/env.ts` が `CLERK_SECRET_KEY_PREVIEW` を優先し、`src/start.ts` が `clerkMiddleware` に渡します
 - この `--var` はバージョン単位の平文の変数になり、ダッシュボードから値が見えます。ここに本番の secret を入れてはなりません
 - D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
 
