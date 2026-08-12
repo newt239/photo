@@ -57,14 +57,18 @@
 
 Clerk の本番インスタンスは primary domain `newt239.dev` とそのサブドメインしか redirect 先として許可しないため、`*.workers.dev` のプレビュー URL では本番キーだとログインできません。プレビューでは Clerk の Development インスタンスを使います。
 
-Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。既定ではこれが同一 Worker のバージョンなので本番と同じ vars を参照してしまいます。そこで `wrangler.jsonc` の `env.preview`（Worker 名 `photos-preview`）に向けます。
+Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。このバージョンは接続先の Worker `photos` の上に載ります。`wrangler.jsonc` に別環境を書いても CI が Worker 名を `photos` に上書きするため、別 Worker には出せません。そのためキーはバージョン単位で上書きします。
 
-`@cloudflare/vite-plugin` を使っているため、wrangler は `dist/server/wrangler.json` にリダイレクトされて動きます。この生成物は環境を展開済みなので、**`wrangler deploy --env preview` は効きません**。環境の選択はビルド時に `CLOUDFLARE_ENV` で行います。
+Version command は次のとおりです。
 
-- `infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のとき `CLOUDFLARE_ENV=preview` を立ててビルドします。Version command は既定の `npx wrangler versions upload` のままで、生成された設定が `photos-preview` を向きます
-- `CLERK_SECRET_KEY` などのランタイムの secret は `photos-preview` に本番と同じ名前で設定します。Worker が別なので本番の値とは混ざりません
-- publishable key はビルド時にバンドルへ焼き込まれます。ビルド変数は production と preview で共通の 1 リストなので、本番用の `VITE_CLERK_PUBLISHABLE_KEY` は触らず Development の値を `VITE_CLERK_PUBLISHABLE_KEY_PREVIEW` として追加し、同じ分岐で差し替えます
-- ローカルから `photos-preview` に手で出す場合は `CLOUDFLARE_ENV=preview pnpm run build` の後に `pnpm wrangler deploy` を実行します。`--env` は付けません
+```
+npx wrangler versions upload --var VITE_CLERK_PUBLISHABLE_KEY:$VITE_CLERK_PUBLISHABLE_KEY_PREVIEW --var CLERK_SECRET_KEY:$CLERK_SECRET_KEY_PREVIEW
+```
+
+- ビルド変数に Development の `VITE_CLERK_PUBLISHABLE_KEY_PREVIEW` と `CLERK_SECRET_KEY_PREVIEW` を追加します。本番用の変数は触りません
+- `photos` のランタイムには `VITE_CLERK_PUBLISHABLE_KEY` が secret として載っており、Clerk のサーバー側はビルド時の埋め込みよりこちらを優先します。`--var` で上書きするのはこのためです
+- publishable key はバンドルにも焼き込まれるため、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ差し替えます
+- `--var` はバージョン単位の平文の変数になり、ダッシュボードから値が見えます。本番の値をここに渡してはなりません
 - D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
 
 ## アーキテクチャ
