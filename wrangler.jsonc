@@ -29,5 +29,36 @@
   },
   "observability": {
     "enabled": true
+  },
+  "env": {
+    "preview": {
+      "name": "photos-preview",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "photo",
+          "database_id": "25507ef0-d4a4-46e0-92c0-d5f568d21f06",
+          "migrations_dir": "drizzle"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MY_BUCKET",
+          "bucket_name": "photo",
+          "remote": true
+        }
+      ],
+      "ai": {
+        "binding": "AI",
+        "remote": true
+      },
+      "images": {
+        "binding": "IMAGES",
+        "remote": true
+      },
+      "observability": {
+        "enabled": true
+      }
+    }
   }
 }

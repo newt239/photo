@@ -1,9 +1,6 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-const processEnv: Record<string, string | undefined> =
-  typeof process === "undefined" ? {} : process.env;
-
 export const env = createEnv({
   client: {
     VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -37,9 +34,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     ...import.meta.env,
-    ...processEnv,
-    // プレビューは Clerk の Development インスタンスを使うため別名の値を優先する
-    CLERK_SECRET_KEY: processEnv.CLERK_SECRET_KEY_PREVIEW ?? processEnv.CLERK_SECRET_KEY,
+    ...(typeof process === "undefined" ? {} : process.env),
   },
 
   server: {

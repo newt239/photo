@@ -1,8 +1,6 @@
 import { clerkMiddleware } from "@clerk/tanstack-react-start/server";
 import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/react-start";
 
-import { env } from "#/env.ts";
-
 const securityHeadersMiddleware = createMiddleware({ type: "request" }).server(async ({ next }) => {
   const result = await next();
   // 元の Response はヘッダが immutable な場合があるため作り直してから付与する
@@ -18,6 +16,6 @@ export const startInstance = createStart(() => ({
   requestMiddleware: [
     securityHeadersMiddleware,
     createCsrfMiddleware({ filter: (ctx) => ctx.handlerType === "serverFn" }),
-    clerkMiddleware({ secretKey: env.CLERK_SECRET_KEY }),
+    clerkMiddleware(),
   ],
 }));

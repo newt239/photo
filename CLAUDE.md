@@ -57,12 +57,10 @@
 
 Clerk の本番インスタンスは primary domain `newt239.dev` とそのサブドメインしか redirect 先として許可しないため、`*.workers.dev` のプレビュー URL では本番キーだとログインできません。プレビューでは Clerk の Development インスタンスを使います。
 
-Workers Builds のトリガーは production と preview で別々にビルド変数とデプロイコマンドを持てます。Worker は 1 つのままで、preview トリガー側だけ Development のキーに差し替えます。
+Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。既定ではこれが同一 Worker のバージョンなので本番と同じ vars を参照してしまいます。そこで Version command を `npx wrangler versions upload --env preview` にして、`wrangler.jsonc` の `env.preview`（Worker 名 `photos-preview`）に向けます。
 
-- preview トリガーのビルド変数に Development の `VITE_CLERK_PUBLISHABLE_KEY` と `CLERK_SECRET_KEY_PREVIEW` を設定します
-- secret key はランタイムに読むためビルド変数だけでは届きません。preview のデプロイコマンドを `pnpm wrangler versions upload --var CLERK_SECRET_KEY_PREVIEW:$CLERK_SECRET_KEY_PREVIEW` にして、そのバージョンにだけ渡します
-- 本番の Worker secret `CLERK_SECRET_KEY` と名前を分けているのは、同名の `--var` で上書きできるか不明なためです。`src/env.ts` が `CLERK_SECRET_KEY_PREVIEW` を優先し、`src/start.ts` が `clerkMiddleware` に渡します
-- この `--var` はバージョン単位の平文の変数になり、ダッシュボードから値が見えます。ここに本番の secret を入れてはなりません
+- `CLERK_SECRET_KEY` などのランタイムの secret は `photos-preview` に本番と同じ名前で設定します。Worker が別なので本番の値とは混ざりません
+- publishable key はビルド時にバンドルへ焼き込まれるため `--env preview` では切り替わりません。ビルド変数は production と preview で共通の 1 リストなので、本番用の `VITE_CLERK_PUBLISHABLE_KEY` は触らず Development の値を `VITE_CLERK_PUBLISHABLE_KEY_PREVIEW` として追加し、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ差し替えます
 - D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
 
 ## アーキテクチャ
