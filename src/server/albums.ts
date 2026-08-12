@@ -27,6 +27,12 @@ const coverPhotoId = sql`(
     )
   )`;
 
+const oldestTakenAt = sql`(
+    SELECT MIN(p.taken_at) FROM album_photos ap
+      JOIN photos p ON p.id = ap.photo_id
+      WHERE ap.album_id = ${albums}.id
+  )`;
+
 const findOwnedAlbum = async (
   db: DrizzleD1Database<typeof schema>,
   albumId: string,
@@ -191,6 +197,7 @@ export const listMyAlbums = createServerFn({ method: "GET" })
       .orderBy(
         sql`${albums}.period_start IS NULL`,
         desc(albums.periodStart),
+        desc(oldestTakenAt),
         desc(albums.createdAt),
       )
       .limit(data.limit ?? 200);
