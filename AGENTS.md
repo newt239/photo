@@ -53,6 +53,15 @@
 
 `drizzle/` にマイグレーションを追加した変更をデプロイする際は、必ず `--remote` の適用を先に実行してください。適用を忘れると本番のスキーマだけが古いまま残り、ローカルでは再現しない実行時エラーになります。未適用のマイグレーションは `pnpm wrangler d1 migrations list photo --remote` で確認できます。
 
+### プレビューデプロイ
+
+Clerk の本番インスタンスは primary domain `newt239.dev` とそのサブドメインしか redirect 先として許可しないため、`*.workers.dev` のプレビュー URL では本番キーだとログインできません。プレビューは wrangler の `preview` 環境（Worker 名 `photos-preview`）に配信し、Clerk の Development インスタンスのキーを使います。
+
+- `infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のとき `VITE_CLERK_PUBLISHABLE_KEY` を Development のものに差し替えます
+- D1 と R2 は本番と同じリソースを共有します。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
+- Workers Builds の非本番ブランチのデプロイコマンドは `pnpm wrangler versions upload --env preview` です
+- `CLERK_SECRET_KEY` などのランタイム secret は `photos-preview` 側に個別に設定します
+
 ## アーキテクチャ
 
 ### 技術スタック
