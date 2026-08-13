@@ -67,7 +67,8 @@ Version command は次のとおりです。
 npx wrangler versions upload --var CLERK_PUBLISHABLE_KEY_PREVIEW:$VITE_CLERK_PUBLISHABLE_KEY_PREVIEW --var CLERK_SECRET_KEY_PREVIEW:$CLERK_SECRET_KEY_PREVIEW
 ```
 
-- `src/start.ts` が `clerkMiddleware` に `CLERK_PUBLISHABLE_KEY_PREVIEW` / `CLERK_SECRET_KEY_PREVIEW` を優先して渡します。無ければ本番の値にフォールバックします
+- `src/start.ts` が `clerkMiddleware` に `CLERK_PUBLISHABLE_KEY_PREVIEW` / `CLERK_SECRET_KEY_PREVIEW` を優先して渡します。無ければビルド時に焼き込まれた `VITE_CLERK_PUBLISHABLE_KEY` と Worker secret の `CLERK_SECRET_KEY` を使います
+- `VITE_CLERK_PUBLISHABLE_KEY` は Worker のバインディングとして登録しません。ビルド変数だけで足ります。平文の変数として登録すると `wrangler deploy` のたびに消えます。secret は消えません
 - この 2 つは `VITE_` を付けません。`VITE_` を付けるとビルド時にバンドルへ焼き込まれ、ビルド変数が production と preview で共通なので本番のビルドにも入ってしまいます
 - 同じ理由で、この 2 つを Worker の secret として登録してはなりません。バージョン単位の `--var` でのみ渡します
 - publishable key はバンドルにも焼き込まれるため、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ `VITE_CLERK_PUBLISHABLE_KEY` を差し替えます
