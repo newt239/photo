@@ -5,7 +5,6 @@ import { Link, Outlet, createFileRoute, redirect } from "@tanstack/react-router"
 import { AdminNavbar } from "#/components/organisms/AdminNavbar";
 import { KeyboardShortcutHelp } from "#/components/organisms/KeyboardShortcutHelp";
 import { listMyAlbums } from "#/server/albums.ts";
-import { fetchAuth } from "#/server/auth.ts";
 
 const AdminLayout = () => {
   const { albums } = Route.useLoaderData();
@@ -38,12 +37,6 @@ const AdminLayout = () => {
 };
 
 export const Route = createFileRoute("/admin")({
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth();
-    if (!userId) {
-      throw redirect({ params: { _splat: "" }, to: "/login/$" });
-    }
-  },
   component: AdminLayout,
   loader: async () => {
     const result = await listMyAlbums({ data: {} });
