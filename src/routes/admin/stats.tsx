@@ -37,15 +37,13 @@ const StatsPage = () => {
     },
     { label: "アルバム未所属", value: `${overview.unfiledPhotos.toLocaleString()} 枚` },
   ];
-  const columnCharts = [
+  const charts = [
     { data: months, title: "月別の枚数" },
     { data: hours, title: "時間帯別の枚数" },
     { data: focalLengths, title: "焦点距離" },
     { data: isoValues, title: "ISO 感度" },
-  ];
-  const barCharts = [
-    { data: cameras, title: "カメラ別の枚数" },
-    { data: lenses, title: "レンズ別の枚数" },
+    { data: cameras, title: "カメラ別の枚数", vertical: true },
+    { data: lenses, title: "レンズ別の枚数", vertical: true },
   ];
 
   return (
@@ -65,38 +63,20 @@ const StatsPage = () => {
         ))}
       </SimpleGrid>
 
-      {columnCharts.map((chart) =>
+      {charts.map((chart) =>
         chart.data.length === 0 ? null : (
           <Stack key={chart.title} gap="xs">
             <Title order={4}>{chart.title}</Title>
             <BarChart
-              h={260}
+              h={chart.vertical ? 40 * chart.data.length + 40 : 260}
               data={chart.data}
               dataKey="label"
+              orientation={chart.vertical ? "vertical" : undefined}
               series={[{ color: "blue.6", label: "枚数", name: "count" }]}
               barProps={{ radius: 4 }}
-              gridAxis="y"
+              gridAxis={chart.vertical ? "x" : "y"}
               tickLine="none"
-              unit=" 枚"
-            />
-          </Stack>
-        ),
-      )}
-
-      {barCharts.map((chart) =>
-        chart.data.length === 0 ? null : (
-          <Stack key={chart.title} gap="xs">
-            <Title order={4}>{chart.title}</Title>
-            <BarChart
-              h={40 * chart.data.length + 40}
-              data={chart.data}
-              dataKey="label"
-              orientation="vertical"
-              series={[{ color: "blue.6", label: "枚数", name: "count" }]}
-              barProps={{ radius: 4 }}
-              gridAxis="x"
-              tickLine="none"
-              yAxisProps={{ width: 160 }}
+              yAxisProps={chart.vertical ? { width: 160 } : undefined}
               unit=" 枚"
             />
           </Stack>

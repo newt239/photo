@@ -65,11 +65,15 @@ export const PhotoLibrary = ({
     setLastSelectedId(photoId);
   };
 
+  const selectAll = () => {
+    setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]));
+  };
+
   useHotkeys([
     ["Backspace", () => selected.size > 0 && setModal("delete")],
     ["Delete", () => selected.size > 0 && setModal("delete")],
     ["Escape", () => setSelected(new Set())],
-    ["mod+A", () => setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]))],
+    ["mod+A", selectAll],
   ]);
 
   const handleRemove = async () => {
@@ -185,9 +189,7 @@ export const PhotoLibrary = ({
             albums={album ? albums.filter((a) => a.id !== album.id) : albums}
             modal={modal}
             onModalChange={setModal}
-            onSelectAll={() =>
-              setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]))
-            }
+            onSelectAll={selectAll}
             onCancel={() => {
               setSelected(new Set());
               setError(null);

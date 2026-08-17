@@ -349,7 +349,7 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
     for (let offset = 0; offset < data.photoIds.length; offset += INSERT_CHUNK_SIZE) {
       const rows = data.photoIds
         .slice(offset, offset + INSERT_CHUNK_SIZE)
-        .map((photoId) => ({ albumId: data.albumId, photoId }));
+        .map((photoId) => ({ albumId: album.id, photoId }));
       // 1 行あたり 2 パラメータを使うため挿入はさらに小さく分割する
       const result = await db
         .insert(albumPhotos)
@@ -397,7 +397,7 @@ export const removePhotosFromAlbum = createServerFn({ method: "POST" })
     const coverRemoved = album.coverPhotoId !== null && data.photoIds.includes(album.coverPhotoId);
     await db
       .update(albums)
-      .set({ coverPhotoId: coverRemoved ? null : album.coverPhotoId, updatedAt: new Date() })
+      .set(coverRemoved ? { coverPhotoId: null, updatedAt: new Date() } : { updatedAt: new Date() })
       .where(eq(albums.id, album.id));
 
     return { removed, success: true } as const;

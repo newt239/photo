@@ -207,59 +207,22 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     }
   };
 
-  const backButton =
-    albumSlug === undefined ? (
-      <Button
-        component={Link}
-        to="/admin"
-        variant="subtle"
-        size="xs"
-        w="fit-content"
-        leftSection={<ArrowLeftIcon size={14} />}
-      >
-        写真一覧に戻る
-      </Button>
-    ) : (
-      <Button
-        variant="subtle"
-        size="xs"
-        w="fit-content"
-        leftSection={<ArrowLeftIcon size={14} />}
-        renderRoot={(props) => (
-          <Link {...props} to="/admin/albums/$slug" params={{ slug: albumSlug }} />
-        )}
-      >
-        アルバムに戻る
-      </Button>
-    );
-
-  const goToPhoto = (photoId: string | null) => {
-    if (photoId === null) {
-      return;
-    }
-    if (albumSlug === undefined) {
-      router.navigate({ params: { photoId }, to: "/admin/photos/$photoId" });
-    } else {
-      router.navigate({
-        params: { photoId, slug: albumSlug },
-        to: "/admin/albums/$slug/photos/$photoId",
-      });
-    }
-  };
+  const photoLink = (photoId: string) =>
+    albumSlug === undefined
+      ? ({ params: { photoId }, to: "/admin/photos/$photoId" } as const)
+      : ({
+          params: { photoId, slug: albumSlug },
+          to: "/admin/albums/$slug/photos/$photoId",
+        } as const);
+  const listLink =
+    albumSlug === undefined
+      ? ({ to: "/admin" } as const)
+      : ({ params: { slug: albumSlug }, to: "/admin/albums/$slug" } as const);
 
   useHotkeys([
-    ["ArrowLeft", () => goToPhoto(previousId)],
-    ["ArrowRight", () => goToPhoto(nextId)],
-    [
-      "Escape",
-      () => {
-        if (albumSlug === undefined) {
-          router.navigate({ to: "/admin" });
-        } else {
-          router.navigate({ params: { slug: albumSlug }, to: "/admin/albums/$slug" });
-        }
-      },
-    ],
+    ["ArrowLeft", () => previousId !== null && router.navigate(photoLink(previousId))],
+    ["ArrowRight", () => nextId !== null && router.navigate(photoLink(nextId))],
+    ["Escape", () => router.navigate(listLink)],
   ]);
 
   const neighborButton = (photoId: string | null, direction: "previous" | "next") => {
@@ -277,17 +240,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
       <ActionIcon
         variant="default"
         aria-label={label}
-        renderRoot={(props) =>
-          albumSlug === undefined ? (
-            <Link {...props} to="/admin/photos/$photoId" params={{ photoId }} />
-          ) : (
-            <Link
-              {...props}
-              to="/admin/albums/$slug/photos/$photoId"
-              params={{ photoId, slug: albumSlug }}
-            />
-          )
-        }
+        renderRoot={(props) => <Link {...props} {...photoLink(photoId)} />}
       >
         {icon}
       </ActionIcon>
@@ -297,7 +250,17 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
   return (
     <Stack p="xl" gap="md">
       <Group justify="space-between" align="center" wrap="nowrap">
-        <div>{backButton}</div>
+        <div>
+          <Button
+            variant="subtle"
+            size="xs"
+            w="fit-content"
+            leftSection={<ArrowLeftIcon size={14} />}
+            renderRoot={(props) => <Link {...props} {...listLink} />}
+          >
+            {albumSlug === undefined ? "写真一覧に戻る" : "アルバムに戻る"}
+          </Button>
+        </div>
         <Group gap="xs" wrap="nowrap">
           {currentAlbum && (
             <Menu position="bottom-end" shadow="md" width={240}>
