@@ -13,7 +13,7 @@ import { extractExif, probeDimensions } from "#/lib/image.ts";
 import { encodeThumbHash } from "#/lib/thumbhash.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
-import { createPhotoUpload, finalizePhoto, updatePhoto } from "#/server/photos.ts";
+import { createPhotoUpload, finalizePhoto, updatePhotos } from "#/server/photos.ts";
 
 type UploadState = UploadDraftItem;
 
@@ -226,29 +226,36 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       return;
     }
     setSavingAll(true);
+    for (const target of targets) {
+      updateItem(target.id, { error: undefined, saved: false });
+    }
     try {
-      await Promise.all(
-        targets.map(async (target) => {
-          updateItem(target.id, { error: undefined, saved: false });
-          try {
-            const result = await updatePhoto({
-              data: {
+      for (let offset = 0; offset < targets.length; offset += 100) {
+        // 1 リクエストあたりの件数を抑えるため分割して順に送信する
+        const chunk = targets.slice(offset, offset + 100);
+        try {
+          const result = await updatePhotos({
+            data: {
+              items: chunk.map((target) => ({
                 alt: target.alt.trim() || null,
                 caption: target.caption.trim() || null,
                 id: target.photoId,
-              },
-            });
-            if (result.success) {
-              updateItem(target.id, { saved: true });
-            } else {
-              updateItem(target.id, { error: result.error });
-            }
-          } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            updateItem(target.id, { error: message });
+              })),
+            },
+          });
+          for (const target of chunk) {
+            updateItem(
+              target.id,
+              result.success ? { saved: true } : { error: result.error, saved: false },
+            );
           }
-        }),
-      );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          for (const target of chunk) {
+            updateItem(target.id, { error: message, saved: false });
+          }
+        }
+      }
     } finally {
       setSavingAll(false);
     }

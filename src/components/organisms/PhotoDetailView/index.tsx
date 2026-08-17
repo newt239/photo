@@ -35,7 +35,7 @@ import { photoImageUrl } from "#/lib/image-url.ts";
 import { usePhotoZoom } from "#/lib/photo-zoom.ts";
 import { setAlbumCover } from "#/server/albums.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
-import { updatePhoto } from "#/server/photos.ts";
+import { updatePhotos } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
 
@@ -188,17 +188,17 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     setSubmitting(true);
     setErrorMessage(null);
     try {
-      const result = await updatePhoto({
+      const result = await updatePhotos({
         data: {
-          alt: alt.trim() || null,
-          caption: caption.trim() || null,
-          id: photo.id,
+          items: [{ alt: alt.trim() || null, caption: caption.trim() || null, id: photo.id }],
         },
       });
-      if (result.success) {
-        await router.invalidate();
-      } else {
+      if (!result.success) {
         setErrorMessage(result.error);
+      } else if (result.updated === 0) {
+        setErrorMessage("写真が見つかりません");
+      } else {
+        await router.invalidate();
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));

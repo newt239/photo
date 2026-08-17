@@ -358,31 +358,6 @@ export const updatePhotos = createServerFn({ method: "POST" })
     return { success: true, updated: results.flat().length } as const;
   });
 
-const updatePhotoInput = z.object({
-  alt: z.string().max(500).nullable(),
-  caption: z.string().max(2000).nullable(),
-  id: z.string().min(1),
-});
-
-export const updatePhoto = createServerFn({ method: "POST" })
-  .validator(updatePhotoInput)
-  .handler(async ({ data }) => {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
-    const updated = await db
-      .update(photos)
-      .set({ alt: data.alt, caption: data.caption })
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
-      .returning({ id: photos.id });
-    if (updated.length === 0) {
-      return { error: "NOT_FOUND", success: false } as const;
-    }
-    return { id: data.id, success: true } as const;
-  });
-
 const updatePhotoLocationInput = z
   .object({
     id: z.string().min(1),
