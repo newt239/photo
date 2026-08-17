@@ -20,6 +20,7 @@ export const PhotoMasonry = ({
 }) => {
   const positions = masonryStyle(photos, [1, 2, 3, 4, 5, 6, 7, 8], {
     canvas: classes.canvas,
+    gap: true,
     item: classes.item,
   });
 

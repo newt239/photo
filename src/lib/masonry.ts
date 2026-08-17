@@ -24,26 +24,31 @@ const masonryLayout = <T extends { height: number; width: number }>(
 };
 
 // 列数は CSS のコンテナクエリで決まるため候補ごとの位置を CSS カスタムプロパティとして先に配る
+// 行数は行間に余白を持つ一覧だけが必要とするため gap を渡されたときだけ出力する
 export const masonryStyle = (
   items: { height: number; width: number }[],
   columnCounts: number[],
-  classNames: { canvas: string | undefined; item: string | undefined },
+  {
+    canvas,
+    gap = false,
+    item,
+  }: { canvas: string | undefined; gap?: boolean; item: string | undefined },
 ) => {
   const layouts = columnCounts.map((columns) => masonryLayout(items, columns));
   return [
-    `.${classNames.canvas}{${layouts
+    `.${canvas}{${layouts
       .map(
         (layout, i) =>
-          `--h${i + 1}:${layout.totalHeight};--gr${i + 1}:${Math.max(0, layout.totalRows - 1)};`,
+          `--h${i + 1}:${layout.totalHeight};${gap ? `--gr${i + 1}:${Math.max(0, layout.totalRows - 1)};` : ""}`,
       )
       .join("")}}`,
     ...items.map(
       (_, index) =>
-        `.${classNames.item}[data-index="${index}"]{${layouts
+        `.${item}[data-index="${index}"]{${layouts
           .map((layout, i) => {
             const placed = layout.items[index];
             return placed
-              ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};--r${i + 1}:${placed.rowsAbove};`
+              ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};${gap ? `--r${i + 1}:${placed.rowsAbove};` : ""}`
               : "";
           })
           .join("")}}`,
