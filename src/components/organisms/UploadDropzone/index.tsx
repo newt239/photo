@@ -15,8 +15,6 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
 import { createPhotoUpload, finalizePhoto, updatePhotos } from "#/server/photos.ts";
 
-type UploadState = UploadDraftItem;
-
 const putToR2 = async (url: string, body: Blob, contentType: string) => {
   const res = await fetch(url, {
     body,
@@ -29,7 +27,7 @@ const putToR2 = async (url: string, body: Blob, contentType: string) => {
 };
 
 export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[]) => void }) => {
-  const [items, setItems] = useState<UploadState[]>([]);
+  const [items, setItems] = useState<UploadDraftItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [generatingField, setGeneratingField] = useState<"caption" | "alt" | null>(null);
   const [savingAll, setSavingAll] = useState(false);
@@ -42,7 +40,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   const unsavedCount = items.filter((it) => it.status === "done" && it.photoId && !it.saved).length;
   const preview = items.find((it) => it.id === previewId);
 
-  const updateItem = (id: string, patch: Partial<UploadState>) => {
+  const updateItem = (id: string, patch: Partial<UploadDraftItem>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
@@ -127,7 +125,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   };
 
   const handleDrop = async (files: File[]) => {
-    const batch: { file: File; item: UploadState }[] = files.map((file) => ({
+    const batch: { file: File; item: UploadDraftItem }[] = files.map((file) => ({
       file,
       item: {
         alt: "",

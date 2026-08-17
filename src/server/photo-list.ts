@@ -48,8 +48,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
     }
     if (data.geo === "with") {
       conditions.push(and(isNotNull(photos.latitude), isNotNull(photos.longitude)));
-    }
-    if (data.geo === "without") {
+    } else if (data.geo === "without") {
       conditions.push(missingLocation);
     }
     if (data.camera) {

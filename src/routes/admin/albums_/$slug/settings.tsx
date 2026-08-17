@@ -111,7 +111,7 @@ const AlbumSettingsPage = () => {
           periodEnd: album.periodEnd ?? "",
           periodStart: album.periodStart ?? "",
           slug: album.slug,
-          title: album.title ?? "",
+          title: album.title,
           visibility: album.visibility,
         }}
         slugRequired
