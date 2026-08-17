@@ -168,8 +168,13 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     return { id: data.photoId, success: true } as const;
   });
 
+const getPhotoInput = z.object({
+  albumSlug: z.string().min(1).nullable().optional(),
+  id: z.string().min(1),
+});
+
 export const getPhoto = createServerFn({ method: "GET" })
-  .validator(z.object({ id: z.string().min(1) }))
+  .validator(getPhotoInput)
   .handler(async ({ data }) => {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -206,34 +211,6 @@ export const getPhoto = createServerFn({ method: "GET" })
     if (!row) {
       return { error: "写真が見つかりません", success: false } as const;
     }
-    const albumRows = await db
-      .select({
-        coverPhotoId: albums.coverPhotoId,
-        id: albums.id,
-        slug: albums.slug,
-        title: albums.title,
-        visibility: albums.visibility,
-      })
-      .from(albumPhotos)
-      .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
-      .where(and(eq(albumPhotos.photoId, data.id), eq(albums.userId, userId)))
-      .orderBy(albums.createdAt);
-    return { photo: { ...row, albums: albumRows }, success: true } as const;
-  });
-
-const getPhotoNeighborsInput = z.object({
-  albumSlug: z.string().min(1).nullable().optional(),
-  id: z.string().min(1),
-});
-
-export const getPhotoNeighbors = createServerFn({ method: "GET" })
-  .validator(getPhotoNeighborsInput)
-  .handler(async ({ data }) => {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
     // 全件を取得して JS で探すのを避けるため LAG/LEAD で前後 1 件だけを求める
     const ordering = sql`ORDER BY p.taken_at IS NULL, p.taken_at DESC, p.uploaded_at DESC`;
     const source = data.albumSlug
@@ -242,19 +219,35 @@ export const getPhotoNeighbors = createServerFn({ method: "GET" })
           JOIN albums a ON a.id = ap.album_id
           WHERE a.slug = ${data.albumSlug} AND a.user_id = ${userId}`
       : sql`FROM photos p WHERE p.user_id = ${userId}`;
-    const rows = await db.all<{ next_id: string | null; previous_id: string | null }>(sql`
-      WITH ordered AS (
-        SELECT p.id AS id,
-          LAG(p.id) OVER (${ordering}) AS previous_id,
-          LEAD(p.id) OVER (${ordering}) AS next_id
-        ${source}
-      )
-      SELECT previous_id, next_id FROM ordered WHERE id = ${data.id}
-    `);
-    const [row] = rows;
+    const belongsToOwnedAlbum = and(eq(albumPhotos.photoId, data.id), eq(albums.userId, userId));
+    const [albumRows, neighborRows] = await Promise.all([
+      db
+        .select({
+          coverPhotoId: albums.coverPhotoId,
+          id: albums.id,
+          slug: albums.slug,
+          title: albums.title,
+          visibility: albums.visibility,
+        })
+        .from(albumPhotos)
+        .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
+        .where(belongsToOwnedAlbum)
+        .orderBy(albums.createdAt),
+      db.all<{ next_id: string | null; previous_id: string | null }>(sql`
+        WITH ordered AS (
+          SELECT p.id AS id,
+            LAG(p.id) OVER (${ordering}) AS previous_id,
+            LEAD(p.id) OVER (${ordering}) AS next_id
+          ${source}
+        )
+        SELECT previous_id, next_id FROM ordered WHERE id = ${data.id}
+      `),
+    ]);
+    const [neighbor] = neighborRows;
     return {
-      nextId: row?.next_id ?? null,
-      previousId: row?.previous_id ?? null,
+      nextId: neighbor?.next_id ?? null,
+      photo: { ...row, albums: albumRows },
+      previousId: neighbor?.previous_id ?? null,
       success: true,
     } as const;
   });
