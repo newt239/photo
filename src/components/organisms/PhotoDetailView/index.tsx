@@ -32,6 +32,7 @@ import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
 import { PhotoLocationEditor } from "#/components/organisms/PhotoLocationEditor";
 import { formatBytes, formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
+import { photoDetailLink } from "#/lib/photo-link.ts";
 import { usePhotoZoom } from "#/lib/photo-zoom.ts";
 import { setAlbumCover } from "#/server/albums.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
@@ -207,21 +208,17 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     }
   };
 
-  const photoLink = (photoId: string) =>
-    albumSlug === undefined
-      ? ({ params: { photoId }, to: "/admin/photos/$photoId" } as const)
-      : ({
-          params: { photoId, slug: albumSlug },
-          to: "/admin/albums/$slug/photos/$photoId",
-        } as const);
   const listLink =
     albumSlug === undefined
       ? ({ to: "/admin" } as const)
       : ({ params: { slug: albumSlug }, to: "/admin/albums/$slug" } as const);
 
   useHotkeys([
-    ["ArrowLeft", () => previousId !== null && router.navigate(photoLink(previousId))],
-    ["ArrowRight", () => nextId !== null && router.navigate(photoLink(nextId))],
+    [
+      "ArrowLeft",
+      () => previousId !== null && router.navigate(photoDetailLink(previousId, albumSlug)),
+    ],
+    ["ArrowRight", () => nextId !== null && router.navigate(photoDetailLink(nextId, albumSlug))],
     ["Escape", () => router.navigate(listLink)],
   ]);
 
@@ -240,7 +237,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
       <ActionIcon
         variant="default"
         aria-label={label}
-        renderRoot={(props) => <Link {...props} {...photoLink(photoId)} />}
+        renderRoot={(props) => <Link {...props} {...photoDetailLink(photoId, albumSlug)} />}
       >
         {icon}
       </ActionIcon>

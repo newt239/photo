@@ -4,6 +4,7 @@ import { MapPinOffIcon } from "lucide-react";
 
 import { formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
+import { photoDetailLink } from "#/lib/photo-link.ts";
 
 import classes from "./PhotoTable.module.css";
 
@@ -69,23 +70,9 @@ export const PhotoTable = ({
                   </div>
                 </Table.Td>
                 <Table.Td>
-                  {albumSlug === undefined ? (
-                    <Link
-                      to="/admin/photos/$photoId"
-                      params={{ photoId: p.id }}
-                      className={classes.link}
-                    >
-                      {label}
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/admin/albums/$slug/photos/$photoId"
-                      params={{ photoId: p.id, slug: albumSlug }}
-                      className={classes.link}
-                    >
-                      {label}
-                    </Link>
-                  )}
+                  <Link {...photoDetailLink(p.id, albumSlug)} className={classes.link}>
+                    {label}
+                  </Link>
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm" c="dimmed" lineClamp={2}>

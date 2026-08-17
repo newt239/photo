@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { MapPinOffIcon } from "lucide-react";
 
 import { photoImageUrl, photoSrcSet } from "#/lib/image-url.ts";
+import { photoDetailLink } from "#/lib/photo-link.ts";
 
 import classes from "./PhotoCard.module.css";
 
@@ -43,23 +44,11 @@ export const PhotoCard = ({ photo, albumSlug, selected, onSelect }: PhotoCardPro
       {photo.caption && <span className={classes.caption}>{photo.caption}</span>}
     </div>
   );
-  const link =
-    albumSlug === undefined ? (
-      <Link to="/admin/photos/$photoId" params={{ photoId: photo.id }} className={classes.link}>
-        {thumb}
-      </Link>
-    ) : (
-      <Link
-        to="/admin/albums/$slug/photos/$photoId"
-        params={{ photoId: photo.id, slug: albumSlug }}
-        className={classes.link}
-      >
-        {thumb}
-      </Link>
-    );
   return (
     <div className={classes.card} data-selected={selected || undefined}>
-      {link}
+      <Link {...photoDetailLink(photo.id, albumSlug)} className={classes.link}>
+        {thumb}
+      </Link>
       <Checkbox
         className={classes.check}
         checked={selected}
