@@ -13,6 +13,7 @@ import type { PhotoCardData } from "#/components/molecules/PhotoCard";
 type PhotoTableProps = {
   photos: PhotoCardData[];
   albumSlug?: string;
+  order: "asc" | "desc";
   emptyMessage: string;
   selectedPhotoIds: Set<string>;
   onSelect: (photoId: string, extend: boolean) => void;
@@ -21,6 +22,7 @@ type PhotoTableProps = {
 export const PhotoTable = ({
   photos,
   albumSlug,
+  order,
   emptyMessage,
   selectedPhotoIds,
   onSelect,
@@ -70,7 +72,7 @@ export const PhotoTable = ({
                   </div>
                 </Table.Td>
                 <Table.Td>
-                  <Link {...photoDetailLink(p.id, albumSlug)} className={classes.link}>
+                  <Link {...photoDetailLink(p.id, albumSlug, order)} className={classes.link}>
                     {name ?? "(キャプションなし)"}
                   </Link>
                 </Table.Td>

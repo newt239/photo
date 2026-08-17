@@ -90,11 +90,12 @@ const renderInfoList = (rows: InfoRow[]) => (
 type Props = {
   photo: PhotoDetailData;
   albumSlug?: string;
+  order: "asc" | "desc";
   previousId: string | null;
   nextId: string | null;
 };
 
-export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props) => {
+export const PhotoDetailView = ({ photo, albumSlug, order, previousId, nextId }: Props) => {
   const router = useRouter();
   const imageSrc = photoImageUrl(photo.storageKey, 2048);
   const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
@@ -210,15 +211,18 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
 
   const listLink =
     albumSlug === undefined
-      ? ({ to: "/admin" } as const)
-      : ({ params: { slug: albumSlug }, to: "/admin/albums/$slug" } as const);
+      ? ({ search: { order }, to: "/admin" } as const)
+      : ({ params: { slug: albumSlug }, search: { order }, to: "/admin/albums/$slug" } as const);
 
   useHotkeys([
     [
       "ArrowLeft",
-      () => previousId !== null && router.navigate(photoDetailLink(previousId, albumSlug)),
+      () => previousId !== null && router.navigate(photoDetailLink(previousId, albumSlug, order)),
     ],
-    ["ArrowRight", () => nextId !== null && router.navigate(photoDetailLink(nextId, albumSlug))],
+    [
+      "ArrowRight",
+      () => nextId !== null && router.navigate(photoDetailLink(nextId, albumSlug, order)),
+    ],
     ["Escape", () => router.navigate(listLink)],
   ]);
 
@@ -237,7 +241,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
       <ActionIcon
         variant="default"
         aria-label={label}
-        renderRoot={(props) => <Link {...props} {...photoDetailLink(photoId, albumSlug)} />}
+        renderRoot={(props) => <Link {...props} {...photoDetailLink(photoId, albumSlug, order)} />}
       >
         {icon}
       </ActionIcon>

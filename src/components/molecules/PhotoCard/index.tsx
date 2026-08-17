@@ -21,11 +21,12 @@ export type PhotoCardData = {
 type PhotoCardProps = {
   photo: PhotoCardData;
   albumSlug?: string;
+  order: "asc" | "desc";
   selected: boolean;
   onSelect: (photoId: string, extend: boolean) => void;
 };
 
-export const PhotoCard = ({ photo, albumSlug, selected, onSelect }: PhotoCardProps) => {
+export const PhotoCard = ({ photo, albumSlug, order, selected, onSelect }: PhotoCardProps) => {
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
       <img
@@ -46,7 +47,7 @@ export const PhotoCard = ({ photo, albumSlug, selected, onSelect }: PhotoCardPro
   );
   return (
     <div className={classes.card} data-selected={selected || undefined}>
-      <Link {...photoDetailLink(photo.id, albumSlug)} className={classes.link}>
+      <Link {...photoDetailLink(photo.id, albumSlug, order)} className={classes.link}>
         {thumb}
       </Link>
       <Checkbox

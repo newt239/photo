@@ -171,6 +171,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
 const getPhotoInput = z.object({
   albumSlug: z.string().min(1).nullable().optional(),
   id: z.string().min(1),
+  order: z.enum(["asc", "desc"]).default("desc"),
 });
 
 export const getPhoto = createServerFn({ method: "GET" })
@@ -212,7 +213,10 @@ export const getPhoto = createServerFn({ method: "GET" })
       return { error: "写真が見つかりません", success: false } as const;
     }
     // 全件を取得して JS で探すのを避けるため LAG/LEAD で前後 1 件だけを求める
-    const ordering = sql`ORDER BY p.taken_at IS NULL, p.taken_at DESC, p.uploaded_at DESC`;
+    const ordering =
+      data.order === "asc"
+        ? sql`ORDER BY p.taken_at IS NULL, p.taken_at ASC, p.uploaded_at ASC`
+        : sql`ORDER BY p.taken_at IS NULL, p.taken_at DESC, p.uploaded_at DESC`;
     const source = data.albumSlug
       ? sql`FROM album_photos ap
           JOIN photos p ON p.id = ap.photo_id

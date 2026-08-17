@@ -199,6 +199,7 @@ export const PhotoLibrary = ({
         <PhotoTable
           photos={photos}
           albumSlug={album?.slug}
+          order={order}
           emptyMessage={emptyMessage}
           selectedPhotoIds={selected}
           onSelect={toggle}
@@ -207,6 +208,7 @@ export const PhotoLibrary = ({
         <PhotoMasonry
           photos={photos}
           albumSlug={album?.slug}
+          order={order}
           emptyMessage={emptyMessage}
           selectedPhotoIds={selected}
           onSelect={toggle}
