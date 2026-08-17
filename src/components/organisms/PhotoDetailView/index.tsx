@@ -30,7 +30,7 @@ import {
 
 import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
 import { PhotoLocationEditor } from "#/components/organisms/PhotoLocationEditor";
-import { formatDateTime } from "#/lib/format.ts";
+import { formatBytes, formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { usePhotoZoom } from "#/lib/photo-zoom.ts";
 import { setAlbumCover } from "#/server/albums.ts";
@@ -117,15 +117,9 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     exifRows.push({ label: "ISO", value: `ISO ${photo.iso}` });
   }
 
-  const fileSize =
-    photo.fileSize < 1024
-      ? `${photo.fileSize} B`
-      : photo.fileSize < 1024 * 1024
-        ? `${(photo.fileSize / 1024).toFixed(1)} KB`
-        : `${(photo.fileSize / (1024 * 1024)).toFixed(2)} MB`;
   const fileRows: InfoRow[] = [
     { label: "サイズ", value: `${photo.width} × ${photo.height}` },
-    { label: "ファイルサイズ", value: fileSize },
+    { label: "ファイルサイズ", value: formatBytes(photo.fileSize) },
     { label: "形式", value: photo.mimeType },
   ];
   const takenAt = formatDateTime(photo.takenAt);

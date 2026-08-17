@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { photos } from "#/db/schema.ts";
+import { jpegDataUrl } from "#/server/image-source.ts";
 import { getCurrentUserId } from "#/server/user.ts";
 
 const draftSchema = z
@@ -58,25 +59,11 @@ export const generatePhotoDraft = createServerFn({ method: "POST" })
       return { error: "写真が見つかりません", success: false } as const;
     }
 
-    const obj = await env.MY_BUCKET.get(photo.storageKey);
-    if (!obj) {
-      return { error: "画像が見つかりません", success: false } as const;
-    }
     // Base64 に展開すると約 4/3 に膨らむため AI に渡す前に縮小する
-    // eslint-disable-next-line typescript/no-unsafe-argument
-    const resized = await env.IMAGES.input(obj.body)
-      .transform({ fit: "scale-down", width: 1024 })
-      .output({ format: "image/jpeg", quality: 80 })
-      .catch(() => null);
-    if (!resized) {
-      return { error: "画像を変換できませんでした", success: false } as const;
+    const dataUri = await jpegDataUrl(photo.storageKey, { fit: "scale-down", width: 1024 });
+    if (!dataUri) {
+      return { error: "画像を読み込めませんでした", success: false } as const;
     }
-    const bytes = new Uint8Array(await resized.response().arrayBuffer());
-    let binary = "";
-    for (let i = 0; i < bytes.length; i += 8192) {
-      binary += String.fromCodePoint(...bytes.subarray(i, i + 8192));
-    }
-    const dataUri = `data:image/jpeg;base64,${btoa(binary)}`;
 
     const wantsCaption = data.fields.includes("caption");
     const wantsAlt = data.fields.includes("alt");

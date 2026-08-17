@@ -5,7 +5,7 @@ import { thumbHashToDataURL } from "thumbhash";
 
 import { formatAlbumPeriod } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
-import { masonryLayout } from "#/lib/masonry.ts";
+import { masonryStyle } from "#/lib/masonry.ts";
 
 import classes from "./AlbumMasonry.module.css";
 
@@ -22,20 +22,10 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
     height: album.coverHeight ?? 3,
     width: album.coverWidth ?? 4,
   }));
-  // 列数は CSS のコンテナクエリで決まるため 1〜4 列ぶんの位置を先に配っておく
-  const layouts = [1, 2, 3, 4].map((columns) => masonryLayout(sized, columns));
-  const positions = [
-    `.${classes.canvas}{${layouts.map((layout, i) => `--h${i + 1}:${layout.totalHeight};`).join("")}}`,
-    ...sized.map(
-      (_, index) =>
-        `.${classes.item}[data-index="${index}"]{${layouts
-          .map((layout, i) => {
-            const placed = layout.items[index];
-            return placed ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};` : "";
-          })
-          .join("")}}`,
-    ),
-  ].join("");
+  const positions = masonryStyle(sized, [1, 2, 3, 4], {
+    canvas: classes.canvas,
+    item: classes.item,
+  });
   const blurs = useMemo(
     () =>
       new Map(
@@ -61,6 +51,8 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
       <div className={classes.canvas}>
         {sized.map((album, index) => {
           const coverKey = album.coverStorageKey;
+          const blur = blurs.get(album.id);
+          const period = formatAlbumPeriod(album.periodStart, album.periodEnd);
           return (
             <Link
               key={album.id}
@@ -82,9 +74,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
                   decoding="async"
                   style={{
                     aspectRatio: `${album.width} / ${album.height}`,
-                    backgroundImage: blurs.get(album.id)
-                      ? `url(${blurs.get(album.id)})`
-                      : undefined,
+                    backgroundImage: blur ? `url(${blur})` : undefined,
                     backgroundSize: "cover",
                   }}
                 />
@@ -93,11 +83,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
               )}
               <span className={classes.caption}>
                 <span className={classes.title}>{album.title ?? "(無題)"}</span>
-                {formatAlbumPeriod(album.periodStart, album.periodEnd) ? (
-                  <span className={classes.description}>
-                    {formatAlbumPeriod(album.periodStart, album.periodEnd)}
-                  </span>
-                ) : null}
+                {period ? <span className={classes.description}>{period}</span> : null}
               </span>
             </Link>
           );

@@ -32,7 +32,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
     }
     const db = drizzle(env.DB, { schema });
 
-    const conditions: SQL[] = [eq(photos.userId, userId)];
+    const conditions: (SQL | undefined)[] = [eq(photos.userId, userId)];
     if (data.q) {
       const pattern = `%${data.q.replaceAll(/[%_\\]/g, String.raw`\$&`)}%`;
       conditions.push(
@@ -46,17 +46,17 @@ export const listMyPhotos = createServerFn({ method: "GET" })
       );
     }
     if (data.geo === "with") {
-      conditions.push(and(isNotNull(photos.latitude), isNotNull(photos.longitude)) ?? sql`1`);
+      conditions.push(and(isNotNull(photos.latitude), isNotNull(photos.longitude)));
     }
     if (data.geo === "without") {
-      conditions.push(or(isNull(photos.latitude), isNull(photos.longitude)) ?? sql`1`);
+      conditions.push(or(isNull(photos.latitude), isNull(photos.longitude)));
     }
     if (data.camera) {
       conditions.push(eq(photos.cameraModel, data.camera));
     }
     if (data.missing) {
       const column = data.missing === "caption" ? photos.caption : photos.alt;
-      conditions.push(or(isNull(column), eq(column, "")) ?? sql`1`);
+      conditions.push(or(isNull(column), eq(column, "")));
     }
     if (data.album === "none") {
       conditions.push(

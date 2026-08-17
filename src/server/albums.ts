@@ -8,6 +8,7 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
+import { coverPhotoId, oldestTakenAt } from "#/server/public.ts";
 import { getCurrentUserId } from "#/server/user.ts";
 
 const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
@@ -15,22 +16,6 @@ const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
 const ID_CHUNK_SIZE = 90;
 
 const INSERT_CHUNK_SIZE = 45;
-
-const coverPhotoId = sql`(
-    SELECT COALESCE(
-      ${albums}.cover_photo_id,
-      (SELECT ap.photo_id FROM album_photos ap
-        WHERE ap.album_id = ${albums}.id
-        ORDER BY ap.added_at ASC
-        LIMIT 1)
-    )
-  )`;
-
-const oldestTakenAt = sql`(
-    SELECT MIN(p.taken_at) FROM album_photos ap
-      JOIN photos p ON p.id = ap.photo_id
-      WHERE ap.album_id = ${albums}.id
-  )`;
 
 const findOwnedAlbum = async (
   db: DrizzleD1Database<typeof schema>,

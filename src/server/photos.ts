@@ -372,18 +372,14 @@ export const updatePhoto = createServerFn({ method: "POST" })
       return { error: "ログインしてください", success: false } as const;
     }
     const db = drizzle(env.DB, { schema });
-    const [existing] = await db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
-      .limit(1);
-    if (!existing) {
-      return { error: "NOT_FOUND", success: false } as const;
-    }
-    await db
+    const updated = await db
       .update(photos)
       .set({ alt: data.alt, caption: data.caption })
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
+      .returning({ id: photos.id });
+    if (updated.length === 0) {
+      return { error: "NOT_FOUND", success: false } as const;
+    }
     return { id: data.id, success: true } as const;
   });
 
@@ -405,22 +401,18 @@ export const updatePhotoLocation = createServerFn({ method: "POST" })
       return { error: "ログインしてください", success: false } as const;
     }
     const db = drizzle(env.DB, { schema });
-    const [existing] = await db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
-      .limit(1);
-    if (!existing) {
-      return { error: "写真が見つかりません", success: false } as const;
-    }
-    await db
+    const updated = await db
       .update(photos)
       .set(
         data.latitude === null
           ? { altitude: null, latitude: null, longitude: null }
           : { latitude: data.latitude, longitude: data.longitude },
       )
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
+      .returning({ id: photos.id });
+    if (updated.length === 0) {
+      return { error: "写真が見つかりません", success: false } as const;
+    }
     return { id: data.id, success: true } as const;
   });
 
@@ -429,24 +421,18 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
     return 0;
   }
   const db = drizzle(env.DB, { schema });
-  const rows: { id: string; storageKey: string }[] = [];
+  const rows: { storageKey: string }[] = [];
   for (let offset = 0; offset < photoIds.length; offset += ID_CHUNK_SIZE) {
-    // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
+    // D1 のバインドパラメータ上限を超えないよう ID を分割して削除する
     const chunk = photoIds.slice(offset, offset + ID_CHUNK_SIZE);
-    const found = await db
-      .select({ id: photos.id, storageKey: photos.storageKey })
-      .from(photos)
-      .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
-    rows.push(...found);
+    const deleted = await db
+      .delete(photos)
+      .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)))
+      .returning({ storageKey: photos.storageKey });
+    rows.push(...deleted);
   }
   if (rows.length === 0) {
     return 0;
-  }
-
-  const deletableIds = rows.map((row) => row.id);
-  for (let offset = 0; offset < deletableIds.length; offset += ID_CHUNK_SIZE) {
-    const chunk = deletableIds.slice(offset, offset + ID_CHUNK_SIZE);
-    await db.delete(photos).where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
   }
 
   const storageKeys = rows.map((row) => row.storageKey);

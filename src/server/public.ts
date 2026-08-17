@@ -17,7 +17,7 @@ export const coverPhotoId = sql`(
     )
   )`;
 
-const oldestTakenAt = sql`(
+export const oldestTakenAt = sql`(
     SELECT MIN(p.taken_at) FROM album_photos ap
       JOIN photos p ON p.id = ap.photo_id
       WHERE ap.album_id = ${albums}.id

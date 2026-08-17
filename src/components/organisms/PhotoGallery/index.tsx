@@ -6,7 +6,7 @@ import { thumbHashToDataURL } from "thumbhash";
 
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
 import { photoImageUrl } from "#/lib/image-url.ts";
-import { masonryLayout } from "#/lib/masonry.ts";
+import { masonryStyle } from "#/lib/masonry.ts";
 
 import classes from "./PhotoGallery.module.css";
 
@@ -31,23 +31,13 @@ export const PhotoGallery = ({
 }) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  // 列数は size 未指定なら CSS のコンテナクエリで決まるため 1〜3 列ぶんの位置を先に配っておく
-  const candidates = size === undefined ? [1, 2, 3] : [size];
-  const layouts = candidates.map((columns) => masonryLayout(photos, columns));
-  const positions = [
-    `.${classes.canvas}{${size === undefined ? "" : `--cols:${size};`}${layouts
-      .map((layout, i) => `--h${i + 1}:${layout.totalHeight};`)
-      .join("")}}`,
-    ...photos.map(
-      (_, position) =>
-        `.${classes.item}[data-index="${position}"]{${layouts
-          .map((layout, i) => {
-            const placed = layout.items[position];
-            return placed ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};` : "";
-          })
-          .join("")}}`,
-    ),
-  ].join("");
+  // 列数は size があればそれに固定し、無ければ CSS のコンテナクエリが 1〜3 列から選ぶ
+  const positions =
+    (size === undefined ? "" : `.${classes.canvas}{--cols:${size};}`) +
+    masonryStyle(photos, size === undefined ? [1, 2, 3] : [size], {
+      canvas: classes.canvas,
+      item: classes.item,
+    });
   const blurs = useMemo(
     () =>
       photos.map((p) =>

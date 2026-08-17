@@ -8,6 +8,7 @@ import { EraserIcon, SaveIcon, SparklesIcon } from "lucide-react";
 import { PhotoPreviewModal } from "#/components/molecules/PhotoPreviewModal";
 import { TimeZoneSelect } from "#/components/molecules/TimeZoneSelect";
 import { UploadDraftRow, type UploadDraftItem } from "#/components/molecules/UploadDraftRow";
+import { runConcurrently } from "#/lib/concurrent.ts";
 import { extractExif, probeDimensions } from "#/lib/image.ts";
 import { encodeThumbHash } from "#/lib/thumbhash.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
@@ -46,9 +47,9 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   };
 
   const uploadOne = async (file: File, id: string) => {
-    const contentType = file.type.toLowerCase();
-    if (!ALLOWED_MIME_TYPES.includes(contentType as (typeof ALLOWED_MIME_TYPES)[number])) {
-      updateItem(id, { error: `非対応の形式: ${contentType}`, status: "error" });
+    const contentType = ALLOWED_MIME_TYPES.find((mime) => mime === file.type.toLowerCase());
+    if (!contentType) {
+      updateItem(id, { error: `非対応の形式: ${file.type}`, status: "error" });
       return null;
     }
     try {
@@ -69,7 +70,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       const prep = await createPhotoUpload({
         data: {
           contentHash,
-          contentType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
+          contentType,
           size: file.size,
         },
       });
@@ -95,7 +96,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
           contentHash,
           fileSize: file.size,
           height: dims.height,
-          mimeType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
+          mimeType: contentType,
           originalKey: prep.originalKey,
           photoId: prep.photoId,
           placeholder,
@@ -209,18 +210,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     }
     setGeneratingField(field);
     try {
-      await Promise.all(
-        Array.from({ length: 3 }, async () => {
-          for (;;) {
-            const target = queue.shift();
-            if (!target) {
-              return;
-            }
-            // AI の同時実行を 3 件までに抑えるためキューから 1 件ずつ取り出して処理する
-            await generateOne(target.id, target.photoId, field);
-          }
-        }),
-      );
+      await runConcurrently(queue, 3, (target) => generateOne(target.id, target.photoId, field));
     } finally {
       setGeneratingField(null);
     }

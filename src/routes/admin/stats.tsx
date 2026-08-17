@@ -4,6 +4,7 @@ import { Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { Notice } from "#/components/atoms/Notice";
+import { formatBytes } from "#/lib/format.ts";
 import { getPhotoStats } from "#/server/stats.ts";
 
 const StatsPage = () => {
@@ -19,19 +20,13 @@ const StatsPage = () => {
     );
   }
 
-  const capacity =
-    overview.totalBytes < 1024 * 1024
-      ? `${(overview.totalBytes / 1024).toFixed(1)} KB`
-      : overview.totalBytes < 1024 * 1024 * 1024
-        ? `${(overview.totalBytes / (1024 * 1024)).toFixed(1)} MB`
-        : `${(overview.totalBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   const period =
     overview.earliest === null || overview.latest === null
       ? "撮影日時が未設定"
       : `${new Date(overview.earliest).toLocaleDateString("ja-JP")} 〜 ${new Date(overview.latest).toLocaleDateString("ja-JP")}`;
   const cards = [
     { label: "総枚数", value: `${overview.totalPhotos.toLocaleString()} 枚` },
-    { label: "合計容量", value: capacity },
+    { label: "合計容量", value: formatBytes(overview.totalBytes) },
     { label: "撮影期間", value: period },
     { label: "位置情報あり", value: `${overview.geotagged.toLocaleString()} 枚` },
     { label: "キャプション未入力", value: `${overview.missingCaption.toLocaleString()} 枚` },

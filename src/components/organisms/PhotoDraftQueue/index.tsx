@@ -16,6 +16,7 @@ import { useRouter } from "@tanstack/react-router";
 import { SaveIcon, SparklesIcon } from "lucide-react";
 
 import { PhotoPreviewModal } from "#/components/molecules/PhotoPreviewModal";
+import { runConcurrently } from "#/lib/concurrent.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
 import { updatePhotos } from "#/server/photos.ts";
@@ -78,24 +79,15 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
   };
 
   const generateAll = async () => {
-    const queue = rows.map((row) => row.id);
-    if (queue.length === 0 || generating) {
+    if (rows.length === 0 || generating) {
       return;
     }
     setGenerating(true);
     try {
-      await Promise.all(
-        Array.from({ length: 3 }, async () => {
-          for (;;) {
-            const id = queue.shift();
-            if (!id) {
-              return;
-            }
-            // AI の同時実行を 3 件までに抑えるためキューから 1 件ずつ取り出して処理する
-            // eslint-disable-next-line no-await-in-loop
-            await generateOne(id, field);
-          }
-        }),
+      await runConcurrently(
+        rows.map((row) => row.id),
+        3,
+        (id) => generateOne(id, field),
       );
     } finally {
       setGenerating(false);

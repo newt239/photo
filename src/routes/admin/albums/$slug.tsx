@@ -14,6 +14,7 @@ const AlbumDetailPage = () => {
   const { slug } = Route.useParams();
   const { order, view } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const period = formatAlbumPeriod(album.periodStart, album.periodEnd);
 
   return (
     <Stack p="xl" gap="md">
@@ -59,9 +60,9 @@ const AlbumDetailPage = () => {
             </Button>
           </Group>
         </Group>
-        {formatAlbumPeriod(album.periodStart, album.periodEnd) && (
+        {period && (
           <Text size="sm" c="dimmed">
-            {formatAlbumPeriod(album.periodStart, album.periodEnd)}
+            {period}
           </Text>
         )}
       </Stack>

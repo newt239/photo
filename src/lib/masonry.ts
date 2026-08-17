@@ -1,4 +1,4 @@
-export const masonryLayout = <T extends { height: number; width: number }>(
+const masonryLayout = <T extends { height: number; width: number }>(
   items: T[],
   columns: number,
 ) => {
@@ -21,4 +21,32 @@ export const masonryLayout = <T extends { height: number; width: number }>(
     totalHeight: Math.max(...lanes.map((lane) => lane.height)),
     totalRows: Math.max(...lanes.map((lane) => lane.count)),
   };
+};
+
+// 列数は CSS のコンテナクエリで決まるため候補ごとの位置を CSS カスタムプロパティとして先に配る
+export const masonryStyle = (
+  items: { height: number; width: number }[],
+  columnCounts: number[],
+  classNames: { canvas: string | undefined; item: string | undefined },
+) => {
+  const layouts = columnCounts.map((columns) => masonryLayout(items, columns));
+  return [
+    `.${classNames.canvas}{${layouts
+      .map(
+        (layout, i) =>
+          `--h${i + 1}:${layout.totalHeight};--gr${i + 1}:${Math.max(0, layout.totalRows - 1)};`,
+      )
+      .join("")}}`,
+    ...items.map(
+      (_, index) =>
+        `.${classNames.item}[data-index="${index}"]{${layouts
+          .map((layout, i) => {
+            const placed = layout.items[index];
+            return placed
+              ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};--r${i + 1}:${placed.rowsAbove};`
+              : "";
+          })
+          .join("")}}`,
+    ),
+  ].join("");
 };
