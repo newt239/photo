@@ -40,6 +40,9 @@ const AdminIndexPage = () => {
       />
 
       <PhotoFilterBar
+        key={[search.q, search.month, search.album, search.camera, search.geo, search.missing].join(
+          "|",
+        )}
         filters={search}
         albums={albums}
         cameras={cameras}

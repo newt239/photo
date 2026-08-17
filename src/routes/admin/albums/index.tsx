@@ -32,6 +32,7 @@ const AlbumsIndexPage = () => {
       />
 
       <AlbumFilterBar
+        key={[search.q, search.year].join("|")}
         filters={search}
         years={years}
         opened={filterOpened}

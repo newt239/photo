@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 import { LayoutGridIcon, Share2Icon } from "lucide-react";
@@ -31,6 +31,16 @@ export const PhotoGallery = ({
 }) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // アンマウント後に setCopied が走らないようタイマーを片付ける
+  useEffect(
+    () => () => {
+      if (copiedTimer.current !== null) {
+        clearTimeout(copiedTimer.current);
+      }
+    },
+    [],
+  );
   // 列数は size があればそれに固定し、無ければ CSS のコンテナクエリが 1〜3 列から選ぶ
   const positions =
     (size === undefined ? "" : `.${classes.canvas}{--cols:${size};}`) +
@@ -62,7 +72,10 @@ export const PhotoGallery = ({
     // 共有 API が使えない環境ではクリップボードにコピーする
     await navigator.clipboard.writeText(url);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (copiedTimer.current !== null) {
+      clearTimeout(copiedTimer.current);
+    }
+    copiedTimer.current = setTimeout(() => setCopied(false), 2000);
   };
 
   return (
