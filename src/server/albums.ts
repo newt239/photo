@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, asc, desc, eq, inArray, like, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, sql, type SQL } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -123,26 +123,22 @@ export const updateAlbum = createServerFn({ method: "POST" })
       return { error: "アルバムが見つかりません", success: false } as const;
     }
 
-    const [duplicate] = await db
-      .select({ id: albums.id })
-      .from(albums)
-      .where(and(eq(albums.slug, data.slug), ne(albums.id, data.id)))
-      .limit(1);
-    if (duplicate) {
+    try {
+      await db
+        .update(albums)
+        .set({
+          periodEnd: data.periodEnd,
+          periodStart: data.periodStart,
+          slug: data.slug,
+          title: data.title,
+          updatedAt: new Date(),
+          visibility: data.visibility,
+        })
+        .where(eq(albums.id, data.id));
+    } catch {
+      // 一意制約があるため slug が重複するとここに来る
       return { error: "この URL は既に使われています", success: false } as const;
     }
-
-    await db
-      .update(albums)
-      .set({
-        periodEnd: data.periodEnd,
-        periodStart: data.periodStart,
-        slug: data.slug,
-        title: data.title,
-        updatedAt: new Date(),
-        visibility: data.visibility,
-      })
-      .where(eq(albums.id, data.id));
 
     return { slug: data.slug, success: true } as const;
   });
