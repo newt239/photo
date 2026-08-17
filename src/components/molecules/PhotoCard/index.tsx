@@ -2,7 +2,7 @@ import { Checkbox } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { MapPinOffIcon } from "lucide-react";
 
-import { photoImageUrl } from "#/lib/image-url.ts";
+import { photoImageUrl, photoSrcSet } from "#/lib/image-url.ts";
 
 import classes from "./PhotoCard.module.css";
 
@@ -25,18 +25,11 @@ type PhotoCardProps = {
 };
 
 export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: PhotoCardProps) => {
-  const widths = [320, 640].filter((width) => width <= photo.width);
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
       <img
         src={photoImageUrl(photo.storageKey, 640)}
-        srcSet={
-          widths.length > 0
-            ? widths
-                .map((width) => `${photoImageUrl(photo.storageKey, width)} ${width}w`)
-                .join(", ")
-            : undefined
-        }
+        srcSet={photoSrcSet(photo.storageKey, [320, 640], photo.width)}
         sizes="(max-width: 768px) 50vw, 240px"
         alt={photo.alt ?? photo.caption ?? ""}
         loading="lazy"

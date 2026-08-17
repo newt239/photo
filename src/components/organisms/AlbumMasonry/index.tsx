@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { thumbHashToDataURL } from "thumbhash";
 
 import { formatAlbumPeriod } from "#/lib/format.ts";
-import { photoImageUrl } from "#/lib/image-url.ts";
+import { photoImageUrl, photoSrcSet } from "#/lib/image-url.ts";
 import { masonryStyle } from "#/lib/masonry.ts";
 
 import classes from "./AlbumMasonry.module.css";
@@ -64,9 +64,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
               {coverKey ? (
                 <img
                   src={photoImageUrl(coverKey, 640)}
-                  srcSet={[640, 1024]
-                    .map((candidate) => `${photoImageUrl(coverKey, candidate)} ${candidate}w`)
-                    .join(", ")}
+                  srcSet={photoSrcSet(coverKey, [640, 1024])}
                   sizes="(min-width: 1408px) 25vw, (min-width: 1056px) 33vw, (min-width: 704px) 50vw, 100vw"
                   alt=""
                   loading={index < EAGER_COUNT ? "eager" : "lazy"}
