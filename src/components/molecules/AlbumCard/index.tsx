@@ -9,7 +9,7 @@ import classes from "./AlbumCard.module.css";
 export type AlbumCardData = {
   id: string;
   slug: string;
-  title: string | null;
+  title: string;
   periodStart: string | null;
   periodEnd: string | null;
   visibility: "public" | "private";
@@ -34,7 +34,7 @@ export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
         </div>
         <Group gap={6} wrap="nowrap" px="sm" py="xs">
           <Text fw={600} truncate style={{ minWidth: 0 }}>
-            {album.title ?? "(無題)"}
+            {album.title}
           </Text>
           <VisibilityIcon visibility={album.visibility} size={14} />
         </Group>

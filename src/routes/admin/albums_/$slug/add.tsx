@@ -68,7 +68,7 @@ const AlbumAddPhotosPage = () => {
       <Stack gap={4}>
         <Title order={2}>写真を追加する</Title>
         <Text size="sm" c="dimmed">
-          {album.title ?? "(無題)"}
+          {album.title}
         </Text>
       </Stack>
 

@@ -6,7 +6,7 @@ import { ChevronDownIcon, InfoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react
 import classes from "./AlbumViewerControls.module.css";
 
 type AlbumViewerControlsProps = {
-  title: string | null;
+  title: string;
   period: string | null;
   hasGeotagged: boolean;
   mode: "photo" | "map";
@@ -50,7 +50,7 @@ export const AlbumViewerControls = ({
         aria-label="アルバムの情報を開く"
       >
         <div className={classes.heading}>
-          <div className={classes.title}>{title ?? "(無題)"}</div>
+          <div className={classes.title}>{title}</div>
           <span className={classes.iconButton} aria-hidden>
             <InfoIcon size={16} />
           </span>
@@ -63,7 +63,7 @@ export const AlbumViewerControls = ({
     <div className={classes.panel}>
       <div className={classes.info}>
         <div className={classes.heading}>
-          <div className={classes.title}>{title ?? "(無題)"}</div>
+          <div className={classes.title}>{title}</div>
           <button
             type="button"
             className={classes.iconButton}

@@ -25,7 +25,7 @@ import {
 type PhotoBulkActionsProps = {
   selectedCount: number;
   submitting: boolean;
-  albums: { id: string; title: string | null }[];
+  albums: { id: string; title: string }[];
   modal: "add" | "create" | "delete" | null;
   onModalChange: (next: "add" | "create" | "delete" | null) => void;
   onSelectAll: () => void;
@@ -126,7 +126,7 @@ export const PhotoBulkActions = ({
             value={albumId}
             onChange={setAlbumId}
             data={albums.map((album) => ({
-              label: album.title ?? "(無題)",
+              label: album.title,
               value: album.id,
             }))}
             searchable

@@ -14,7 +14,7 @@ export type PhotoFilters = {
 
 type PhotoFilterBarProps = {
   filters: PhotoFilters;
-  albums: { id: string; title: string | null }[];
+  albums: { id: string; title: string }[];
   cameras: string[];
   opened: boolean;
   appliedCount: number;
@@ -68,7 +68,7 @@ export const PhotoFilterBar = ({
               placeholder="すべて"
               data={[
                 { label: "どれにも入っていない", value: "none" },
-                ...albums.map((album) => ({ label: album.title ?? "(無題)", value: album.id })),
+                ...albums.map((album) => ({ label: album.title, value: album.id })),
               ]}
               value={draft.album ?? null}
               onChange={(value) => setDraft((prev) => ({ ...prev, album: value ?? undefined }))}

@@ -95,7 +95,7 @@ export const albums = sqliteTable(
     periodEnd: text("period_end"),
     periodStart: text("period_start"),
     slug: text().notNull(),
-    title: text(),
+    title: text().notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),

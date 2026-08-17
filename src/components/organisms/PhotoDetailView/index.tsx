@@ -63,7 +63,7 @@ type PhotoDetailData = {
   albums: {
     id: string;
     slug: string;
-    title: string | null;
+    title: string;
     visibility: "public" | "private";
     coverPhotoId: string | null;
   }[];
@@ -270,7 +270,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Label>{currentAlbum.title ?? "(無題)"}</Menu.Label>
+                <Menu.Label>{currentAlbum.title}</Menu.Label>
                 <Menu.Item
                   leftSection={isCover ? <CheckIcon size={14} /> : <ImageIcon size={14} />}
                   disabled={isCover || settingCover}
@@ -419,7 +419,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
                           <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
                         )}
                       >
-                        {album.title ?? "(無題)"}
+                        {album.title}
                       </Anchor>
                     </Group>
                   ))}

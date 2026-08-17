@@ -21,7 +21,7 @@ const AlbumDetailPage = () => {
       <Stack gap={4}>
         <Group justify="space-between" align="flex-start">
           <Group gap="xs" wrap="nowrap">
-            <Title order={2}>{album.title ?? "(無題)"}</Title>
+            <Title order={2}>{album.title}</Title>
             <VisibilityIcon visibility={album.visibility} size={18} />
           </Group>
           <Group gap="sm" wrap="nowrap">

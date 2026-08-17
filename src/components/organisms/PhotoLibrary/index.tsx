@@ -15,7 +15,7 @@ import type { PhotoCardData } from "#/components/molecules/PhotoCard";
 
 type PhotoLibraryProps = {
   photos: PhotoCardData[];
-  albums: { id: string; title: string | null }[];
+  albums: { id: string; title: string }[];
   order: "asc" | "desc";
   view: "grid" | "table";
   onOrderChange: (next: "asc" | "desc") => void;

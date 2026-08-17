@@ -80,7 +80,7 @@ export const AlbumMasonry = ({ albums }: { albums: AlbumMasonryItem[] }) => {
                 <div className={classes.placeholder} />
               )}
               <span className={classes.caption}>
-                <span className={classes.title}>{album.title ?? "(無題)"}</span>
+                <span className={classes.title}>{album.title}</span>
                 {period ? <span className={classes.description}>{period}</span> : null}
               </span>
             </Link>
