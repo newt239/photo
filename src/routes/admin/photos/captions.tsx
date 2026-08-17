@@ -46,7 +46,15 @@ export const Route = createFileRoute("/admin/photos/captions")({
     if (!result.success) {
       throw notFound();
     }
-    return { photos: result.photos, total: result.total };
+    return {
+      photos: result.photos.map((p) => ({
+        alt: p.alt,
+        caption: p.caption,
+        id: p.id,
+        storageKey: p.storageKey,
+      })),
+      total: result.total,
+    };
   },
   loaderDeps,
   validateSearch: searchSchema,

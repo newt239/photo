@@ -110,7 +110,16 @@ export const Route = createFileRoute("/admin/albums/$slug")({
     if (!result.success) {
       throw notFound();
     }
-    return { album: result.album, photos: result.photos };
+    return {
+      album: {
+        id: result.album.id,
+        periodEnd: result.album.periodEnd,
+        periodStart: result.album.periodStart,
+        title: result.album.title,
+        visibility: result.album.visibility,
+      },
+      photos: result.photos,
+    };
   },
   loaderDeps,
   validateSearch: searchSchema,
