@@ -319,9 +319,6 @@ export const applyPhotoLocations = createServerFn({ method: "POST" })
         .where(condition)
         .returning({ id: photos.id });
     });
-    if (!first) {
-      return { error: "EMPTY", success: false } as const;
-    }
     const results = await db.batch([first, ...rest]);
     return { success: true, updated: results.flat().length } as const;
   });
@@ -351,9 +348,6 @@ export const updatePhotos = createServerFn({ method: "POST" })
         .where(and(eq(photos.id, item.id), eq(photos.userId, userId)))
         .returning({ id: photos.id }),
     );
-    if (!first) {
-      return { error: "EMPTY", success: false } as const;
-    }
     const results = await db.batch([first, ...rest]);
     return { success: true, updated: results.flat().length } as const;
   });

@@ -176,7 +176,7 @@ export const matchTimeline = (
   while (visitLow < visitHigh) {
     const mid = Math.floor((visitLow + visitHigh) / 2);
     const candidate = timeline.visits[mid];
-    if (candidate && candidate.start <= atMs) {
+    if (candidate.start <= atMs) {
       visitLow = mid + 1;
     } else {
       visitHigh = mid;
@@ -197,14 +197,14 @@ export const matchTimeline = (
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
     const sample = timeline.samples[mid];
-    if (sample && sample.at < atMs) {
+    if (sample.at < atMs) {
       low = mid + 1;
     } else {
       high = mid;
     }
   }
   const next = timeline.samples[low] ?? null;
-  const prev = low > 0 ? (timeline.samples[low - 1] ?? null) : null;
+  const prev = low > 0 ? timeline.samples[low - 1] : null;
   const prevDiff = prev ? atMs - prev.at : Number.POSITIVE_INFINITY;
   const nextDiff = next ? next.at - atMs : Number.POSITIVE_INFINITY;
 

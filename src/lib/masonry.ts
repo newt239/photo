@@ -4,7 +4,7 @@ const masonryLayout = <T extends { height: number; width: number }>(
 ) => {
   const lanes = Array.from({ length: Math.max(1, columns) }, () => ({ count: 0, height: 0 }));
   const placed = items.map((item) => {
-    let lane = lanes[0] ?? { count: 0, height: 0 };
+    let [lane] = lanes;
     for (const candidate of lanes) {
       if (candidate.height < lane.height) {
         lane = candidate;
@@ -47,9 +47,7 @@ export const masonryStyle = (
         `.${item}[data-index="${index}"]{${layouts
           .map((layout, i) => {
             const placed = layout.items[index];
-            return placed
-              ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};${gap ? `--r${i + 1}:${placed.rowsAbove};` : ""}`
-              : "";
+            return `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};${gap ? `--r${i + 1}:${placed.rowsAbove};` : ""}`;
           })
           .join("")}}`,
     ),
