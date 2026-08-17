@@ -73,7 +73,7 @@ npx wrangler versions upload --var CLERK_PUBLISHABLE_KEY_PREVIEW:$VITE_CLERK_PUB
 - 同じ理由で、この 2 つを Worker の secret として登録してはなりません。バージョン単位の `--var` でのみ渡します
 - publishable key はバンドルにも焼き込まれるため、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ `VITE_CLERK_PUBLISHABLE_KEY` を差し替えます
 - `--var` はバージョン単位の平文の変数になり、ダッシュボードから値が見えます。本番の値をここに渡してはなりません
-- D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
+- D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別でも `user_identities` が Clerk の user_id をアプリ内の `user_id` に解決するため、同じメールアドレスなら本番と同じ写真・アルバムを扱います
 
 ## アーキテクチャ
 
