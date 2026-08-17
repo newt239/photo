@@ -8,22 +8,16 @@ import classes from "./PhotoMasonry.module.css";
 export const PhotoMasonry = ({
   photos,
   albumSlug,
-  emptyMessage = "写真はまだありません",
+  emptyMessage,
   selectedPhotoIds,
   onSelect,
 }: {
   photos: PhotoCardData[];
   albumSlug?: string;
-  emptyMessage?: string;
-  selectedPhotoIds?: Set<string>;
-  onSelect?: (photoId: string, extend: boolean) => void;
+  emptyMessage: string;
+  selectedPhotoIds: Set<string>;
+  onSelect: (photoId: string, extend: boolean) => void;
 }) => {
-  const positions = masonryStyle(photos, [1, 2, 3, 4, 5, 6, 7, 8], {
-    canvas: classes.canvas,
-    gap: true,
-    item: classes.item,
-  });
-
   if (photos.length === 0) {
     return (
       <Text c="dimmed" size="sm">
@@ -31,6 +25,11 @@ export const PhotoMasonry = ({
       </Text>
     );
   }
+  const positions = masonryStyle(photos, [1, 2, 3, 4, 5, 6, 7, 8], {
+    canvas: classes.canvas,
+    gap: true,
+    item: classes.item,
+  });
   return (
     <div className={classes.masonry}>
       <style>{positions}</style>
@@ -40,7 +39,7 @@ export const PhotoMasonry = ({
             <PhotoCard
               photo={p}
               albumSlug={albumSlug}
-              selected={selectedPhotoIds?.has(p.id)}
+              selected={selectedPhotoIds.has(p.id)}
               onSelect={onSelect}
             />
           </div>

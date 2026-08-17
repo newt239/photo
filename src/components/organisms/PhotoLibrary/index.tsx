@@ -32,7 +32,7 @@ export const PhotoLibrary = ({
   onOrderChange,
   onViewChange,
   album,
-  emptyMessage,
+  emptyMessage = "写真はまだありません",
 }: PhotoLibraryProps) => {
   const router = useRouter();
   const [selected, setSelected] = useState(new Set<string>());
@@ -77,7 +77,7 @@ export const PhotoLibrary = ({
   ]);
 
   const handleRemove = async () => {
-    if (!album || selected.size === 0 || submitting) {
+    if (!album || submitting) {
       return;
     }
     setSubmitting(true);
@@ -100,7 +100,7 @@ export const PhotoLibrary = ({
   };
 
   const handleDelete = async () => {
-    if (selected.size === 0 || submitting) {
+    if (submitting) {
       return;
     }
     setSubmitting(true);
@@ -121,7 +121,7 @@ export const PhotoLibrary = ({
   };
 
   const handleAddToAlbum = async (albumId: string) => {
-    if (selected.size === 0 || submitting) {
+    if (submitting) {
       return;
     }
     setSubmitting(true);
@@ -146,7 +146,7 @@ export const PhotoLibrary = ({
   };
 
   const handleCreateAlbum = async (title: string) => {
-    if (selected.size === 0 || submitting) {
+    if (submitting) {
       return;
     }
     setSubmitting(true);

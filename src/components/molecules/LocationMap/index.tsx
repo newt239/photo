@@ -9,11 +9,11 @@ import type * as Leaflet from "leaflet";
 type LocationMapProps = {
   latitude: number;
   longitude: number;
-  zoom?: number;
-  onChange?: (latitude: number, longitude: number) => void;
+  zoom: number;
+  onChange: (latitude: number, longitude: number) => void;
 };
 
-export const LocationMap = ({ latitude, longitude, zoom = 14, onChange }: LocationMapProps) => {
+export const LocationMap = ({ latitude, longitude, zoom, onChange }: LocationMapProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
   const markerRef = useRef<Leaflet.CircleMarker | null>(null);
@@ -48,7 +48,7 @@ export const LocationMap = ({ latitude, longitude, zoom = 14, onChange }: Locati
         })
         .addTo(map);
       map.on("click", (event) => {
-        latestRef.current.onChange?.(event.latlng.lat, event.latlng.lng);
+        latestRef.current.onChange(event.latlng.lat, event.latlng.lng);
       });
       mapRef.current = map;
     });
@@ -69,7 +69,5 @@ export const LocationMap = ({ latitude, longitude, zoom = 14, onChange }: Locati
     }
   }, [latitude, longitude]);
 
-  return (
-    <div ref={containerRef} className={classes.map} data-editable={onChange ? true : undefined} />
-  );
+  return <div ref={containerRef} className={classes.map} />;
 };

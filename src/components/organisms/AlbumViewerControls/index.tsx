@@ -78,7 +78,7 @@ export const AlbumViewerControls = ({
       </div>
 
       {(hasGeotagged || showSize) && (
-        <div className={classes.row} data-geotagged={hasGeotagged || undefined}>
+        <div className={classes.row}>
           {showSize && (
             <div className={classes.sizeControl}>
               <button

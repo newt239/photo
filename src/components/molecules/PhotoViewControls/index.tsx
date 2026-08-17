@@ -23,7 +23,7 @@ export const PhotoViewControls = ({
     <SegmentedControl
       size="xs"
       value={order}
-      onChange={(value) => onOrderChange(value === "asc" ? "asc" : "desc")}
+      onChange={onOrderChange}
       data={[
         {
           label: (
@@ -49,7 +49,7 @@ export const PhotoViewControls = ({
     <SegmentedControl
       size="xs"
       value={view}
-      onChange={(value) => onViewChange(value === "table" ? "table" : "grid")}
+      onChange={onViewChange}
       data={[
         {
           label: (

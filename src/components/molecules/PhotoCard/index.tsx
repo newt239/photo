@@ -20,11 +20,11 @@ export type PhotoCardData = {
 type PhotoCardProps = {
   photo: PhotoCardData;
   albumSlug?: string;
-  selected?: boolean;
-  onSelect?: (photoId: string, extend: boolean) => void;
+  selected: boolean;
+  onSelect: (photoId: string, extend: boolean) => void;
 };
 
-export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: PhotoCardProps) => {
+export const PhotoCard = ({ photo, albumSlug, selected, onSelect }: PhotoCardProps) => {
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
       <img
@@ -57,9 +57,6 @@ export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: Phot
         {thumb}
       </Link>
     );
-  if (!onSelect) {
-    return link;
-  }
   return (
     <div className={classes.card} data-selected={selected || undefined}>
       {link}

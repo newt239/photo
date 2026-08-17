@@ -12,7 +12,7 @@ import type { PhotoCardData } from "#/components/molecules/PhotoCard";
 type PhotoTableProps = {
   photos: PhotoCardData[];
   albumSlug?: string;
-  emptyMessage?: string;
+  emptyMessage: string;
   selectedPhotoIds: Set<string>;
   onSelect: (photoId: string, extend: boolean) => void;
 };
@@ -20,7 +20,7 @@ type PhotoTableProps = {
 export const PhotoTable = ({
   photos,
   albumSlug,
-  emptyMessage = "写真はまだありません",
+  emptyMessage,
   selectedPhotoIds,
   onSelect,
 }: PhotoTableProps) => {

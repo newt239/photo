@@ -129,7 +129,7 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
         <Group gap="sm">
           <SegmentedControl
             value={field}
-            onChange={(next) => onFieldChange(next === "alt" ? "alt" : "caption")}
+            onChange={onFieldChange}
             data={[
               { label: "キャプション", value: "caption" },
               { label: "代替テキスト", value: "alt" },

@@ -93,12 +93,7 @@ export const PhotoFilterBar = ({
                 { label: "未設定", value: "without" },
               ]}
               value={draft.geo ?? null}
-              onChange={(value) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  geo: value === "with" || value === "without" ? value : undefined,
-                }))
-              }
+              onChange={(value) => setDraft((prev) => ({ ...prev, geo: value ?? undefined }))}
               clearable
               w={140}
             />
@@ -110,12 +105,7 @@ export const PhotoFilterBar = ({
                 { label: "代替テキスト", value: "alt" },
               ]}
               value={draft.missing ?? null}
-              onChange={(value) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  missing: value === "caption" || value === "alt" ? value : undefined,
-                }))
-              }
+              onChange={(value) => setDraft((prev) => ({ ...prev, missing: value ?? undefined }))}
               clearable
               w={160}
             />
