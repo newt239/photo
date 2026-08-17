@@ -80,24 +80,38 @@ const AdminIndexPage = () => {
   );
 };
 
+const searchSchema = z.object({
+  album: z.string().optional(),
+  camera: z.string().optional(),
+  geo: z.enum(["with", "without"]).optional(),
+  missing: z.enum(["caption", "alt"]).optional(),
+  month: z
+    .string()
+    .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/)
+    .optional(),
+  order: z.enum(["asc", "desc"]).default("desc"),
+  page: z.number().int().min(1).catch(1).default(1),
+  perPage: z.number().int().min(12).max(200).catch(60).default(60),
+  q: z.string().max(100).optional(),
+  view: z.enum(["grid", "table"]).default("grid"),
+});
+
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
+  album: search.album,
+  camera: search.camera,
+  geo: search.geo,
+  missing: search.missing,
+  month: search.month,
+  order: search.order,
+  page: search.page,
+  perPage: search.perPage,
+  q: search.q,
+});
+
 export const Route = createFileRoute("/admin/")({
   component: AdminIndexPage,
   head: () => ({ meta: [{ title: "写真 | photos.newt239.dev" }] }),
-  loader: async ({
-    deps,
-  }: {
-    deps: {
-      album?: string;
-      camera?: string;
-      geo?: "with" | "without";
-      missing?: "caption" | "alt";
-      month?: string;
-      order: "asc" | "desc";
-      page: number;
-      perPage: number;
-      q?: string;
-    };
-  }) => {
+  loader: async ({ deps }: { deps: ReturnType<typeof loaderDeps> }) => {
     const [result, cameras] = await Promise.all([
       listMyPhotos({
         data: {
@@ -119,30 +133,6 @@ export const Route = createFileRoute("/admin/")({
     }
     return { cameras, photos: result.photos, total: result.total };
   },
-  loaderDeps: ({ search }) => ({
-    album: search.album,
-    camera: search.camera,
-    geo: search.geo,
-    missing: search.missing,
-    month: search.month,
-    order: search.order,
-    page: search.page,
-    perPage: search.perPage,
-    q: search.q,
-  }),
-  validateSearch: z.object({
-    album: z.string().optional(),
-    camera: z.string().optional(),
-    geo: z.enum(["with", "without"]).optional(),
-    missing: z.enum(["caption", "alt"]).optional(),
-    month: z
-      .string()
-      .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/)
-      .optional(),
-    order: z.enum(["asc", "desc"]).default("desc"),
-    page: z.number().int().min(1).catch(1).default(1),
-    perPage: z.number().int().min(12).max(200).catch(60).default(60),
-    q: z.string().max(100).optional(),
-    view: z.enum(["grid", "table"]).default("grid"),
-  }),
+  loaderDeps,
+  validateSearch: searchSchema,
 });

@@ -85,6 +85,15 @@ const AlbumDetailPage = () => {
   );
 };
 
+const searchSchema = z.object({
+  order: z.enum(["asc", "desc"]).default("desc"),
+  view: z.enum(["grid", "table"]).default("grid"),
+});
+
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
+  order: search.order,
+});
+
 export const Route = createFileRoute("/admin/albums/$slug")({
   component: AlbumDetailPage,
   head: ({ loaderData }) => ({
@@ -94,7 +103,7 @@ export const Route = createFileRoute("/admin/albums/$slug")({
     deps,
     params,
   }: {
-    deps: { order: "asc" | "desc" };
+    deps: ReturnType<typeof loaderDeps>;
     params: { slug: string };
   }) => {
     const result = await getAlbumBySlug({ data: { order: deps.order, slug: params.slug } });
@@ -103,9 +112,6 @@ export const Route = createFileRoute("/admin/albums/$slug")({
     }
     return { album: result.album, photos: result.photos };
   },
-  loaderDeps: ({ search }) => ({ order: search.order }),
-  validateSearch: z.object({
-    order: z.enum(["asc", "desc"]).default("desc"),
-    view: z.enum(["grid", "table"]).default("grid"),
-  }),
+  loaderDeps,
+  validateSearch: searchSchema,
 });

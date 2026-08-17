@@ -30,18 +30,24 @@ const PhotoCaptionsPage = () => {
   );
 };
 
+const searchSchema = z.object({
+  field: z.enum(["caption", "alt"]).default("caption"),
+});
+
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
+  field: search.field,
+});
+
 export const Route = createFileRoute("/admin/photos/captions")({
   component: PhotoCaptionsPage,
   head: () => ({ meta: [{ title: "説明を生成 | photos.newt239.dev" }] }),
-  loader: async ({ deps }: { deps: { field: "caption" | "alt" } }) => {
+  loader: async ({ deps }: { deps: ReturnType<typeof loaderDeps> }) => {
     const result = await listMyPhotos({ data: { limit: 50, missing: deps.field } });
     if (!result.success) {
       throw notFound();
     }
     return { photos: result.photos, total: result.total };
   },
-  loaderDeps: ({ search }) => ({ field: search.field }),
-  validateSearch: z.object({
-    field: z.enum(["caption", "alt"]).default("caption"),
-  }),
+  loaderDeps,
+  validateSearch: searchSchema,
 });

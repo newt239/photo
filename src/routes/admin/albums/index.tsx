@@ -56,10 +56,23 @@ const AlbumsIndexPage = () => {
   );
 };
 
+const searchSchema = z.object({
+  q: z.string().max(100).optional(),
+  year: z
+    .string()
+    .regex(/^\d{4}$/)
+    .optional(),
+});
+
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
+  q: search.q,
+  year: search.year,
+});
+
 export const Route = createFileRoute("/admin/albums/")({
   component: AlbumsIndexPage,
   head: () => ({ meta: [{ title: "アルバム | photos.newt239.dev" }] }),
-  loader: async ({ deps }: { deps: { q?: string; year?: string } }) => {
+  loader: async ({ deps }: { deps: ReturnType<typeof loaderDeps> }) => {
     // 絞り込みが無いときは親 /admin の一覧と同じ結果になるため問い合わせない
     if (deps.q === undefined && deps.year === undefined) {
       return { albums: null };
@@ -70,12 +83,6 @@ export const Route = createFileRoute("/admin/albums/")({
     }
     return { albums: result.albums };
   },
-  loaderDeps: ({ search }) => ({ q: search.q, year: search.year }),
-  validateSearch: z.object({
-    q: z.string().max(100).optional(),
-    year: z
-      .string()
-      .regex(/^\d{4}$/)
-      .optional(),
-  }),
+  loaderDeps,
+  validateSearch: searchSchema,
 });
