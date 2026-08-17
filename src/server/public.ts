@@ -17,11 +17,22 @@ export const coverPhotoId = sql`(
     )
   )`;
 
-export const oldestTakenAt = sql`(
+const oldestTakenAt = sql`(
     SELECT MIN(p.taken_at) FROM album_photos ap
       JOIN photos p ON p.id = ap.photo_id
       WHERE ap.album_id = ${albums}.id
   )`;
+
+export const albumPhotoCount = sql<number>`(
+    SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
+  )`.as("photo_count");
+
+export const albumListOrder = [
+  sql`${albums}.period_start IS NULL`,
+  desc(albums.periodStart),
+  desc(oldestTakenAt),
+  desc(albums.createdAt),
+];
 
 export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async () => {
   const db = drizzle(env.DB, { schema });
@@ -35,21 +46,14 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
       id: albums.id,
       periodEnd: albums.periodEnd,
       periodStart: albums.periodStart,
-      photoCount: sql<number>`(
-          SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
-        )`.as("photo_count"),
+      photoCount: albumPhotoCount,
       slug: albums.slug,
       title: albums.title,
     })
     .from(albums)
     .leftJoin(photos, eq(photos.id, coverPhotoId))
     .where(eq(albums.visibility, "public"))
-    .orderBy(
-      sql`${albums}.period_start IS NULL`,
-      desc(albums.periodStart),
-      desc(oldestTakenAt),
-      desc(albums.createdAt),
-    );
+    .orderBy(...albumListOrder);
   return rows;
 });
 

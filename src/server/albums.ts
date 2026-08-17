@@ -8,7 +8,7 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
-import { coverPhotoId, oldestTakenAt } from "#/server/public.ts";
+import { albumListOrder, albumPhotoCount, coverPhotoId } from "#/server/public.ts";
 import { getCurrentUserId } from "#/server/user.ts";
 
 const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
@@ -183,9 +183,7 @@ export const listMyAlbums = createServerFn({ method: "GET" })
         id: albums.id,
         periodEnd: albums.periodEnd,
         periodStart: albums.periodStart,
-        photoCount: sql<number>`(
-            SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
-          )`.as("photo_count"),
+        photoCount: albumPhotoCount,
         slug: albums.slug,
         title: albums.title,
         updatedAt: albums.updatedAt,
@@ -194,12 +192,7 @@ export const listMyAlbums = createServerFn({ method: "GET" })
       .from(albums)
       .leftJoin(photos, eq(photos.id, coverPhotoId))
       .where(and(...conditions))
-      .orderBy(
-        sql`${albums}.period_start IS NULL`,
-        desc(albums.periodStart),
-        desc(oldestTakenAt),
-        desc(albums.createdAt),
-      )
+      .orderBy(...albumListOrder)
       .limit(data.limit ?? 200);
     return { albums: rows, success: true } as const;
   });

@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { photos } from "#/db/schema.ts";
+import { missingLocation } from "#/server/photos.ts";
 import { getCurrentUserId } from "#/server/user.ts";
 
 const listMyPhotosInput = z.object({
@@ -49,7 +50,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
       conditions.push(and(isNotNull(photos.latitude), isNotNull(photos.longitude)));
     }
     if (data.geo === "without") {
-      conditions.push(or(isNull(photos.latitude), isNull(photos.longitude)));
+      conditions.push(missingLocation);
     }
     if (data.camera) {
       conditions.push(eq(photos.cameraModel, data.camera));

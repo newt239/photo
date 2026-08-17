@@ -252,7 +252,7 @@ export const getPhoto = createServerFn({ method: "GET" })
     } as const;
   });
 
-const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
+export const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
 
 export const listPhotosMissingLocation = createServerFn({ method: "GET" })
   .validator(z.object({ limit: z.number().int().positive().max(1000).optional() }))
