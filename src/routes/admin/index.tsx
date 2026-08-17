@@ -1,9 +1,9 @@
-import { Badge, Button, Group, Pagination, Stack, Text, Title } from "@mantine/core";
+import { Group, Pagination, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
-import { ChevronDownIcon, ChevronUpIcon, FilterIcon } from "lucide-react";
 import { z } from "zod";
 
+import { FilterHeader } from "#/components/molecules/FilterHeader";
 import { PhotoFilterBar, type PhotoFilters } from "#/components/molecules/PhotoFilterBar";
 import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
 import { listCameraModels, listMyPhotos } from "#/server/photo-list.ts";
@@ -32,22 +32,12 @@ const AdminIndexPage = () => {
 
   return (
     <Stack p="xl" gap="md">
-      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-        <Title order={2}>写真</Title>
-        <Group gap="sm">
-          {appliedCount > 0 && <Badge variant="light">{`${appliedCount} 件の条件`}</Badge>}
-          <Button
-            variant="default"
-            leftSection={<FilterIcon size={16} />}
-            rightSection={
-              filterOpened ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />
-            }
-            onClick={toggleFilter}
-          >
-            絞り込む
-          </Button>
-        </Group>
-      </Group>
+      <FilterHeader
+        title="写真"
+        appliedCount={appliedCount}
+        opened={filterOpened}
+        onToggle={toggleFilter}
+      />
 
       <PhotoFilterBar
         filters={search}

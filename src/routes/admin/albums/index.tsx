@@ -1,11 +1,11 @@
-import { Badge, Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { SimpleGrid, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
-import { ChevronDownIcon, ChevronUpIcon, FilterIcon } from "lucide-react";
 import { z } from "zod";
 
 import { AlbumCard } from "#/components/molecules/AlbumCard";
 import { AlbumFilterBar, type AlbumFilters } from "#/components/molecules/AlbumFilterBar";
+import { FilterHeader } from "#/components/molecules/FilterHeader";
 import { listMyAlbums } from "#/server/albums.ts";
 
 const AlbumsIndexPage = () => {
@@ -24,22 +24,12 @@ const AlbumsIndexPage = () => {
 
   return (
     <Stack p="xl" gap="md">
-      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-        <Title order={2}>アルバム</Title>
-        <Group gap="sm">
-          {appliedCount > 0 && <Badge variant="light">{`${appliedCount} 件の条件`}</Badge>}
-          <Button
-            variant="default"
-            leftSection={<FilterIcon size={16} />}
-            rightSection={
-              filterOpened ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />
-            }
-            onClick={toggleFilter}
-          >
-            絞り込む
-          </Button>
-        </Group>
-      </Group>
+      <FilterHeader
+        title="アルバム"
+        appliedCount={appliedCount}
+        opened={filterOpened}
+        onToggle={toggleFilter}
+      />
 
       <AlbumFilterBar
         filters={search}
