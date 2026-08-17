@@ -43,7 +43,6 @@ export const Route = createFileRoute("/admin")({
     if (!userId) {
       throw redirect({ params: { _splat: "" }, to: "/login/$" });
     }
-    return { userId };
   },
   component: AdminLayout,
   loader: async () => {

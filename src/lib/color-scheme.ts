@@ -4,37 +4,32 @@ export const COLOR_SCHEME_COOKIE = "mantine-color-scheme-value";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
-export const cookieColorSchemeManager = (
-  opts: { key?: string; maxAge?: number } = {},
-): MantineColorSchemeManager => {
-  const key = opts.key ?? COLOR_SCHEME_COOKIE;
-  const maxAge = opts.maxAge ?? ONE_YEAR;
-
-  return {
-    clear: () => {
-      if (typeof document === "undefined") {
-        return;
-      }
-      document.cookie = `${key}=; path=/; max-age=0; SameSite=Lax`;
-    },
-    get: (defaultValue) => {
-      if (typeof document === "undefined") {
-        return defaultValue;
-      }
-      const match = document.cookie.split("; ").find((row) => row.startsWith(`${key}=`));
-      if (!match) {
-        return defaultValue;
-      }
-      const value = decodeURIComponent(match.slice(key.length + 1));
-      return value === "light" || value === "dark" || value === "auto" ? value : defaultValue;
-    },
-    set: (value) => {
-      if (typeof document === "undefined") {
-        return;
-      }
-      document.cookie = `${key}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
-    },
-    subscribe: () => {},
-    unsubscribe: () => {},
-  };
-};
+export const cookieColorSchemeManager = (): MantineColorSchemeManager => ({
+  clear: () => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    document.cookie = `${COLOR_SCHEME_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  },
+  get: (defaultValue) => {
+    if (typeof document === "undefined") {
+      return defaultValue;
+    }
+    const match = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(`${COLOR_SCHEME_COOKIE}=`));
+    if (!match) {
+      return defaultValue;
+    }
+    const value = decodeURIComponent(match.slice(COLOR_SCHEME_COOKIE.length + 1));
+    return value === "light" || value === "dark" || value === "auto" ? value : defaultValue;
+  },
+  set: (value) => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    document.cookie = `${COLOR_SCHEME_COOKIE}=${value}; path=/; max-age=${ONE_YEAR}; SameSite=Lax`;
+  },
+  subscribe: () => {},
+  unsubscribe: () => {},
+});

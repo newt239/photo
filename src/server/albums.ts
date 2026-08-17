@@ -397,7 +397,7 @@ export const removePhotosFromAlbum = createServerFn({ method: "POST" })
     const coverRemoved = album.coverPhotoId !== null && data.photoIds.includes(album.coverPhotoId);
     await db
       .update(albums)
-      .set(coverRemoved ? { coverPhotoId: null, updatedAt: new Date() } : { updatedAt: new Date() })
+      .set({ ...(coverRemoved && { coverPhotoId: null }), updatedAt: new Date() })
       .where(eq(albums.id, album.id));
 
     return { removed, success: true } as const;
@@ -435,7 +435,7 @@ export const deleteAlbum = createServerFn({ method: "POST" })
     }
 
     await db.delete(albumPhotos).where(eq(albumPhotos.albumId, album.id));
-    await db.delete(albums).where(and(eq(albums.id, album.id), eq(albums.userId, userId)));
+    await db.delete(albums).where(eq(albums.id, album.id));
 
     return { deletedPhotos, success: true } as const;
   });

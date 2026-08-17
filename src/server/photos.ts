@@ -38,7 +38,7 @@ export const createPhotoUpload = createServerFn({ method: "POST" })
       return { kind: "duplicate", photoId: existing.id, success: true } as const;
     }
     const photoId = nanoid();
-    const extension = MIME_EXT[data.contentType.toLowerCase()] ?? "bin";
+    const extension = MIME_EXT[data.contentType];
     const originalKey = `users/${userId}/photos/${photoId}/original.${extension}`;
     const originalUrl = await signPutUrl(originalKey, data.contentType);
     return { kind: "created", originalKey, originalUrl, photoId, success: true } as const;
@@ -399,9 +399,6 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
       .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)))
       .returning({ storageKey: photos.storageKey });
     rows.push(...deleted);
-  }
-  if (rows.length === 0) {
-    return 0;
   }
 
   const storageKeys = rows.map((row) => row.storageKey);

@@ -21,7 +21,7 @@ const IndexPage = () => {
 export const Route = createFileRoute("/")({
   component: IndexPage,
   head: () => ({
-    meta: [{ title: "photos.newt239.dev" }, { content: env.VITE_SITE_URL, property: "og:url" }],
+    meta: [{ content: env.VITE_SITE_URL, property: "og:url" }],
   }),
   loader: async () => ({
     albums: await listPublicAlbums(),

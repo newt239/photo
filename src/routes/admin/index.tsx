@@ -15,7 +15,7 @@ const AdminIndexPage = () => {
   const navigate = Route.useNavigate();
   const [filterOpened, { toggle: toggleFilter }] = useDisclosure(false);
   const { order, page, perPage, view } = search;
-  const from = total === 0 ? 0 : (page - 1) * perPage + 1;
+  const from = (page - 1) * perPage + 1;
   const to = Math.min(page * perPage, total);
 
   const changeFilters = (patch: PhotoFilters) => {
