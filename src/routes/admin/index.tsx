@@ -59,7 +59,7 @@ const AdminIndexPage = () => {
         onViewChange={(next) => {
           navigate({ replace: true, search: (prev) => ({ ...prev, view: next }) });
         }}
-        emptyMessage={total === 0 ? "条件に合う写真はありません" : undefined}
+        emptyMessage="条件に合う写真はありません"
       />
 
       {total > 0 && (

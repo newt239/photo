@@ -48,7 +48,7 @@ export const PhotoTable = ({
           {photos.map((p) => {
             const selected = selectedPhotoIds.has(p.id);
             const src = photoImageUrl(p.storageKey, 320);
-            const label = p.caption ?? p.alt ?? "(キャプションなし)";
+            const name = p.caption ?? p.alt;
             return (
               <Table.Tr key={p.id} bg={selected ? "var(--mantine-color-blue-light)" : undefined}>
                 <Table.Td>
@@ -56,7 +56,7 @@ export const PhotoTable = ({
                     checked={selected}
                     readOnly
                     onClick={(event) => onSelect(p.id, event.shiftKey)}
-                    aria-label={p.caption ?? p.alt ?? "この写真を選択する"}
+                    aria-label={name ?? "この写真を選択する"}
                   />
                 </Table.Td>
                 <Table.Td>
@@ -71,7 +71,7 @@ export const PhotoTable = ({
                 </Table.Td>
                 <Table.Td>
                   <Link {...photoDetailLink(p.id, albumSlug)} className={classes.link}>
-                    {label}
+                    {name ?? "(キャプションなし)"}
                   </Link>
                 </Table.Td>
                 <Table.Td>
