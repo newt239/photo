@@ -1,4 +1,3 @@
-import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, eq } from "drizzle-orm";
@@ -7,6 +6,7 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { photos } from "#/db/schema.ts";
+import { getCurrentUserId } from "#/server/user.ts";
 
 const draftSchema = z
   .object({
@@ -44,7 +44,7 @@ const altInstruction =
 export const generatePhotoDraft = createServerFn({ method: "POST" })
   .validator(generatePhotoDraftInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }

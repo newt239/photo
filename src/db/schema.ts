@@ -26,6 +26,20 @@ export const users = sqliteTable(
   (t) => [uniqueIndex("users_email_idx").on(t.email)],
 );
 
+export const userIdentities = sqliteTable(
+  "user_identities",
+  {
+    clerkUserId: text("clerk_user_id").primaryKey(),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => [index("user_identities_user_id_idx").on(t.userId)],
+);
+
 export const photos = sqliteTable(
   "photos",
   {
