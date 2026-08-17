@@ -61,9 +61,10 @@
 
 .image {
   display: block;
+  width: auto;
+  height: auto;
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain;
   border-radius: 0.25rem;
   user-select: none;
   -webkit-user-drag: none;

@@ -105,9 +105,7 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
                   draggable={false}
                   style={{
                     backgroundImage: blur ? `url(${blur})` : undefined,
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "contain",
+                    backgroundSize: "cover",
                   }}
                 />
               </div>
