@@ -9,8 +9,9 @@ import { AlbumFilterBar, type AlbumFilters } from "#/components/molecules/AlbumF
 import { listMyAlbums } from "#/server/albums.ts";
 
 const AlbumsIndexPage = () => {
-  const { albums } = Route.useLoaderData();
+  const { albums: filtered } = Route.useLoaderData();
   const { albums: allAlbums } = useLoaderData({ from: "/admin" });
+  const albums = filtered ?? allAlbums;
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [filterOpened, { toggle: toggleFilter }] = useDisclosure(false);
@@ -69,6 +70,10 @@ export const Route = createFileRoute("/admin/albums/")({
   component: AlbumsIndexPage,
   head: () => ({ meta: [{ title: "アルバム | photos.newt239.dev" }] }),
   loader: async ({ deps }: { deps: { q?: string; year?: string } }) => {
+    // 絞り込みが無いときは親 /admin の一覧と同じ結果になるため問い合わせない
+    if (deps.q === undefined && deps.year === undefined) {
+      return { albums: null };
+    }
     const result = await listMyAlbums({ data: { q: deps.q, year: deps.year } });
     if (!result.success) {
       throw notFound();
