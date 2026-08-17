@@ -23,10 +23,6 @@ const oldestTakenAt = sql`(
       WHERE ap.album_id = ${albums}.id
   )`;
 
-export const albumPhotoCount = sql<number>`(
-    SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
-  )`.as("photo_count");
-
 export const albumListOrder = [
   sql`${albums}.period_start IS NULL`,
   desc(albums.periodStart),
@@ -42,11 +38,9 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
       coverPlaceholder: photos.placeholder,
       coverStorageKey: photos.storageKey,
       coverWidth: photos.width,
-      createdAt: albums.createdAt,
       id: albums.id,
       periodEnd: albums.periodEnd,
       periodStart: albums.periodStart,
-      photoCount: albumPhotoCount,
       slug: albums.slug,
       title: albums.title,
     })

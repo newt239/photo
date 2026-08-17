@@ -8,7 +8,7 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
-import { albumListOrder, albumPhotoCount, coverPhotoId } from "#/server/public.ts";
+import { albumListOrder, coverPhotoId } from "#/server/public.ts";
 import { getCurrentUserId } from "#/server/user.ts";
 
 const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
@@ -177,16 +177,12 @@ export const listMyAlbums = createServerFn({ method: "GET" })
     }
     const rows = await db
       .select({
-        coverPhotoId: albums.coverPhotoId,
         coverStorageKey: photos.storageKey,
-        createdAt: albums.createdAt,
         id: albums.id,
         periodEnd: albums.periodEnd,
         periodStart: albums.periodStart,
-        photoCount: albumPhotoCount,
         slug: albums.slug,
         title: albums.title,
-        updatedAt: albums.updatedAt,
         visibility: albums.visibility,
       })
       .from(albums)
