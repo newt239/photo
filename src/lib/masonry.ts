@@ -28,11 +28,7 @@ const masonryLayout = <T extends { height: number; width: number }>(
 export const masonryStyle = (
   items: { height: number; width: number }[],
   columnCounts: number[],
-  {
-    canvas,
-    gap = false,
-    item,
-  }: { canvas: string | undefined; gap?: boolean; item: string | undefined },
+  { canvas, gap = false, item }: { canvas: string; gap?: boolean; item: string },
 ) => {
   const layouts = columnCounts.map((columns) => masonryLayout(items, columns));
   return [

@@ -6,12 +6,9 @@ import { photoImageUrl } from "#/lib/image-url.ts";
 
 import classes from "./AlbumCard.module.css";
 
-export type AlbumCardData = {
-  id: string;
+type AlbumCardData = {
   slug: string;
   title: string;
-  periodStart: string | null;
-  periodEnd: string | null;
   visibility: "public" | "private";
   coverStorageKey: string | null;
 };

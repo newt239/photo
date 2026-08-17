@@ -11,7 +11,7 @@ import classes from "./AlbumMasonry.module.css";
 
 import type { listPublicAlbums } from "#/server/public.ts";
 
-export type AlbumMasonryItem = Awaited<ReturnType<typeof listPublicAlbums>>[number];
+type AlbumMasonryItem = Awaited<ReturnType<typeof listPublicAlbums>>[number];
 
 const EAGER_COUNT = 4;
 
