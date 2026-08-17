@@ -97,14 +97,6 @@ export const Route = createFileRoute("/admin/stats")({
     if (!result.success) {
       throw notFound();
     }
-    return {
-      cameras: result.cameras,
-      focalLengths: result.focalLengths,
-      hours: result.hours,
-      isoValues: result.isoValues,
-      lenses: result.lenses,
-      months: result.months,
-      overview: result.overview,
-    };
+    return result;
   },
 });
