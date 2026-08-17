@@ -60,18 +60,8 @@ export const createAlbum = createServerFn({ method: "POST" })
     const db = drizzle(env.DB, { schema });
     const id = nanoid();
     const requested = data.slug?.trim() ?? "";
-    if (requested) {
-      if (!SLUG_PATTERN.test(requested)) {
-        return { error: "URL に使えない文字が含まれています", success: false } as const;
-      }
-      const [duplicate] = await db
-        .select({ id: albums.id })
-        .from(albums)
-        .where(eq(albums.slug, requested))
-        .limit(1);
-      if (duplicate) {
-        return { error: "この URL は既に使われています", success: false } as const;
-      }
+    if (requested && !SLUG_PATTERN.test(requested)) {
+      return { error: "URL に使えない文字が含まれています", success: false } as const;
     }
     const normalized = data.title
       .normalize("NFKD")
@@ -91,7 +81,7 @@ export const createAlbum = createServerFn({ method: "POST" })
         visibility: data.visibility,
       });
     } catch {
-      // 重複チェックの後に他のリクエストが割り込むと一意制約に違反しうる
+      // 一意制約があるため slug が重複するとここに来る
       return { error: "この URL は既に使われています", success: false } as const;
     }
     return { id, slug, success: true } as const;
