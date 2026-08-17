@@ -1,13 +1,17 @@
-[
-  {
-    "AllowedOrigins": [
-      "http://localhost:3000",
-      "https://photos.newt239.dev",
-      "https://*.newtpia.workers.dev"
-    ],
-    "AllowedMethods": ["GET", "PUT", "HEAD"],
-    "AllowedHeaders": ["Content-Type"],
-    "ExposeHeaders": ["ETag"],
-    "MaxAgeSeconds": 3600
-  }
-]
+{
+  "rules": [
+    {
+      "allowed": {
+        "headers": ["Content-Type"],
+        "methods": ["GET", "PUT", "HEAD"],
+        "origins": [
+          "http://localhost:3000",
+          "https://photos.newt239.dev",
+          "https://*.newtpia.workers.dev"
+        ]
+      },
+      "exposeHeaders": ["ETag"],
+      "maxAgeSeconds": 3600
+    }
+  ]
+}
