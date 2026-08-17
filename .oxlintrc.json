@@ -112,6 +112,7 @@
     "typescript/strict-void-return": "off",
     "typescript/unbound-method": "off",
     "unicorn/filename-case": ["warn", { "cases": { "kebabCase": true, "pascalCase": true } }],
+    "unicorn/max-nested-calls": "off",
     "unicorn/no-document-cookie": "off",
     "unicorn/no-nested-ternary": "off",
     "unicorn/no-null": "off",
