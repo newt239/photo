@@ -66,7 +66,6 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
         id: albums.id,
         periodEnd: albums.periodEnd,
         periodStart: albums.periodStart,
-        slug: albums.slug,
         title: albums.title,
         updatedAt: albums.updatedAt,
       })
@@ -94,5 +93,13 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
       .where(eq(albumPhotos.albumId, album.id))
       .orderBy(sql`${photos}.taken_at IS NULL`, asc(photos.takenAt), asc(albumPhotos.addedAt));
 
-    return { album, photos: photoRows };
+    return {
+      album: {
+        periodEnd: album.periodEnd,
+        periodStart: album.periodStart,
+        title: album.title,
+        updatedAt: album.updatedAt,
+      },
+      photos: photoRows,
+    };
   });
