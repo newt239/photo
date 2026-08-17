@@ -299,7 +299,14 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                 <Button
                   variant="default"
                   leftSection={<EraserIcon size={16} />}
-                  onClick={() => setItems([])}
+                  onClick={() => {
+                    for (const it of items) {
+                      if (it.thumbUrl) {
+                        URL.revokeObjectURL(it.thumbUrl);
+                      }
+                    }
+                    setItems([]);
+                  }}
                   disabled={busy || savingAll || generatingField !== null}
                 >
                   履歴を消去する
@@ -310,7 +317,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                     saveAll();
                   }}
                   loading={savingAll}
-                  disabled={generatingField !== null || unsavedCount === 0}
+                  disabled={busy || generatingField !== null || unsavedCount === 0}
                 >
                   保存する
                 </Button>
