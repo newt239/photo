@@ -313,23 +313,25 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
       return { error: "アルバムが見つかりません", success: false } as const;
     }
 
+    const photoIds = [...new Set(data.photoIds)];
+
     let ownedCount = 0;
-    for (let offset = 0; offset < data.photoIds.length; offset += ID_CHUNK_SIZE) {
+    for (let offset = 0; offset < photoIds.length; offset += ID_CHUNK_SIZE) {
       // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
-      const chunk = data.photoIds.slice(offset, offset + ID_CHUNK_SIZE);
+      const chunk = photoIds.slice(offset, offset + ID_CHUNK_SIZE);
       const owned = await db
         .select({ id: photos.id })
         .from(photos)
         .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
       ownedCount += owned.length;
     }
-    if (ownedCount !== data.photoIds.length) {
+    if (ownedCount !== photoIds.length) {
       return { error: "追加できない写真が含まれています", success: false } as const;
     }
 
     let inserted = 0;
-    for (let offset = 0; offset < data.photoIds.length; offset += INSERT_CHUNK_SIZE) {
-      const rows = data.photoIds
+    for (let offset = 0; offset < photoIds.length; offset += INSERT_CHUNK_SIZE) {
+      const rows = photoIds
         .slice(offset, offset + INSERT_CHUNK_SIZE)
         .map((photoId) => ({ albumId: album.id, photoId }));
       // 1 行あたり 2 パラメータを使うため挿入はさらに小さく分割する
