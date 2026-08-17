@@ -106,6 +106,18 @@ TanStack Start は RSC を使いません。full-document SSR + hydration + serv
 - 表示に使う幅の種類を増やすと変換の回数がその分増えます。`srcSet` の候補は必要最小限にしてください
 - HEIC は原本のままだと Chrome などで表示できないため、`finalizePhoto` がアップロード時に JPEG へ変換して保存します
 
+### アップロードと R2 の CORS
+
+アップロードはブラウザから R2 の S3 エンドポイントへ直接 PUT します。Worker を経由しないため、配信元の origin を R2 バケットの CORS に登録しないとブラウザにブロックされ、`putToR2` の `fetch` が `Failed to fetch` で失敗します。Worker のログには何も残りません。
+
+許可する origin は `infra/r2-cors.json` で管理します。新しい配信元を増やしたときはこのファイルに追記し、次のコマンドで適用してください。
+
+```
+pnpm wrangler r2 bucket cors set photo --file infra/r2-cors.json
+```
+
+プレビューは `https://*.newtpia.workers.dev` で配信されるため、この 1 行を消すとプレビューからのアップロードが動かなくなります。
+
 ### プロジェクト構造
 
 ```bash
