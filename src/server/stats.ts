@@ -34,9 +34,6 @@ const isoBucket = sql<string>`CASE
     ELSE '6401〜'
   END`;
 
-const toIso = (seconds: number | null) =>
-  seconds === null ? null : new Date(seconds * 1000).toISOString();
-
 export const getPhotoStats = createServerFn({ method: "GET" }).handler(async () => {
   const userId = await getCurrentUserId();
   if (!userId) {
@@ -136,9 +133,10 @@ export const getPhotoStats = createServerFn({ method: "GET" }).handler(async () 
     lenses: lenses.map((row) => ({ count: row.count, label: row.label ?? "不明" })),
     months,
     overview: {
-      earliest: toIso(overview.earliest),
+      earliest:
+        overview.earliest === null ? null : new Date(overview.earliest * 1000).toISOString(),
       geotagged: overview.geotagged,
-      latest: toIso(overview.latest),
+      latest: overview.latest === null ? null : new Date(overview.latest * 1000).toISOString(),
       missingAlt: overview.missingAlt,
       missingCaption: overview.missingCaption,
       publicAlbums: albumRow.publicAlbums,

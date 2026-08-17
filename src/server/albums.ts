@@ -35,9 +35,6 @@ const albumPeriod = z
   .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/)
   .nullable();
 
-const hasValidPeriod = (value: { periodEnd: string | null; periodStart: string | null }) =>
-  value.periodEnd === null || (value.periodStart !== null && value.periodStart <= value.periodEnd);
-
 const periodMessage = { message: "終了年月は開始年月以降にしてください" };
 
 const createAlbumInput = z
@@ -48,7 +45,12 @@ const createAlbumInput = z
     title: z.string().min(1).max(200),
     visibility: z.enum(["public", "private"]).default("private"),
   })
-  .refine(hasValidPeriod, periodMessage);
+  .refine(
+    (value) =>
+      value.periodEnd === null ||
+      (value.periodStart !== null && value.periodStart <= value.periodEnd),
+    periodMessage,
+  );
 
 export const createAlbum = createServerFn({ method: "POST" })
   .validator(createAlbumInput)
@@ -96,7 +98,12 @@ const updateAlbumInput = z
     title: z.string().min(1).max(200),
     visibility: z.enum(["public", "private"]),
   })
-  .refine(hasValidPeriod, periodMessage);
+  .refine(
+    (value) =>
+      value.periodEnd === null ||
+      (value.periodStart !== null && value.periodStart <= value.periodEnd),
+    periodMessage,
+  );
 
 export const updateAlbum = createServerFn({ method: "POST" })
   .validator(updateAlbumInput)

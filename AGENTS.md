@@ -108,7 +108,7 @@ TanStack Start は RSC を使いません。full-document SSR + hydration + serv
 
 ### アップロードと R2 の CORS
 
-アップロードはブラウザから R2 の S3 エンドポイントへ直接 PUT します。Worker を経由しないため、配信元の origin を R2 バケットの CORS に登録しないとブラウザにブロックされ、`putToR2` の `fetch` が `Failed to fetch` で失敗します。Worker のログには何も残りません。
+アップロードはブラウザから R2 の S3 エンドポイントへ直接 PUT します。Worker を経由しないため、配信元の origin を R2 バケットの CORS に登録しないとブラウザにブロックされ、`UploadDropzone` の `uploadOne` が投げる PUT の `fetch` が `Failed to fetch` で失敗します。Worker のログには何も残りません。
 
 許可する origin は `infra/r2-cors.json` で管理します。新しい配信元を増やしたときはこのファイルに追記し、次のコマンドで適用してください。
 

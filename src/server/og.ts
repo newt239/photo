@@ -21,9 +21,6 @@ const escapeHtml = (value: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-const truncate = (value: string, max: number) =>
-  value.length > max ? `${value.slice(0, max)}…` : value;
-
 type RenderOgImageInput = {
   title: string;
   subheading: string | null;
@@ -31,8 +28,8 @@ type RenderOgImageInput = {
 };
 
 const renderOgImage = async ({ title, subheading: sub, coverStorageKeys }: RenderOgImageInput) => {
-  const heading = truncate(title, 40);
-  const subheading = sub ? truncate(sub, 60) : "";
+  const heading = title.length > 40 ? `${title.slice(0, 40)}…` : title;
+  const subheading = sub && sub.length > 60 ? `${sub.slice(0, 60)}…` : (sub ?? "");
   const tiled = coverStorageKeys.length > 1;
 
   const [boldFont, regularFont, covers] = await Promise.all([

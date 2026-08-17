@@ -15,17 +15,6 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
 import { createPhotoUpload, finalizePhoto, updatePhotos } from "#/server/photos.ts";
 
-const putToR2 = async (url: string, body: Blob, contentType: string) => {
-  const res = await fetch(url, {
-    body,
-    headers: { "Content-Type": contentType },
-    method: "PUT",
-  });
-  if (!res.ok) {
-    throw new Error(`R2_PUT_FAILED_${res.status}`);
-  }
-};
-
 export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[]) => void }) => {
   const [items, setItems] = useState<UploadDraftItem[]>([]);
   const [busy, setBusy] = useState(false);
@@ -86,7 +75,14 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       }
 
       updateItem(id, { progress: 40, status: "uploading" });
-      await putToR2(prep.originalUrl, file, contentType);
+      const uploaded = await fetch(prep.originalUrl, {
+        body: file,
+        headers: { "Content-Type": contentType },
+        method: "PUT",
+      });
+      if (!uploaded.ok) {
+        throw new Error(`R2_PUT_FAILED_${uploaded.status}`);
+      }
 
       updateItem(id, { progress: 85, status: "saving" });
       const saved = await finalizePhoto({

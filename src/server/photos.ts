@@ -219,7 +219,6 @@ export const getPhoto = createServerFn({ method: "GET" })
           JOIN albums a ON a.id = ap.album_id
           WHERE a.slug = ${data.albumSlug} AND a.user_id = ${userId}`
       : sql`FROM photos p WHERE p.user_id = ${userId}`;
-    const belongsToOwnedAlbum = and(eq(albumPhotos.photoId, data.id), eq(albums.userId, userId));
     const [albumRows, neighborRows] = await Promise.all([
       db
         .select({
@@ -231,7 +230,7 @@ export const getPhoto = createServerFn({ method: "GET" })
         })
         .from(albumPhotos)
         .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
-        .where(belongsToOwnedAlbum)
+        .where(and(eq(albumPhotos.photoId, data.id), eq(albums.userId, userId)))
         .orderBy(albums.createdAt),
       db.all<{ next_id: string | null; previous_id: string | null }>(sql`
         WITH ordered AS (
