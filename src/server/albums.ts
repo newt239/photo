@@ -413,7 +413,7 @@ export const deleteAlbum = createServerFn({ method: "POST" })
       );
     }
 
-    await db.delete(albumPhotos).where(eq(albumPhotos.albumId, album.id));
+    // 外部キーが cascade のため album_photos の行も合わせて消える
     await db.delete(albums).where(eq(albums.id, album.id));
 
     return { deletedPhotos, success: true } as const;

@@ -110,7 +110,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
         width: row.width,
       })),
       success: true,
-      total: counted[0]?.count ?? 0,
+      total: counted[0].count,
     } as const;
   });
 
