@@ -76,14 +76,25 @@ export const PhotoLibrary = ({
     ["mod+A", selectAll],
   ]);
 
-  const handleRemove = async () => {
-    if (!album || submitting) {
+  const run = async (action: () => Promise<void>) => {
+    if (submitting) {
       return;
     }
     setSubmitting(true);
     setError(null);
     setNotice(null);
     try {
+      await action();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    await run(async () => {
+      if (!album) {
+        return;
+      }
       const result = await removePhotosFromAlbum({
         data: { albumId: album.id, photoIds: [...selected] },
       });
@@ -94,19 +105,11 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   const handleDelete = async () => {
-    if (submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
+    await run(async () => {
       const result = await deletePhotos({ data: { ids: [...selected] } });
       if (result.success) {
         setSelected(new Set());
@@ -115,19 +118,11 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   const handleAddToAlbum = async (albumId: string) => {
-    if (submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
+    await run(async () => {
       const result = await addPhotosToAlbum({ data: { albumId, photoIds: [...selected] } });
       if (result.success) {
         setSelected(new Set());
@@ -140,19 +135,11 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   const handleCreateAlbum = async (title: string) => {
-    if (submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
+    await run(async () => {
       const created = await createAlbum({ data: { title } });
       if (!created.success) {
         setError(created.error);
@@ -168,9 +155,7 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   return (
