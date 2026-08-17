@@ -1,4 +1,3 @@
-import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, asc, desc, eq, inArray, like, ne, sql, type SQL } from "drizzle-orm";
@@ -9,7 +8,7 @@ import { z } from "zod";
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
-import { ensureUserRow } from "#/server/user.ts";
+import { getCurrentUserId } from "#/server/user.ts";
 
 const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
 
@@ -69,11 +68,10 @@ const createAlbumInput = z
 export const createAlbum = createServerFn({ method: "POST" })
   .validator(createAlbumInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
-    await ensureUserRow(userId);
     const db = drizzle(env.DB, { schema });
     const id = nanoid();
     const requested = data.slug?.trim() ?? "";
@@ -128,7 +126,7 @@ const updateAlbumInput = z
 export const updateAlbum = createServerFn({ method: "POST" })
   .validator(updateAlbumInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -179,7 +177,7 @@ export const listMyAlbums = createServerFn({ method: "GET" })
     }),
   )
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -229,7 +227,7 @@ const getAlbumBySlugInput = z.object({
 export const getAlbumBySlug = createServerFn({ method: "GET" })
   .validator(getAlbumBySlugInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -299,7 +297,7 @@ const setAlbumCoverInput = z.object({
 export const setAlbumCover = createServerFn({ method: "POST" })
   .validator(setAlbumCoverInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -337,7 +335,7 @@ const addPhotosInput = z.object({
 export const addPhotosToAlbum = createServerFn({ method: "POST" })
   .validator(addPhotosInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -389,7 +387,7 @@ const removePhotosInput = z.object({
 export const removePhotosFromAlbum = createServerFn({ method: "POST" })
   .validator(removePhotosInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -428,7 +426,7 @@ const deleteAlbumInput = z.object({
 export const deleteAlbum = createServerFn({ method: "POST" })
   .validator(deleteAlbumInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }

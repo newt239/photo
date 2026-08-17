@@ -1,4 +1,3 @@
-import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
@@ -10,7 +9,7 @@ import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { MIME_EXT, signPutUrl } from "#/server/storage.ts";
-import { ensureUserRow } from "#/server/user.ts";
+import { getCurrentUserId } from "#/server/user.ts";
 
 const ID_CHUNK_SIZE = 90;
 
@@ -25,11 +24,10 @@ const createPhotoUploadInput = z.object({
 export const createPhotoUpload = createServerFn({ method: "POST" })
   .validator(createPhotoUploadInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
-    await ensureUserRow(userId);
     const db = drizzle(env.DB, { schema });
     const [existing] = await db
       .select({ id: photos.id })
@@ -74,7 +72,7 @@ const finalizePhotoInput = z.object({
 export const finalizePhoto = createServerFn({ method: "POST" })
   .validator(finalizePhotoInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -173,7 +171,7 @@ export const finalizePhoto = createServerFn({ method: "POST" })
 export const getPhoto = createServerFn({ method: "GET" })
   .validator(z.object({ id: z.string().min(1) }))
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -231,7 +229,7 @@ const getPhotoNeighborsInput = z.object({
 export const getPhotoNeighbors = createServerFn({ method: "GET" })
   .validator(getPhotoNeighborsInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -266,7 +264,7 @@ const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
 export const listPhotosMissingLocation = createServerFn({ method: "GET" })
   .validator(z.object({ limit: z.number().int().positive().max(1000).optional() }))
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -308,7 +306,7 @@ const applyPhotoLocationsInput = z.object({
 export const applyPhotoLocations = createServerFn({ method: "POST" })
   .validator(applyPhotoLocationsInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -341,7 +339,7 @@ const updatePhotosInput = z.object({
 export const updatePhotos = createServerFn({ method: "POST" })
   .validator(updatePhotosInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -369,7 +367,7 @@ const updatePhotoInput = z.object({
 export const updatePhoto = createServerFn({ method: "POST" })
   .validator(updatePhotoInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -402,7 +400,7 @@ const updatePhotoLocationInput = z
 export const updatePhotoLocation = createServerFn({ method: "POST" })
   .validator(updatePhotoLocationInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -471,7 +469,7 @@ const deletePhotosInput = z.object({
 export const deletePhotos = createServerFn({ method: "POST" })
   .validator(deletePhotosInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }

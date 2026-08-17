@@ -73,7 +73,7 @@ npx wrangler versions upload --var CLERK_PUBLISHABLE_KEY_PREVIEW:$VITE_CLERK_PUB
 - 同じ理由で、この 2 つを Worker の secret として登録してはなりません。バージョン単位の `--var` でのみ渡します
 - publishable key はバンドルにも焼き込まれるため、`infra/cloudflare-build.sh` が `WORKERS_CI_BRANCH` が `main` 以外のときだけ `VITE_CLERK_PUBLISHABLE_KEY` を差し替えます
 - `--var` はバージョン単位の平文の変数になり、ダッシュボードから値が見えます。本番の値をここに渡してはなりません
-- D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別なので `user_id` が異なり、行としては混ざりません
+- D1 と R2 は本番と同じリソースを使います。Clerk のインスタンスが別でも `user_identities` が Clerk の user_id をアプリ内の `user_id` に解決するため、同じメールアドレスなら本番と同じ写真・アルバムを扱います
 
 ## アーキテクチャ
 
@@ -105,6 +105,18 @@ TanStack Start は RSC を使いません。full-document SSR + hydration + serv
 - 幅を渡すと `/cdn-cgi/image/` 経由でリサイズされ、渡さないと R2 の原本がそのまま返ります
 - 表示に使う幅の種類を増やすと変換の回数がその分増えます。`srcSet` の候補は必要最小限にしてください
 - HEIC は原本のままだと Chrome などで表示できないため、`finalizePhoto` がアップロード時に JPEG へ変換して保存します
+
+### アップロードと R2 の CORS
+
+アップロードはブラウザから R2 の S3 エンドポイントへ直接 PUT します。Worker を経由しないため、配信元の origin を R2 バケットの CORS に登録しないとブラウザにブロックされ、`putToR2` の `fetch` が `Failed to fetch` で失敗します。Worker のログには何も残りません。
+
+許可する origin は `infra/r2-cors.json` で管理します。新しい配信元を増やしたときはこのファイルに追記し、次のコマンドで適用してください。
+
+```
+pnpm wrangler r2 bucket cors set photo --file infra/r2-cors.json
+```
+
+プレビューは `https://*.newtpia.workers.dev` で配信されるため、この 1 行を消すとプレビューからのアップロードが動かなくなります。
 
 ### プロジェクト構造
 

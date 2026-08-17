@@ -1,4 +1,3 @@
-import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
@@ -6,6 +5,7 @@ import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "#/db/schema.ts";
 import { albums, photos } from "#/db/schema.ts";
+import { getCurrentUserId } from "#/server/user.ts";
 
 // 撮影地の壁時計で集計するため保存済みのオフセットを足す。未設定の写真は JST とみなす
 const wallClock = sql`${photos}.taken_at + COALESCE(${photos}.taken_at_offset_minutes, 540) * 60`;
@@ -38,7 +38,7 @@ const toIso = (seconds: number | null) =>
   seconds === null ? null : new Date(seconds * 1000).toISOString();
 
 export const getPhotoStats = createServerFn({ method: "GET" }).handler(async () => {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) {
     return { error: "ログインしてください", success: false } as const;
   }

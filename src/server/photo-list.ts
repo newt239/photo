@@ -1,4 +1,3 @@
-import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { and, asc, desc, eq, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
@@ -7,6 +6,7 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { photos } from "#/db/schema.ts";
+import { getCurrentUserId } from "#/server/user.ts";
 
 const listMyPhotosInput = z.object({
   album: z.string().optional(),
@@ -26,7 +26,7 @@ const listMyPhotosInput = z.object({
 export const listMyPhotos = createServerFn({ method: "GET" })
   .validator(listMyPhotosInput)
   .handler(async ({ data }) => {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { error: "ログインしてください", success: false } as const;
     }
@@ -115,7 +115,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
   });
 
 export const listCameraModels = createServerFn({ method: "GET" }).handler(async () => {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) {
     return [];
   }
