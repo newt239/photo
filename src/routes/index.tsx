@@ -8,7 +8,7 @@ import { listPublicAlbums } from "#/server/public.ts";
 const IndexPage = () => {
   const { albums } = Route.useLoaderData();
   return (
-    <main id="main">
+    <main>
       {albums.length === 0 ? (
         <Notice>公開アルバムはまだありません</Notice>
       ) : (

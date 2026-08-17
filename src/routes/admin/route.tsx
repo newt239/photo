@@ -30,7 +30,7 @@ const AdminLayout = () => {
 
       <AdminNavbar albums={albums} onNavigate={close} />
 
-      <AppShell.Main id="main">
+      <AppShell.Main>
         <Outlet />
       </AppShell.Main>
     </AppShell>
