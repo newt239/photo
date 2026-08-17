@@ -54,7 +54,7 @@ const AlbumSettingsPage = () => {
   };
 
   const handleSubmit = async (values: AlbumFormValues) => {
-    if (values.title.length === 0 || values.slug.length === 0 || submitting) {
+    if (submitting) {
       return;
     }
     setSubmitting(true);

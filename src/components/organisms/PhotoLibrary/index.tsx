@@ -90,13 +90,10 @@ export const PhotoLibrary = ({
     }
   };
 
-  const handleRemove = async () => {
+  const handleRemove = async (target: { id: string }) => {
     await run(async () => {
-      if (!album) {
-        return;
-      }
       const result = await removePhotosFromAlbum({
-        data: { albumId: album.id, photoIds: [...selected] },
+        data: { albumId: target.id, photoIds: [...selected] },
       });
       if (result.success) {
         setSelected(new Set());
@@ -182,7 +179,7 @@ export const PhotoLibrary = ({
             onDelete={handleDelete}
             onAddToAlbum={handleAddToAlbum}
             onCreateAlbum={handleCreateAlbum}
-            onRemoveFromAlbum={album ? handleRemove : undefined}
+            onRemoveFromAlbum={album ? () => handleRemove(album) : undefined}
           />
         )}
       </Group>

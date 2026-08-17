@@ -13,7 +13,7 @@ const NewAlbumPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (values: AlbumFormValues) => {
-    if (values.title.length === 0 || submitting) {
+    if (submitting) {
       return;
     }
     setSubmitting(true);
