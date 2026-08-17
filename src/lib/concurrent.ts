@@ -12,7 +12,6 @@ export const runConcurrently = async <T>(
           return;
         }
         // 同時実行数を抑えるためキューから 1 件ずつ取り出して処理する
-        // eslint-disable-next-line no-await-in-loop
         await worker(item);
       }
     }),
