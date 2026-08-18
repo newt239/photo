@@ -25,7 +25,9 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     () => new Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const router = useRouter();
-  const editable = items.filter((it) => it.status === "done" && it.photoId);
+  const editable = items.flatMap((it) =>
+    it.status === "done" && it.photoId ? [{ ...it, photoId: it.photoId }] : [],
+  );
   const unsavedCount = editable.filter((it) => !it.saved).length;
   const preview = items.find((it) => it.id === previewId);
 
@@ -196,26 +198,19 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   };
 
   const generateAll = async (field: "caption" | "alt") => {
-    const queue = items.flatMap((it) =>
-      it.status === "done" && it.photoId ? [{ id: it.id, photoId: it.photoId }] : [],
-    );
-    if (queue.length === 0 || generatingField) {
+    if (editable.length === 0 || generatingField) {
       return;
     }
     setGeneratingField(field);
     try {
-      await runConcurrently(queue, 3, (target) => generateOne(target.id, target.photoId, field));
+      await runConcurrently(editable, 3, (it) => generateOne(it.id, it.photoId, field));
     } finally {
       setGeneratingField(null);
     }
   };
 
   const saveAll = async () => {
-    const targets = items.flatMap((it) =>
-      it.status === "done" && it.photoId && !it.saved
-        ? [{ alt: it.alt, caption: it.caption, id: it.id, photoId: it.photoId }]
-        : [],
-    );
+    const targets = editable.filter((it) => !it.saved);
     if (targets.length === 0 || savingAll) {
       return;
     }
