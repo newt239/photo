@@ -62,11 +62,10 @@ export const createAlbum = createServerFn({ method: "POST" })
     }
     const db = drizzle(env.DB, { schema });
     const id = nanoid();
-    const requested = data.slug?.trim() ?? "";
-    if (requested && !SLUG_PATTERN.test(requested)) {
+    let slug = data.slug?.trim() ?? "";
+    if (slug && !SLUG_PATTERN.test(slug)) {
       return { error: "URL に使えない文字が含まれています", success: false } as const;
     }
-    let slug = requested;
     if (!slug) {
       const normalized = data.title
         .normalize("NFKD")

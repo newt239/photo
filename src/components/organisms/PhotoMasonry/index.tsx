@@ -1,5 +1,3 @@
-import { Text } from "@mantine/core";
-
 import { PhotoCard, type PhotoCardData } from "#/components/molecules/PhotoCard";
 import { masonryStyle } from "#/lib/masonry.ts";
 
@@ -9,24 +7,15 @@ export const PhotoMasonry = ({
   photos,
   albumSlug,
   order,
-  emptyMessage,
   selectedPhotoIds,
   onSelect,
 }: {
   photos: PhotoCardData[];
   albumSlug?: string;
   order: "asc" | "desc";
-  emptyMessage: string;
   selectedPhotoIds: Set<string>;
   onSelect: (photoId: string, extend: boolean) => void;
 }) => {
-  if (photos.length === 0) {
-    return (
-      <Text c="dimmed" size="sm">
-        {emptyMessage}
-      </Text>
-    );
-  }
   const positions = masonryStyle(photos, [1, 2, 3, 4, 5, 6, 7, 8], {
     canvas: classes.canvas,
     gap: true,

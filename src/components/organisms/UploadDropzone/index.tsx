@@ -25,8 +25,8 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     () => new Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const router = useRouter();
-  const editableCount = items.filter((it) => it.status === "done" && it.photoId).length;
-  const unsavedCount = items.filter((it) => it.status === "done" && it.photoId && !it.saved).length;
+  const editable = items.filter((it) => it.status === "done" && it.photoId);
+  const unsavedCount = editable.filter((it) => !it.saved).length;
   const preview = items.find((it) => it.id === previewId);
 
   const updateItem = (id: string, patch: Partial<UploadDraftItem>) => {
@@ -338,7 +338,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                           }}
                           loading={generatingField === "caption"}
                           disabled={
-                            busy || savingAll || generatingField === "alt" || editableCount === 0
+                            busy || savingAll || generatingField === "alt" || editable.length === 0
                           }
                         >
                           まとめて生成する
@@ -360,7 +360,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                             busy ||
                             savingAll ||
                             generatingField === "caption" ||
-                            editableCount === 0
+                            editable.length === 0
                           }
                         >
                           まとめて生成する

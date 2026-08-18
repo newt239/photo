@@ -23,7 +23,9 @@ const searchSchema = z.object({
   order: z.enum(["asc", "desc"]).default("desc"),
 });
 
-const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => search;
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
+  order: search.order,
+});
 
 export const Route = createFileRoute("/admin/photos/$photoId")({
   component: PhotoDetailPage,

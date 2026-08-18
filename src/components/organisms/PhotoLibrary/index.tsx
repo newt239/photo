@@ -21,7 +21,7 @@ type PhotoLibraryProps = {
   onOrderChange: (next: "asc" | "desc") => void;
   onViewChange: (next: "grid" | "table") => void;
   album?: { id: string; slug: string };
-  emptyMessage?: string;
+  emptyMessage: string;
 };
 
 export const PhotoLibrary = ({
@@ -32,7 +32,7 @@ export const PhotoLibrary = ({
   onOrderChange,
   onViewChange,
   album,
-  emptyMessage = "写真はまだありません",
+  emptyMessage,
 }: PhotoLibraryProps) => {
   const router = useRouter();
   const [selected, setSelected] = useState(new Set<string>());
@@ -77,6 +77,8 @@ export const PhotoLibrary = ({
     ["Escape", () => setSelected(new Set())],
     ["mod+A", selectAll],
   ]);
+
+  const List = view === "table" ? PhotoTable : PhotoMasonry;
 
   const run = async (action: () => Promise<void>) => {
     if (submitting) {
@@ -197,21 +199,15 @@ export const PhotoLibrary = ({
         </Text>
       )}
 
-      {view === "table" ? (
-        <PhotoTable
-          photos={photos}
-          albumSlug={album?.slug}
-          order={order}
-          emptyMessage={emptyMessage}
-          selectedPhotoIds={selected}
-          onSelect={toggle}
-        />
+      {photos.length === 0 ? (
+        <Text c="dimmed" size="sm">
+          {emptyMessage}
+        </Text>
       ) : (
-        <PhotoMasonry
+        <List
           photos={photos}
           albumSlug={album?.slug}
           order={order}
-          emptyMessage={emptyMessage}
           selectedPhotoIds={selected}
           onSelect={toggle}
         />
