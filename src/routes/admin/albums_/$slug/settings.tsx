@@ -54,7 +54,7 @@ const AlbumSettingsPage = () => {
   };
 
   const handleSubmit = async (values: AlbumFormValues) => {
-    if (values.title.length === 0 || values.slug.length === 0 || submitting) {
+    if (submitting) {
       return;
     }
     setSubmitting(true);
@@ -111,7 +111,7 @@ const AlbumSettingsPage = () => {
           periodEnd: album.periodEnd ?? "",
           periodStart: album.periodStart ?? "",
           slug: album.slug,
-          title: album.title ?? "",
+          title: album.title,
           visibility: album.visibility,
         }}
         slugRequired
@@ -159,9 +159,7 @@ const AlbumSettingsPage = () => {
 
       <Modal opened={deleteOpened} onClose={closeDelete} title="アルバムを削除する" centered>
         <Stack gap="md">
-          <Text size="sm">
-            「{album.title ?? "(無題)"}」を削除します。この操作は取り消せません。
-          </Text>
+          <Text size="sm">「{album.title}」を削除します。この操作は取り消せません。</Text>
           <Checkbox
             label={`アルバム内の写真 ${photoCount} 枚も削除する`}
             description="削除した写真は他のアルバムからも取り除かれます。チェックしない場合、写真はアルバムから外れるだけで残ります"

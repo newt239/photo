@@ -118,9 +118,7 @@ export const PhotoLocationEditor = ({ photoId, latitude, longitude, altitude }: 
               <NumberInput
                 label="緯度"
                 value={draft.latitude}
-                onChange={(value) =>
-                  setDraft((prev) => (prev === null ? prev : { ...prev, latitude: value }))
-                }
+                onChange={(value) => setDraft({ ...draft, latitude: value })}
                 min={-90}
                 max={90}
                 step={0.001}
@@ -130,9 +128,7 @@ export const PhotoLocationEditor = ({ photoId, latitude, longitude, altitude }: 
               <NumberInput
                 label="経度"
                 value={draft.longitude}
-                onChange={(value) =>
-                  setDraft((prev) => (prev === null ? prev : { ...prev, longitude: value }))
-                }
+                onChange={(value) => setDraft({ ...draft, longitude: value })}
                 min={-180}
                 max={180}
                 step={0.001}

@@ -45,20 +45,18 @@ export const PhotoLightbox = ({ photos, index, onClose, onIndexChange }: PhotoLi
     onClose();
   };
 
-  const move = (delta: number) => {
-    if (index === null) {
-      return;
-    }
-    reset();
-    onIndexChange((index + delta + photos.length) % photos.length);
-  };
-
   const jumpTo = (next: number) => {
     if (index === null) {
       return;
     }
     reset();
     onIndexChange(next);
+  };
+
+  const move = (delta: number) => {
+    if (index !== null) {
+      jumpTo((index + delta + photos.length) % photos.length);
+    }
   };
 
   useHotkeys([

@@ -14,13 +14,14 @@ const AlbumDetailPage = () => {
   const { slug } = Route.useParams();
   const { order, view } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const period = formatAlbumPeriod(album.periodStart, album.periodEnd);
 
   return (
     <Stack p="xl" gap="md">
       <Stack gap={4}>
         <Group justify="space-between" align="flex-start">
           <Group gap="xs" wrap="nowrap">
-            <Title order={2}>{album.title ?? "(無題)"}</Title>
+            <Title order={2}>{album.title}</Title>
             <VisibilityIcon visibility={album.visibility} size={18} />
           </Group>
           <Group gap="sm" wrap="nowrap">
@@ -59,9 +60,9 @@ const AlbumDetailPage = () => {
             </Button>
           </Group>
         </Group>
-        {formatAlbumPeriod(album.periodStart, album.periodEnd) && (
+        {period && (
           <Text size="sm" c="dimmed">
-            {formatAlbumPeriod(album.periodStart, album.periodEnd)}
+            {period}
           </Text>
         )}
       </Stack>
@@ -84,6 +85,15 @@ const AlbumDetailPage = () => {
   );
 };
 
+const searchSchema = z.object({
+  order: z.enum(["asc", "desc"]).default("desc"),
+  view: z.enum(["grid", "table"]).default("grid"),
+});
+
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
+  order: search.order,
+});
+
 export const Route = createFileRoute("/admin/albums/$slug")({
   component: AlbumDetailPage,
   head: ({ loaderData }) => ({
@@ -93,18 +103,24 @@ export const Route = createFileRoute("/admin/albums/$slug")({
     deps,
     params,
   }: {
-    deps: { order: "asc" | "desc" };
+    deps: ReturnType<typeof loaderDeps>;
     params: { slug: string };
   }) => {
     const result = await getAlbumBySlug({ data: { order: deps.order, slug: params.slug } });
     if (!result.success) {
       throw notFound();
     }
-    return { album: result.album, photos: result.photos };
+    return {
+      album: {
+        id: result.album.id,
+        periodEnd: result.album.periodEnd,
+        periodStart: result.album.periodStart,
+        title: result.album.title,
+        visibility: result.album.visibility,
+      },
+      photos: result.photos,
+    };
   },
-  loaderDeps: ({ search }) => ({ order: search.order }),
-  validateSearch: z.object({
-    order: z.enum(["asc", "desc"]).default("desc"),
-    view: z.enum(["grid", "table"]).default("grid"),
-  }),
+  loaderDeps,
+  validateSearch: searchSchema,
 });

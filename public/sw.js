@@ -13,12 +13,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     (async () => {
       const form = await event.request.formData();
-      const files = [];
-      for (const value of form.getAll("photos")) {
-        if (value instanceof File) {
-          files.push(value);
-        }
-      }
+      const files = form.getAll("photos").filter((value) => value instanceof File);
       const cache = await caches.open("share-target");
       await Promise.all(
         files.map((file, index) =>

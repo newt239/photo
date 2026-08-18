@@ -16,6 +16,7 @@ import { useRouter } from "@tanstack/react-router";
 import { SaveIcon, SparklesIcon } from "lucide-react";
 
 import { PhotoPreviewModal } from "#/components/molecules/PhotoPreviewModal";
+import { runConcurrently } from "#/lib/concurrent.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
 import { updatePhotos } from "#/server/photos.ts";
@@ -27,7 +28,6 @@ type DraftRow = {
   storageKey: string;
   generating?: "caption" | "alt";
   error?: string;
-  saved?: boolean;
 };
 
 type PhotoDraftQueueProps = {
@@ -52,7 +52,6 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const preview = rows.find((row) => row.id === previewId);
-  const unsavedCount = rows.filter((row) => !row.saved).length;
 
   const updateRow = (id: string, patch: Partial<DraftRow>) => {
     setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
@@ -65,7 +64,6 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
       if (result.success) {
         updateRow(id, {
           generating: undefined,
-          saved: false,
           ...(target === "caption" ? { caption: result.caption ?? "" } : { alt: result.alt ?? "" }),
         });
       } else {
@@ -78,24 +76,15 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
   };
 
   const generateAll = async () => {
-    const queue = rows.map((row) => row.id);
-    if (queue.length === 0 || generating) {
+    if (rows.length === 0 || generating) {
       return;
     }
     setGenerating(true);
     try {
-      await Promise.all(
-        Array.from({ length: 3 }, async () => {
-          for (;;) {
-            const id = queue.shift();
-            if (!id) {
-              return;
-            }
-            // AI の同時実行を 3 件までに抑えるためキューから 1 件ずつ取り出して処理する
-            // eslint-disable-next-line no-await-in-loop
-            await generateOne(id, field);
-          }
-        }),
+      await runConcurrently(
+        rows.map((row) => row.id),
+        3,
+        (id) => generateOne(id, field),
       );
     } finally {
       setGenerating(false);
@@ -103,8 +92,7 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
   };
 
   const saveAll = async () => {
-    const targets = rows.filter((row) => !row.saved);
-    if (targets.length === 0 || saving) {
+    if (rows.length === 0 || saving) {
       return;
     }
     setSaving(true);
@@ -112,7 +100,7 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
     try {
       const result = await updatePhotos({
         data: {
-          items: targets.map((row) => ({
+          items: rows.map((row) => ({
             alt: row.alt.trim() || null,
             caption: row.caption.trim() || null,
             id: row.id,
@@ -137,7 +125,7 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
         <Group gap="sm">
           <SegmentedControl
             value={field}
-            onChange={(next) => onFieldChange(next === "alt" ? "alt" : "caption")}
+            onChange={onFieldChange}
             data={[
               { label: "キャプション", value: "caption" },
               { label: "代替テキスト", value: "alt" },
@@ -166,7 +154,7 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
               saveAll();
             }}
             loading={saving}
-            disabled={generating || unsavedCount === 0}
+            disabled={generating || rows.length === 0}
           >
             保存する
           </Button>
@@ -211,11 +199,6 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
                             style={{ borderRadius: 6, display: "block", objectFit: "cover" }}
                           />
                         </UnstyledButton>
-                        {row.saved && (
-                          <Text size="xs" c="teal">
-                            保存しました
-                          </Text>
-                        )}
                         {row.error && (
                           <Text size="xs" c="red" role="alert">
                             {row.error}
@@ -227,7 +210,7 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
                       <Textarea
                         value={row.caption}
                         onChange={(event) =>
-                          updateRow(row.id, { caption: event.currentTarget.value, saved: false })
+                          updateRow(row.id, { caption: event.currentTarget.value })
                         }
                         disabled={row.generating === "caption"}
                         autosize
@@ -254,9 +237,7 @@ export const PhotoDraftQueue = ({ photos, total, field, onFieldChange }: PhotoDr
                     <Table.Td>
                       <Textarea
                         value={row.alt}
-                        onChange={(event) =>
-                          updateRow(row.id, { alt: event.currentTarget.value, saved: false })
-                        }
+                        onChange={(event) => updateRow(row.id, { alt: event.currentTarget.value })}
                         disabled={row.generating === "alt"}
                         autosize
                         minRows={1}

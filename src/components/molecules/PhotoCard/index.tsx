@@ -2,7 +2,8 @@ import { Checkbox } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { MapPinOffIcon } from "lucide-react";
 
-import { photoImageUrl } from "#/lib/image-url.ts";
+import { photoImageUrl, photoSrcSet } from "#/lib/image-url.ts";
+import { photoDetailLink } from "#/lib/photo-link.ts";
 
 import classes from "./PhotoCard.module.css";
 
@@ -20,19 +21,17 @@ export type PhotoCardData = {
 type PhotoCardProps = {
   photo: PhotoCardData;
   albumSlug?: string;
-  selected?: boolean;
-  onSelect?: (photoId: string, extend: boolean) => void;
+  order: "asc" | "desc";
+  selected: boolean;
+  onSelect: (photoId: string, extend: boolean) => void;
 };
 
-export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: PhotoCardProps) => {
+export const PhotoCard = ({ photo, albumSlug, order, selected, onSelect }: PhotoCardProps) => {
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
       <img
         src={photoImageUrl(photo.storageKey, 640)}
-        srcSet={[320, 640]
-          .filter((width) => width <= photo.width)
-          .map((width) => `${photoImageUrl(photo.storageKey, width)} ${width}w`)
-          .join(", ")}
+        srcSet={photoSrcSet(photo.storageKey, [320, 640], photo.width)}
         sizes="(max-width: 768px) 50vw, 240px"
         alt={photo.alt ?? photo.caption ?? ""}
         loading="lazy"
@@ -46,26 +45,11 @@ export const PhotoCard = ({ photo, albumSlug, selected = false, onSelect }: Phot
       {photo.caption && <span className={classes.caption}>{photo.caption}</span>}
     </div>
   );
-  const link =
-    albumSlug === undefined ? (
-      <Link to="/admin/photos/$photoId" params={{ photoId: photo.id }} className={classes.link}>
-        {thumb}
-      </Link>
-    ) : (
-      <Link
-        to="/admin/albums/$slug/photos/$photoId"
-        params={{ photoId: photo.id, slug: albumSlug }}
-        className={classes.link}
-      >
-        {thumb}
-      </Link>
-    );
-  if (!onSelect) {
-    return link;
-  }
   return (
     <div className={classes.card} data-selected={selected || undefined}>
-      {link}
+      <Link {...photoDetailLink(photo.id, albumSlug, order)} className={classes.link}>
+        {thumb}
+      </Link>
       <Checkbox
         className={classes.check}
         checked={selected}

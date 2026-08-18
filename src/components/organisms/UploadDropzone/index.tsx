@@ -8,27 +8,15 @@ import { EraserIcon, SaveIcon, SparklesIcon } from "lucide-react";
 import { PhotoPreviewModal } from "#/components/molecules/PhotoPreviewModal";
 import { TimeZoneSelect } from "#/components/molecules/TimeZoneSelect";
 import { UploadDraftRow, type UploadDraftItem } from "#/components/molecules/UploadDraftRow";
+import { runConcurrently } from "#/lib/concurrent.ts";
 import { extractExif, probeDimensions } from "#/lib/image.ts";
 import { encodeThumbHash } from "#/lib/thumbhash.ts";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "#/lib/upload-constraints.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
-import { createPhotoUpload, finalizePhoto, updatePhoto } from "#/server/photos.ts";
-
-type UploadState = UploadDraftItem;
-
-const putToR2 = async (url: string, body: Blob, contentType: string) => {
-  const res = await fetch(url, {
-    body,
-    headers: { "Content-Type": contentType },
-    method: "PUT",
-  });
-  if (!res.ok) {
-    throw new Error(`R2_PUT_FAILED_${res.status}`);
-  }
-};
+import { createPhotoUpload, finalizePhoto, updatePhotos } from "#/server/photos.ts";
 
 export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[]) => void }) => {
-  const [items, setItems] = useState<UploadState[]>([]);
+  const [items, setItems] = useState<UploadDraftItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [generatingField, setGeneratingField] = useState<"caption" | "alt" | null>(null);
   const [savingAll, setSavingAll] = useState(false);
@@ -37,18 +25,20 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     () => new Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const router = useRouter();
-  const editableCount = items.filter((it) => it.status === "done" && it.photoId).length;
-  const unsavedCount = items.filter((it) => it.status === "done" && it.photoId && !it.saved).length;
+  const editable = items.flatMap((it) =>
+    it.status === "done" && it.photoId ? [{ ...it, photoId: it.photoId }] : [],
+  );
+  const unsavedCount = editable.filter((it) => !it.saved).length;
   const preview = items.find((it) => it.id === previewId);
 
-  const updateItem = (id: string, patch: Partial<UploadState>) => {
+  const updateItem = (id: string, patch: Partial<UploadDraftItem>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
   const uploadOne = async (file: File, id: string) => {
-    const contentType = file.type.toLowerCase();
-    if (!ALLOWED_MIME_TYPES.includes(contentType as (typeof ALLOWED_MIME_TYPES)[number])) {
-      updateItem(id, { error: `非対応の形式: ${contentType}`, status: "error" });
+    const contentType = ALLOWED_MIME_TYPES.find((mime) => mime === file.type.toLowerCase());
+    if (!contentType) {
+      updateItem(id, { error: `非対応の形式: ${file.type}`, status: "error" });
       return null;
     }
     try {
@@ -69,7 +59,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       const prep = await createPhotoUpload({
         data: {
           contentHash,
-          contentType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
+          contentType,
           size: file.size,
         },
       });
@@ -87,7 +77,14 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
       }
 
       updateItem(id, { progress: 40, status: "uploading" });
-      await putToR2(prep.originalUrl, file, contentType);
+      const uploaded = await fetch(prep.originalUrl, {
+        body: file,
+        headers: { "Content-Type": contentType },
+        method: "PUT",
+      });
+      if (!uploaded.ok) {
+        throw new Error(`R2_PUT_FAILED_${uploaded.status}`);
+      }
 
       updateItem(id, { progress: 85, status: "saving" });
       const saved = await finalizePhoto({
@@ -95,7 +92,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
           contentHash,
           fileSize: file.size,
           height: dims.height,
-          mimeType: contentType as (typeof ALLOWED_MIME_TYPES)[number],
+          mimeType: contentType,
           originalKey: prep.originalKey,
           photoId: prep.photoId,
           placeholder,
@@ -126,7 +123,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   };
 
   const handleDrop = async (files: File[]) => {
-    const batch: { file: File; item: UploadState }[] = files.map((file) => ({
+    const batch: { file: File; item: UploadDraftItem }[] = files.map((file) => ({
       file,
       item: {
         alt: "",
@@ -201,64 +198,50 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
   };
 
   const generateAll = async (field: "caption" | "alt") => {
-    const queue = items.flatMap((it) =>
-      it.status === "done" && it.photoId ? [{ id: it.id, photoId: it.photoId }] : [],
-    );
-    if (queue.length === 0 || generatingField) {
+    if (editable.length === 0 || generatingField) {
       return;
     }
     setGeneratingField(field);
     try {
-      await Promise.all(
-        Array.from({ length: 3 }, async () => {
-          for (;;) {
-            const target = queue.shift();
-            if (!target) {
-              return;
-            }
-            // AI の同時実行を 3 件までに抑えるためキューから 1 件ずつ取り出して処理する
-            await generateOne(target.id, target.photoId, field);
-          }
-        }),
-      );
+      await runConcurrently(editable, 3, (it) => generateOne(it.id, it.photoId, field));
     } finally {
       setGeneratingField(null);
     }
   };
 
   const saveAll = async () => {
-    const targets = items.flatMap((it) =>
-      it.status === "done" && it.photoId && !it.saved
-        ? [{ alt: it.alt, caption: it.caption, id: it.id, photoId: it.photoId }]
-        : [],
-    );
+    const targets = editable.filter((it) => !it.saved);
     if (targets.length === 0 || savingAll) {
       return;
     }
     setSavingAll(true);
+    for (const target of targets) {
+      updateItem(target.id, { error: undefined });
+    }
     try {
-      await Promise.all(
-        targets.map(async (target) => {
-          updateItem(target.id, { error: undefined, saved: false });
-          try {
-            const result = await updatePhoto({
-              data: {
+      for (let offset = 0; offset < targets.length; offset += 100) {
+        // 1 リクエストあたりの件数を抑えるため分割して順に送信する
+        const chunk = targets.slice(offset, offset + 100);
+        try {
+          const result = await updatePhotos({
+            data: {
+              items: chunk.map((target) => ({
                 alt: target.alt.trim() || null,
                 caption: target.caption.trim() || null,
                 id: target.photoId,
-              },
-            });
-            if (result.success) {
-              updateItem(target.id, { saved: true });
-            } else {
-              updateItem(target.id, { error: result.error });
-            }
-          } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+              })),
+            },
+          });
+          for (const target of chunk) {
+            updateItem(target.id, result.success ? { saved: true } : { error: result.error });
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          for (const target of chunk) {
             updateItem(target.id, { error: message });
           }
-        }),
-      );
+        }
+      }
     } finally {
       setSavingAll(false);
     }
@@ -308,7 +291,14 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                 <Button
                   variant="default"
                   leftSection={<EraserIcon size={16} />}
-                  onClick={() => setItems([])}
+                  onClick={() => {
+                    for (const it of items) {
+                      if (it.thumbUrl) {
+                        URL.revokeObjectURL(it.thumbUrl);
+                      }
+                    }
+                    setItems([]);
+                  }}
                   disabled={busy || savingAll || generatingField !== null}
                 >
                   履歴を消去する
@@ -319,7 +309,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                     saveAll();
                   }}
                   loading={savingAll}
-                  disabled={generatingField !== null || unsavedCount === 0}
+                  disabled={busy || generatingField !== null || unsavedCount === 0}
                 >
                   保存する
                 </Button>
@@ -343,7 +333,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                           }}
                           loading={generatingField === "caption"}
                           disabled={
-                            busy || savingAll || generatingField === "alt" || editableCount === 0
+                            busy || savingAll || generatingField === "alt" || editable.length === 0
                           }
                         >
                           まとめて生成する
@@ -365,7 +355,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
                             busy ||
                             savingAll ||
                             generatingField === "caption" ||
-                            editableCount === 0
+                            editable.length === 0
                           }
                         >
                           まとめて生成する

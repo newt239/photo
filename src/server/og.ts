@@ -1,5 +1,6 @@
-import { env } from "cloudflare:workers";
 import { ImageResponse, loadGoogleFont } from "workers-og";
+
+import { jpegDataUrl } from "#/server/image-source.ts";
 
 const OG_WIDTH = 1200;
 
@@ -20,27 +21,6 @@ const escapeHtml = (value: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-const truncate = (value: string, max: number) =>
-  value.length > max ? `${value.slice(0, max)}…` : value;
-
-const imageDataUrl = async (storageKey: string, width: number, height: number) => {
-  const object = await env.MY_BUCKET.get(storageKey);
-  if (!object) {
-    return null;
-  }
-  // WebP を resvg が読めないため Images バインディングで JPEG に変換する
-  const source = await object.blob();
-  const transformed = await env.IMAGES.input(source.stream())
-    .transform({ fit: "cover", height, width })
-    .output({ format: "image/jpeg", quality: 80 });
-  const bytes = new Uint8Array(await transformed.response().arrayBuffer());
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCodePoint(byte);
-  }
-  return `data:image/jpeg;base64,${btoa(binary)}`;
-};
-
 type RenderOgImageInput = {
   title: string;
   subheading: string | null;
@@ -48,8 +28,8 @@ type RenderOgImageInput = {
 };
 
 const renderOgImage = async ({ title, subheading: sub, coverStorageKeys }: RenderOgImageInput) => {
-  const heading = truncate(title, 40);
-  const subheading = sub ? truncate(sub, 60) : "";
+  const heading = title.length > 40 ? `${title.slice(0, 40)}…` : title;
+  const subheading = sub && sub.length > 60 ? `${sub.slice(0, 60)}…` : (sub ?? "");
   const tiled = coverStorageKeys.length > 1;
 
   const [boldFont, regularFont, covers] = await Promise.all([
@@ -57,11 +37,11 @@ const renderOgImage = async ({ title, subheading: sub, coverStorageKeys }: Rende
     loadGoogleFont({ family: "Noto Sans JP", text: subheading || "photos", weight: 400 }),
     Promise.all(
       coverStorageKeys.map((storageKey) =>
-        imageDataUrl(
-          storageKey,
-          tiled ? TILE_WIDTH : OG_WIDTH,
-          tiled ? TILE_HEIGHT : OG_HEIGHT,
-        ).catch(() => null),
+        jpegDataUrl(storageKey, {
+          fit: "cover",
+          height: tiled ? TILE_HEIGHT : OG_HEIGHT,
+          width: tiled ? TILE_WIDTH : OG_WIDTH,
+        }),
       ),
     ),
   ]);

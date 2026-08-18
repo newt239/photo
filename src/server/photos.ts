@@ -38,7 +38,7 @@ export const createPhotoUpload = createServerFn({ method: "POST" })
       return { kind: "duplicate", photoId: existing.id, success: true } as const;
     }
     const photoId = nanoid();
-    const extension = MIME_EXT[data.contentType.toLowerCase()] ?? "bin";
+    const extension = MIME_EXT[data.contentType];
     const originalKey = `users/${userId}/photos/${photoId}/original.${extension}`;
     const originalUrl = await signPutUrl(originalKey, data.contentType);
     return { kind: "created", originalKey, originalUrl, photoId, success: true } as const;
@@ -168,8 +168,14 @@ export const finalizePhoto = createServerFn({ method: "POST" })
     return { id: data.photoId, success: true } as const;
   });
 
+const getPhotoInput = z.object({
+  albumSlug: z.string().min(1).nullable().optional(),
+  id: z.string().min(1),
+  order: z.enum(["asc", "desc"]).default("desc"),
+});
+
 export const getPhoto = createServerFn({ method: "GET" })
-  .validator(z.object({ id: z.string().min(1) }))
+  .validator(getPhotoInput)
   .handler(async ({ data }) => {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -206,60 +212,50 @@ export const getPhoto = createServerFn({ method: "GET" })
     if (!row) {
       return { error: "写真が見つかりません", success: false } as const;
     }
-    const albumRows = await db
-      .select({
-        coverPhotoId: albums.coverPhotoId,
-        id: albums.id,
-        slug: albums.slug,
-        title: albums.title,
-        visibility: albums.visibility,
-      })
-      .from(albumPhotos)
-      .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
-      .where(and(eq(albumPhotos.photoId, data.id), eq(albums.userId, userId)))
-      .orderBy(albums.createdAt);
-    return { photo: { ...row, albums: albumRows }, success: true } as const;
-  });
-
-const getPhotoNeighborsInput = z.object({
-  albumSlug: z.string().min(1).nullable().optional(),
-  id: z.string().min(1),
-});
-
-export const getPhotoNeighbors = createServerFn({ method: "GET" })
-  .validator(getPhotoNeighborsInput)
-  .handler(async ({ data }) => {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
     // 全件を取得して JS で探すのを避けるため LAG/LEAD で前後 1 件だけを求める
-    const ordering = sql`ORDER BY p.taken_at IS NULL, p.taken_at DESC, p.uploaded_at DESC`;
+    const sortDirection = data.order === "asc" ? sql`ASC` : sql`DESC`;
+    // 一覧の並び順と揃えるため同着の第 3 キーはアルバム内では追加順にする
+    const tieBreaker = data.albumSlug ? sql`ap.added_at` : sql`p.uploaded_at`;
+    const ordering = sql`ORDER BY p.taken_at IS NULL, p.taken_at ${sortDirection}, ${tieBreaker} ${sortDirection}`;
     const source = data.albumSlug
       ? sql`FROM album_photos ap
           JOIN photos p ON p.id = ap.photo_id
           JOIN albums a ON a.id = ap.album_id
           WHERE a.slug = ${data.albumSlug} AND a.user_id = ${userId}`
       : sql`FROM photos p WHERE p.user_id = ${userId}`;
-    const rows = await db.all<{ next_id: string | null; previous_id: string | null }>(sql`
-      WITH ordered AS (
-        SELECT p.id AS id,
-          LAG(p.id) OVER (${ordering}) AS previous_id,
-          LEAD(p.id) OVER (${ordering}) AS next_id
-        ${source}
-      )
-      SELECT previous_id, next_id FROM ordered WHERE id = ${data.id}
-    `);
-    const [row] = rows;
+    const [albumRows, neighborRows] = await Promise.all([
+      db
+        .select({
+          coverPhotoId: albums.coverPhotoId,
+          id: albums.id,
+          slug: albums.slug,
+          title: albums.title,
+          visibility: albums.visibility,
+        })
+        .from(albumPhotos)
+        .innerJoin(albums, eq(albumPhotos.albumId, albums.id))
+        .where(and(eq(albumPhotos.photoId, data.id), eq(albums.userId, userId)))
+        .orderBy(albums.createdAt),
+      db.all<{ next_id: string | null; previous_id: string | null }>(sql`
+        WITH ordered AS (
+          SELECT p.id AS id,
+            LAG(p.id) OVER (${ordering}) AS previous_id,
+            LEAD(p.id) OVER (${ordering}) AS next_id
+          ${source}
+        )
+        SELECT previous_id, next_id FROM ordered WHERE id = ${data.id}
+      `),
+    ]);
+    const [neighbor] = neighborRows;
     return {
-      nextId: row?.next_id ?? null,
-      previousId: row?.previous_id ?? null,
+      nextId: neighbor?.next_id ?? null,
+      photo: { ...row, albums: albumRows },
+      previousId: neighbor?.previous_id ?? null,
       success: true,
     } as const;
   });
 
-const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
+export const missingLocation = or(isNull(photos.latitude), isNull(photos.longitude));
 
 export const listPhotosMissingLocation = createServerFn({ method: "GET" })
   .validator(z.object({ limit: z.number().int().positive().max(1000).optional() }))
@@ -319,9 +315,6 @@ export const applyPhotoLocations = createServerFn({ method: "POST" })
         .where(condition)
         .returning({ id: photos.id });
     });
-    if (!first) {
-      return { error: "EMPTY", success: false } as const;
-    }
     const results = await db.batch([first, ...rest]);
     return { success: true, updated: results.flat().length } as const;
   });
@@ -351,40 +344,8 @@ export const updatePhotos = createServerFn({ method: "POST" })
         .where(and(eq(photos.id, item.id), eq(photos.userId, userId)))
         .returning({ id: photos.id }),
     );
-    if (!first) {
-      return { error: "EMPTY", success: false } as const;
-    }
     const results = await db.batch([first, ...rest]);
     return { success: true, updated: results.flat().length } as const;
-  });
-
-const updatePhotoInput = z.object({
-  alt: z.string().max(500).nullable(),
-  caption: z.string().max(2000).nullable(),
-  id: z.string().min(1),
-});
-
-export const updatePhoto = createServerFn({ method: "POST" })
-  .validator(updatePhotoInput)
-  .handler(async ({ data }) => {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { error: "ログインしてください", success: false } as const;
-    }
-    const db = drizzle(env.DB, { schema });
-    const [existing] = await db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
-      .limit(1);
-    if (!existing) {
-      return { error: "NOT_FOUND", success: false } as const;
-    }
-    await db
-      .update(photos)
-      .set({ alt: data.alt, caption: data.caption })
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
-    return { id: data.id, success: true } as const;
   });
 
 const updatePhotoLocationInput = z
@@ -405,22 +366,18 @@ export const updatePhotoLocation = createServerFn({ method: "POST" })
       return { error: "ログインしてください", success: false } as const;
     }
     const db = drizzle(env.DB, { schema });
-    const [existing] = await db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
-      .limit(1);
-    if (!existing) {
-      return { error: "写真が見つかりません", success: false } as const;
-    }
-    await db
+    const updated = await db
       .update(photos)
       .set(
         data.latitude === null
           ? { altitude: null, latitude: null, longitude: null }
           : { latitude: data.latitude, longitude: data.longitude },
       )
-      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)));
+      .where(and(eq(photos.id, data.id), eq(photos.userId, userId)))
+      .returning({ id: photos.id });
+    if (updated.length === 0) {
+      return { error: "写真が見つかりません", success: false } as const;
+    }
     return { id: data.id, success: true } as const;
   });
 
@@ -429,24 +386,15 @@ export const deleteOwnedPhotos = createServerOnlyFn(async (userId: string, photo
     return 0;
   }
   const db = drizzle(env.DB, { schema });
-  const rows: { id: string; storageKey: string }[] = [];
+  const rows: { storageKey: string }[] = [];
   for (let offset = 0; offset < photoIds.length; offset += ID_CHUNK_SIZE) {
-    // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
+    // D1 のバインドパラメータ上限を超えないよう ID を分割して削除する
     const chunk = photoIds.slice(offset, offset + ID_CHUNK_SIZE);
-    const found = await db
-      .select({ id: photos.id, storageKey: photos.storageKey })
-      .from(photos)
-      .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
-    rows.push(...found);
-  }
-  if (rows.length === 0) {
-    return 0;
-  }
-
-  const deletableIds = rows.map((row) => row.id);
-  for (let offset = 0; offset < deletableIds.length; offset += ID_CHUNK_SIZE) {
-    const chunk = deletableIds.slice(offset, offset + ID_CHUNK_SIZE);
-    await db.delete(photos).where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
+    const deleted = await db
+      .delete(photos)
+      .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)))
+      .returning({ storageKey: photos.storageKey });
+    rows.push(...deleted);
   }
 
   const storageKeys = rows.map((row) => row.storageKey);

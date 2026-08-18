@@ -14,7 +14,7 @@ export type PhotoFilters = {
 
 type PhotoFilterBarProps = {
   filters: PhotoFilters;
-  albums: { id: string; title: string | null }[];
+  albums: { id: string; title: string }[];
   cameras: string[];
   opened: boolean;
   appliedCount: number;
@@ -68,7 +68,7 @@ export const PhotoFilterBar = ({
               placeholder="すべて"
               data={[
                 { label: "どれにも入っていない", value: "none" },
-                ...albums.map((album) => ({ label: album.title ?? "(無題)", value: album.id })),
+                ...albums.map((album) => ({ label: album.title, value: album.id })),
               ]}
               value={draft.album ?? null}
               onChange={(value) => setDraft((prev) => ({ ...prev, album: value ?? undefined }))}
@@ -93,12 +93,7 @@ export const PhotoFilterBar = ({
                 { label: "未設定", value: "without" },
               ]}
               value={draft.geo ?? null}
-              onChange={(value) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  geo: value === "with" || value === "without" ? value : undefined,
-                }))
-              }
+              onChange={(value) => setDraft((prev) => ({ ...prev, geo: value ?? undefined }))}
               clearable
               w={140}
             />
@@ -110,12 +105,7 @@ export const PhotoFilterBar = ({
                 { label: "代替テキスト", value: "alt" },
               ]}
               value={draft.missing ?? null}
-              onChange={(value) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  missing: value === "caption" || value === "alt" ? value : undefined,
-                }))
-              }
+              onChange={(value) => setDraft((prev) => ({ ...prev, missing: value ?? undefined }))}
               clearable
               w={160}
             />

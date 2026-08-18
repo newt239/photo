@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/og/albums/$slug")({
         return ogImageResponse(request, {
           coverStorageKeys: album.coverStorageKey ? [album.coverStorageKey] : [],
           subheading: formatAlbumPeriod(album.periodStart, album.periodEnd),
-          title: album.title ?? "アルバム",
+          title: album.title,
         });
       },
     },

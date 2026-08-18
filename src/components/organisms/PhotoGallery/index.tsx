@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 import { LayoutGridIcon, Share2Icon } from "lucide-react";
 import { thumbHashToDataURL } from "thumbhash";
 
 import { PhotoLightbox } from "#/components/organisms/PhotoLightbox";
-import { photoImageUrl } from "#/lib/image-url.ts";
-import { masonryLayout } from "#/lib/masonry.ts";
+import { photoImageUrl, photoSrcSet } from "#/lib/image-url.ts";
+import { masonryStyle } from "#/lib/masonry.ts";
 
 import classes from "./PhotoGallery.module.css";
 
@@ -31,23 +31,23 @@ export const PhotoGallery = ({
 }) => {
   const [index, setIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  // 列数は size 未指定なら CSS のコンテナクエリで決まるため 1〜3 列ぶんの位置を先に配っておく
-  const candidates = size === undefined ? [1, 2, 3] : [size];
-  const layouts = candidates.map((columns) => masonryLayout(photos, columns));
-  const positions = [
-    `.${classes.canvas}{${size === undefined ? "" : `--cols:${size};`}${layouts
-      .map((layout, i) => `--h${i + 1}:${layout.totalHeight};`)
-      .join("")}}`,
-    ...photos.map(
-      (_, position) =>
-        `.${classes.item}[data-index="${position}"]{${layouts
-          .map((layout, i) => {
-            const placed = layout.items[position];
-            return placed ? `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};` : "";
-          })
-          .join("")}}`,
-    ),
-  ].join("");
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // アンマウント後に setCopied が走らないようタイマーを片付ける
+  useEffect(
+    () => () => {
+      if (copiedTimer.current !== null) {
+        clearTimeout(copiedTimer.current);
+      }
+    },
+    [],
+  );
+  // 列数は size があればそれに固定し、無ければ CSS のコンテナクエリが 1〜3 列から選ぶ
+  const positions =
+    (size === undefined ? "" : `.${classes.canvas}{--cols:${size};}`) +
+    masonryStyle(photos, size === undefined ? [1, 2, 3] : [size], {
+      canvas: classes.canvas,
+      item: classes.item,
+    });
   const blurs = useMemo(
     () =>
       photos.map((p) =>
@@ -72,7 +72,10 @@ export const PhotoGallery = ({
     // 共有 API が使えない環境ではクリップボードにコピーする
     await navigator.clipboard.writeText(url);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (copiedTimer.current !== null) {
+      clearTimeout(copiedTimer.current);
+    }
+    copiedTimer.current = setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -81,45 +84,36 @@ export const PhotoGallery = ({
         <div className={`${classes.gallery} ${size === undefined ? classes.auto : ""}`}>
           <style>{positions}</style>
           <div className={classes.canvas}>
-            {photos.map((p, i) => {
-              const widths = [320, 640, 1024].filter((candidate) => candidate <= p.width);
-              const srcSet =
-                widths.length > 0
-                  ? widths
-                      .map((candidate) => `${photoImageUrl(p.storageKey, candidate)} ${candidate}w`)
-                      .join(", ")
-                  : undefined;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={classes.item}
-                  data-index={i}
-                  onClick={() => setIndex(i)}
-                  aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
-                >
-                  <img
-                    src={photoImageUrl(p.storageKey, 1024)}
-                    srcSet={srcSet}
-                    sizes={
-                      size === undefined
-                        ? "(max-width: 239px) 100vw, (max-width: 480px) 50vw, 33vw"
-                        : `calc(100vw / ${size})`
-                    }
-                    alt=""
-                    loading={i < EAGER_COUNT ? "eager" : "lazy"}
-                    fetchPriority={i < EAGER_COUNT ? "high" : undefined}
-                    decoding="async"
-                    style={{
-                      aspectRatio: `${p.width} / ${p.height}`,
-                      backgroundImage: blurs[i] ? `url(${blurs[i]})` : undefined,
-                      backgroundSize: "cover",
-                    }}
-                  />
-                  {p.caption && <span className={classes.caption}>{p.caption}</span>}
-                </button>
-              );
-            })}
+            {photos.map((p, i) => (
+              <button
+                key={p.id}
+                type="button"
+                className={classes.item}
+                data-index={i}
+                onClick={() => setIndex(i)}
+                aria-label={p.alt ?? p.caption ?? "写真を拡大する"}
+              >
+                <img
+                  src={photoImageUrl(p.storageKey, 1024)}
+                  srcSet={photoSrcSet(p.storageKey, [320, 640, 1024], p.width)}
+                  sizes={
+                    size === undefined
+                      ? "(max-width: 239px) 100vw, (max-width: 480px) 50vw, 33vw"
+                      : `calc(100vw / ${size})`
+                  }
+                  alt=""
+                  loading={i < EAGER_COUNT ? "eager" : "lazy"}
+                  fetchPriority={i < EAGER_COUNT ? "high" : undefined}
+                  decoding="async"
+                  style={{
+                    aspectRatio: `${p.width} / ${p.height}`,
+                    backgroundImage: blurs[i] ? `url(${blurs[i]})` : undefined,
+                    backgroundSize: "cover",
+                  }}
+                />
+                {p.caption && <span className={classes.caption}>{p.caption}</span>}
+              </button>
+            ))}
           </div>
         </div>
         <nav className={classes.footer}>

@@ -30,12 +30,13 @@ import {
 
 import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
 import { PhotoLocationEditor } from "#/components/organisms/PhotoLocationEditor";
-import { formatDateTime } from "#/lib/format.ts";
+import { formatBytes, formatDateTime } from "#/lib/format.ts";
 import { photoImageUrl } from "#/lib/image-url.ts";
+import { photoDetailLink } from "#/lib/photo-link.ts";
 import { usePhotoZoom } from "#/lib/photo-zoom.ts";
 import { setAlbumCover } from "#/server/albums.ts";
 import { generatePhotoDraft } from "#/server/photo-draft.ts";
-import { updatePhoto } from "#/server/photos.ts";
+import { updatePhotos } from "#/server/photos.ts";
 
 import classes from "./PhotoDetailView.module.css";
 
@@ -63,7 +64,7 @@ type PhotoDetailData = {
   albums: {
     id: string;
     slug: string;
-    title: string | null;
+    title: string;
     visibility: "public" | "private";
     coverPhotoId: string | null;
   }[];
@@ -89,11 +90,12 @@ const renderInfoList = (rows: InfoRow[]) => (
 type Props = {
   photo: PhotoDetailData;
   albumSlug?: string;
+  order: "asc" | "desc";
   previousId: string | null;
   nextId: string | null;
 };
 
-export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props) => {
+export const PhotoDetailView = ({ photo, albumSlug, order, previousId, nextId }: Props) => {
   const router = useRouter();
   const imageSrc = photoImageUrl(photo.storageKey, 2048);
   const camera = [photo.cameraMake, photo.cameraModel].filter(Boolean).join(" ");
@@ -117,15 +119,9 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     exifRows.push({ label: "ISO", value: `ISO ${photo.iso}` });
   }
 
-  const fileSize =
-    photo.fileSize < 1024
-      ? `${photo.fileSize} B`
-      : photo.fileSize < 1024 * 1024
-        ? `${(photo.fileSize / 1024).toFixed(1)} KB`
-        : `${(photo.fileSize / (1024 * 1024)).toFixed(2)} MB`;
   const fileRows: InfoRow[] = [
     { label: "サイズ", value: `${photo.width} × ${photo.height}` },
-    { label: "ファイルサイズ", value: fileSize },
+    { label: "ファイルサイズ", value: formatBytes(photo.fileSize) },
     { label: "形式", value: photo.mimeType },
   ];
   const takenAt = formatDateTime(photo.takenAt);
@@ -194,17 +190,17 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     setSubmitting(true);
     setErrorMessage(null);
     try {
-      const result = await updatePhoto({
+      const result = await updatePhotos({
         data: {
-          alt: alt.trim() || null,
-          caption: caption.trim() || null,
-          id: photo.id,
+          items: [{ alt: alt.trim() || null, caption: caption.trim() || null, id: photo.id }],
         },
       });
-      if (result.success) {
-        await router.invalidate();
-      } else {
+      if (!result.success) {
         setErrorMessage(result.error);
+      } else if (result.updated === 0) {
+        setErrorMessage("写真が見つかりません");
+      } else {
+        await router.invalidate();
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -213,59 +209,21 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
     }
   };
 
-  const backButton =
-    albumSlug === undefined ? (
-      <Button
-        component={Link}
-        to="/admin"
-        variant="subtle"
-        size="xs"
-        w="fit-content"
-        leftSection={<ArrowLeftIcon size={14} />}
-      >
-        写真一覧に戻る
-      </Button>
-    ) : (
-      <Button
-        variant="subtle"
-        size="xs"
-        w="fit-content"
-        leftSection={<ArrowLeftIcon size={14} />}
-        renderRoot={(props) => (
-          <Link {...props} to="/admin/albums/$slug" params={{ slug: albumSlug }} />
-        )}
-      >
-        アルバムに戻る
-      </Button>
-    );
-
-  const goToPhoto = (photoId: string | null) => {
-    if (photoId === null) {
-      return;
-    }
-    if (albumSlug === undefined) {
-      router.navigate({ params: { photoId }, to: "/admin/photos/$photoId" });
-    } else {
-      router.navigate({
-        params: { photoId, slug: albumSlug },
-        to: "/admin/albums/$slug/photos/$photoId",
-      });
-    }
-  };
+  const listLink =
+    albumSlug === undefined
+      ? ({ search: { order }, to: "/admin" } as const)
+      : ({ params: { slug: albumSlug }, search: { order }, to: "/admin/albums/$slug" } as const);
 
   useHotkeys([
-    ["ArrowLeft", () => goToPhoto(previousId)],
-    ["ArrowRight", () => goToPhoto(nextId)],
     [
-      "Escape",
-      () => {
-        if (albumSlug === undefined) {
-          router.navigate({ to: "/admin" });
-        } else {
-          router.navigate({ params: { slug: albumSlug }, to: "/admin/albums/$slug" });
-        }
-      },
+      "ArrowLeft",
+      () => previousId !== null && router.navigate(photoDetailLink(previousId, albumSlug, order)),
     ],
+    [
+      "ArrowRight",
+      () => nextId !== null && router.navigate(photoDetailLink(nextId, albumSlug, order)),
+    ],
+    ["Escape", () => router.navigate(listLink)],
   ]);
 
   const neighborButton = (photoId: string | null, direction: "previous" | "next") => {
@@ -283,17 +241,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
       <ActionIcon
         variant="default"
         aria-label={label}
-        renderRoot={(props) =>
-          albumSlug === undefined ? (
-            <Link {...props} to="/admin/photos/$photoId" params={{ photoId }} />
-          ) : (
-            <Link
-              {...props}
-              to="/admin/albums/$slug/photos/$photoId"
-              params={{ photoId, slug: albumSlug }}
-            />
-          )
-        }
+        renderRoot={(props) => <Link {...props} {...photoDetailLink(photoId, albumSlug, order)} />}
       >
         {icon}
       </ActionIcon>
@@ -303,7 +251,17 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
   return (
     <Stack p="xl" gap="md">
       <Group justify="space-between" align="center" wrap="nowrap">
-        <div>{backButton}</div>
+        <div>
+          <Button
+            variant="subtle"
+            size="xs"
+            w="fit-content"
+            leftSection={<ArrowLeftIcon size={14} />}
+            renderRoot={(props) => <Link {...props} {...listLink} />}
+          >
+            {albumSlug === undefined ? "写真一覧に戻る" : "アルバムに戻る"}
+          </Button>
+        </div>
         <Group gap="xs" wrap="nowrap">
           {currentAlbum && (
             <Menu position="bottom-end" shadow="md" width={240}>
@@ -313,7 +271,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Label>{currentAlbum.title ?? "(無題)"}</Menu.Label>
+                <Menu.Label>{currentAlbum.title}</Menu.Label>
                 <Menu.Item
                   leftSection={isCover ? <CheckIcon size={14} /> : <ImageIcon size={14} />}
                   disabled={isCover || settingCover}
@@ -462,7 +420,7 @@ export const PhotoDetailView = ({ photo, albumSlug, previousId, nextId }: Props)
                           <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
                         )}
                       >
-                        {album.title ?? "(無題)"}
+                        {album.title}
                       </Anchor>
                     </Group>
                   ))}

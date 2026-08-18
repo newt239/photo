@@ -6,12 +6,9 @@ import { photoImageUrl } from "#/lib/image-url.ts";
 
 import classes from "./AlbumCard.module.css";
 
-export type AlbumCardData = {
-  id: string;
+type AlbumCardData = {
   slug: string;
-  title: string | null;
-  periodStart: string | null;
-  periodEnd: string | null;
+  title: string;
   visibility: "public" | "private";
   coverStorageKey: string | null;
 };
@@ -34,7 +31,7 @@ export const AlbumCard = ({ album }: { album: AlbumCardData }) => {
         </div>
         <Group gap={6} wrap="nowrap" px="sm" py="xs">
           <Text fw={600} truncate style={{ minWidth: 0 }}>
-            {album.title ?? "(無題)"}
+            {album.title}
           </Text>
           <VisibilityIcon visibility={album.visibility} size={14} />
         </Group>

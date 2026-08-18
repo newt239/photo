@@ -8,7 +8,7 @@ import { listPublicAlbums } from "#/server/public.ts";
 const IndexPage = () => {
   const { albums } = Route.useLoaderData();
   return (
-    <main id="main">
+    <main>
       {albums.length === 0 ? (
         <Notice>公開アルバムはまだありません</Notice>
       ) : (
@@ -21,7 +21,7 @@ const IndexPage = () => {
 export const Route = createFileRoute("/")({
   component: IndexPage,
   head: () => ({
-    meta: [{ title: "photos.newt239.dev" }, { content: env.VITE_SITE_URL, property: "og:url" }],
+    meta: [{ content: env.VITE_SITE_URL, property: "og:url" }],
   }),
   loader: async () => ({
     albums: await listPublicAlbums(),

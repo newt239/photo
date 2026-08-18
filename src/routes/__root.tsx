@@ -20,9 +20,6 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
         <HeadContent />
       </head>
       <body>
-        <a className="skip-link" href="#main">
-          本文へスキップする
-        </a>
         <MantineProvider defaultColorScheme={colorScheme} colorSchemeManager={colorSchemeManager}>
           <ClerkProvider>{children}</ClerkProvider>
         </MantineProvider>

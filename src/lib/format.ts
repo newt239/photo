@@ -9,6 +9,20 @@ export const formatAlbumPeriod = (periodStart: string | null, periodEnd: string 
     : `${monthLabel(periodStart)}〜${monthLabel(periodEnd)}`;
 };
 
+export const formatBytes = (bytes: number) => {
+  const units = ["KB", "MB", "GB"];
+  let value = bytes;
+  let unit = "B";
+  for (const next of units) {
+    if (value < 1024) {
+      break;
+    }
+    value /= 1024;
+    unit = next;
+  }
+  return unit === "B" ? `${value} B` : `${value.toFixed(1)} ${unit}`;
+};
+
 export const formatDateTime = (value: Date | string | null) => {
   if (!value) {
     return null;

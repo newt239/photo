@@ -35,8 +35,10 @@ export const getCurrentUserId = async () => {
     .where(eq(users.email, email))
     .limit(1);
 
-  const userId = existing?.id ?? clerkUserId;
-  if (!existing) {
+  let userId = clerkUserId;
+  if (existing) {
+    userId = existing.id;
+  } else {
     const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ") || null;
     await db
       .insert(users)

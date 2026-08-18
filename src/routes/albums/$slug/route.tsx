@@ -22,7 +22,7 @@ const PublicAlbumLayout = () => {
 
   return (
     <>
-      <main id="main">
+      <main>
         <Outlet />
       </main>
       <AlbumViewerControls

@@ -2,7 +2,9 @@ import { AwsClient } from "aws4fetch";
 
 import { env } from "#/env.ts";
 
-export const MIME_EXT: Record<string, string> = {
+import type { ALLOWED_MIME_TYPES } from "#/lib/upload-constraints.ts";
+
+export const MIME_EXT: Record<(typeof ALLOWED_MIME_TYPES)[number], string> = {
   "image/avif": "avif",
   "image/gif": "gif",
   "image/heic": "heic",
@@ -12,7 +14,7 @@ export const MIME_EXT: Record<string, string> = {
   "image/webp": "webp",
 };
 
-export const signPutUrl = async (key: string, contentType: string, expiresInSeconds = 300) => {
+export const signPutUrl = async (key: string, contentType: string) => {
   const client = new AwsClient({
     accessKeyId: env.R2_ACCESS_KEY_ID,
     region: "auto",
@@ -20,7 +22,7 @@ export const signPutUrl = async (key: string, contentType: string, expiresInSeco
     service: "s3",
   });
   const url = new URL(`https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/photo/${key}`);
-  url.searchParams.set("X-Amz-Expires", String(expiresInSeconds));
+  url.searchParams.set("X-Amz-Expires", "300");
   const signed = await client.sign(
     new Request(url.toString(), {
       headers: { "Content-Type": contentType },

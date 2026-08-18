@@ -34,9 +34,6 @@ const isoBucket = sql<string>`CASE
     ELSE '6401〜'
   END`;
 
-const toIso = (seconds: number | null) =>
-  seconds === null ? null : new Date(seconds * 1000).toISOString();
-
 export const getPhotoStats = createServerFn({ method: "GET" }).handler(async () => {
   const userId = await getCurrentUserId();
   if (!userId) {
@@ -136,16 +133,17 @@ export const getPhotoStats = createServerFn({ method: "GET" }).handler(async () 
     lenses: lenses.map((row) => ({ count: row.count, label: row.label ?? "不明" })),
     months,
     overview: {
-      earliest: toIso(overview?.earliest ?? null),
-      geotagged: overview?.geotagged ?? 0,
-      latest: toIso(overview?.latest ?? null),
-      missingAlt: overview?.missingAlt ?? 0,
-      missingCaption: overview?.missingCaption ?? 0,
-      publicAlbums: albumRow?.publicAlbums ?? 0,
-      totalAlbums: albumRow?.totalAlbums ?? 0,
-      totalBytes: overview?.totalBytes ?? 0,
-      totalPhotos: overview?.totalPhotos ?? 0,
-      unfiledPhotos: unfiled[0]?.count ?? 0,
+      earliest:
+        overview.earliest === null ? null : new Date(overview.earliest * 1000).toISOString(),
+      geotagged: overview.geotagged,
+      latest: overview.latest === null ? null : new Date(overview.latest * 1000).toISOString(),
+      missingAlt: overview.missingAlt,
+      missingCaption: overview.missingCaption,
+      publicAlbums: albumRow.publicAlbums,
+      totalAlbums: albumRow.totalAlbums,
+      totalBytes: overview.totalBytes,
+      totalPhotos: overview.totalPhotos,
+      unfiledPhotos: unfiled[0].count,
     },
     success: true,
   } as const;

@@ -23,6 +23,13 @@ const oldestTakenAt = sql`(
       WHERE ap.album_id = ${albums}.id
   )`;
 
+export const albumListOrder = [
+  sql`${albums}.period_start IS NULL`,
+  desc(albums.periodStart),
+  desc(oldestTakenAt),
+  desc(albums.createdAt),
+];
+
 export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async () => {
   const db = drizzle(env.DB, { schema });
   const rows = await db
@@ -31,25 +38,16 @@ export const listPublicAlbums = createServerFn({ method: "GET" }).handler(async 
       coverPlaceholder: photos.placeholder,
       coverStorageKey: photos.storageKey,
       coverWidth: photos.width,
-      createdAt: albums.createdAt,
       id: albums.id,
       periodEnd: albums.periodEnd,
       periodStart: albums.periodStart,
-      photoCount: sql<number>`(
-          SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
-        )`.as("photo_count"),
       slug: albums.slug,
       title: albums.title,
     })
     .from(albums)
     .leftJoin(photos, eq(photos.id, coverPhotoId))
     .where(eq(albums.visibility, "public"))
-    .orderBy(
-      sql`${albums}.period_start IS NULL`,
-      desc(albums.periodStart),
-      desc(oldestTakenAt),
-      desc(albums.createdAt),
-    );
+    .orderBy(...albumListOrder);
   return rows;
 });
 
@@ -62,7 +60,6 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
         id: albums.id,
         periodEnd: albums.periodEnd,
         periodStart: albums.periodStart,
-        slug: albums.slug,
         title: albums.title,
         updatedAt: albums.updatedAt,
       })
@@ -90,5 +87,13 @@ export const getPublicAlbumBySlug = createServerFn({ method: "GET" })
       .where(eq(albumPhotos.albumId, album.id))
       .orderBy(sql`${photos}.taken_at IS NULL`, asc(photos.takenAt), asc(albumPhotos.addedAt));
 
-    return { album, photos: photoRows };
+    return {
+      album: {
+        periodEnd: album.periodEnd,
+        periodStart: album.periodStart,
+        title: album.title,
+        updatedAt: album.updatedAt,
+      },
+      photos: photoRows,
+    };
   });

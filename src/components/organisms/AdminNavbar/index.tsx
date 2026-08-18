@@ -19,7 +19,7 @@ type AdminNavbarProps = {
   albums: {
     id: string;
     slug: string;
-    title: string | null;
+    title: string;
     periodStart: string | null;
     periodEnd: string | null;
   }[];
@@ -65,7 +65,7 @@ export const AdminNavbar = ({ albums, onNavigate }: AdminNavbarProps) => {
               renderRoot={(props) => (
                 <Link {...props} to="/admin/albums/$slug" params={{ slug: album.slug }} />
               )}
-              label={album.title ?? "(無題)"}
+              label={album.title}
               description={formatAlbumPeriod(album.periodStart, album.periodEnd) ?? undefined}
               classNames={{ label: classes.albumLabel }}
               leftSection={<FolderIcon size={16} />}

@@ -4,18 +4,16 @@ import { GlobeIcon, LockIcon } from "lucide-react";
 type VisibilityControlProps = {
   value: "public" | "private";
   onChange: (value: "public" | "private") => void;
-  disabled?: boolean;
 };
 
-export const VisibilityControl = ({ value, onChange, disabled }: VisibilityControlProps) => (
+export const VisibilityControl = ({ value, onChange }: VisibilityControlProps) => (
   <Group justify="space-between" align="center" wrap="nowrap">
     <Text size="sm" fw={500}>
       公開状態
     </Text>
     <SegmentedControl
       value={value}
-      onChange={(next) => onChange(next === "public" ? "public" : "private")}
-      disabled={disabled}
+      onChange={onChange}
       data={[
         {
           label: (

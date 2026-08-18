@@ -101,6 +101,7 @@
     "typescript/no-floating-promises": "off",
     "typescript/no-misused-promises": "off",
     "typescript/no-non-null-assertion": "off",
+    "typescript/no-unnecessary-condition": "off",
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/only-throw-error": "off",
     "typescript/prefer-nullish-coalescing": "off",
@@ -111,6 +112,7 @@
     "typescript/strict-void-return": "off",
     "typescript/unbound-method": "off",
     "unicorn/filename-case": ["warn", { "cases": { "kebabCase": true, "pascalCase": true } }],
+    "unicorn/max-nested-calls": "off",
     "unicorn/no-document-cookie": "off",
     "unicorn/no-nested-ternary": "off",
     "unicorn/no-null": "off",
@@ -126,12 +128,6 @@
       "rules": {
         "import/no-commonjs": "off",
         "import/unambiguous": "off"
-      }
-    },
-    {
-      "files": ["drizzle.config.ts"],
-      "rules": {
-        "typescript/no-unnecessary-condition": "off"
       }
     }
   ]

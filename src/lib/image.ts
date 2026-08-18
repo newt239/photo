@@ -1,8 +1,6 @@
 import { parse } from "exifr";
 
-type ImageMeta = {
-  width: number;
-  height: number;
+type ExifMeta = {
   takenAt: string | null;
   takenAtOffsetMinutes: number | null;
   latitude: number | null;
@@ -77,10 +75,7 @@ const zonedTakenAt = (local: Date, timeZone: string) => {
   };
 };
 
-export const extractExif = async (
-  file: File,
-  timeZone: string,
-): Promise<Omit<ImageMeta, "width" | "height">> => {
+export const extractExif = async (file: File, timeZone: string): Promise<ExifMeta> => {
   try {
     const tags = (await parse(file, {
       exif: true,
@@ -139,7 +134,7 @@ export const extractExif = async (
   }
 };
 
-const emptyExif = (): Omit<ImageMeta, "width" | "height"> => ({
+const emptyExif = (): ExifMeta => ({
   altitude: null,
   aperture: null,
   cameraMake: null,

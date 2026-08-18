@@ -75,7 +75,6 @@ export const photos = sqliteTable(
     width: integer().notNull(),
   },
   (t) => [
-    index("photos_user_id_idx").on(t.userId),
     index("photos_taken_at_idx").on(t.takenAt),
     index("photos_user_id_taken_at_idx").on(t.userId, t.takenAt),
     index("photos_lat_lng_idx").on(t.latitude, t.longitude),
@@ -96,7 +95,7 @@ export const albums = sqliteTable(
     periodEnd: text("period_end"),
     periodStart: text("period_start"),
     slug: text().notNull(),
-    title: text(),
+    title: text().notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
@@ -125,43 +124,5 @@ export const albumPhotos = sqliteTable(
     primaryKey({ columns: [t.albumId, t.photoId] }),
     index("album_photos_photo_id_idx").on(t.photoId),
     index("album_photos_cover_idx").on(t.albumId, t.addedAt),
-  ],
-);
-
-export const albumShares = sqliteTable(
-  "album_shares",
-  {
-    albumId: text("album_id")
-      .notNull()
-      .references(() => albums.id, { onDelete: "cascade" }),
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-  },
-  (t) => [
-    primaryKey({ columns: [t.albumId, t.userId] }),
-    index("album_shares_user_id_idx").on(t.userId),
-  ],
-);
-
-export const photoShares = sqliteTable(
-  "photo_shares",
-  {
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    photoId: text("photo_id")
-      .notNull()
-      .references(() => photos.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-  },
-  (t) => [
-    primaryKey({ columns: [t.photoId, t.userId] }),
-    index("photo_shares_user_id_idx").on(t.userId),
   ],
 );

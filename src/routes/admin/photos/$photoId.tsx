@@ -1,20 +1,31 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
+import { z } from "zod";
 
 import { PhotoDetailView } from "#/components/organisms/PhotoDetailView";
-import { getPhoto, getPhotoNeighbors } from "#/server/photos.ts";
+import { getPhoto } from "#/server/photos.ts";
 
 const PhotoDetailPage = () => {
-  const { neighbors, photo } = Route.useLoaderData();
+  const { nextId, photo, previousId } = Route.useLoaderData();
+  const { order } = Route.useSearch();
   return (
     <PhotoDetailView
       key={photo.id}
       photo={photo}
-      previousId={neighbors.previousId}
-      nextId={neighbors.nextId}
+      order={order}
+      previousId={previousId}
+      nextId={nextId}
     />
   );
 };
+
+const searchSchema = z.object({
+  order: z.enum(["asc", "desc"]).default("desc"),
+});
+
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
+  order: search.order,
+});
 
 export const Route = createFileRoute("/admin/photos/$photoId")({
   component: PhotoDetailPage,
@@ -22,17 +33,19 @@ export const Route = createFileRoute("/admin/photos/$photoId")({
     links: [{ href: leafletCss, rel: "stylesheet" }],
     meta: [{ title: `${loaderData?.photo.caption ?? "写真"} | photos.newt239.dev` }],
   }),
-  loader: async ({ params }: { params: { photoId: string } }) => {
-    const [photo, neighbors] = await Promise.all([
-      getPhoto({ data: { id: params.photoId } }),
-      getPhotoNeighbors({ data: { id: params.photoId } }),
-    ]);
-    if (!photo.success || !neighbors.success) {
+  loader: async ({
+    deps,
+    params,
+  }: {
+    deps: ReturnType<typeof loaderDeps>;
+    params: { photoId: string };
+  }) => {
+    const result = await getPhoto({ data: { id: params.photoId, order: deps.order } });
+    if (!result.success) {
       throw notFound();
     }
-    return {
-      neighbors: { nextId: neighbors.nextId, previousId: neighbors.previousId },
-      photo: photo.photo,
-    };
+    return result;
   },
+  loaderDeps,
+  validateSearch: searchSchema,
 });

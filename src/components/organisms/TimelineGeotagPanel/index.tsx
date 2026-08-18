@@ -120,7 +120,7 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
   };
 
   const handleApply = async () => {
-    if (selected.length === 0 || applying) {
+    if (applying) {
       return;
     }
     setApplying(true);

@@ -1,13 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { and, asc, desc, eq, inArray, like, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, sql, type SQL } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
+import { photoCardColumns, toPhotoCard } from "#/server/photo-list.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
+import { albumListOrder, coverPhotoId } from "#/server/public.ts";
 import { getCurrentUserId } from "#/server/user.ts";
 
 const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
@@ -15,22 +17,6 @@ const SLUG_PATTERN = /^[a-zA-Z0-9぀-ゟ゠-ヿ一-鿿-]+$/;
 const ID_CHUNK_SIZE = 90;
 
 const INSERT_CHUNK_SIZE = 45;
-
-const coverPhotoId = sql`(
-    SELECT COALESCE(
-      ${albums}.cover_photo_id,
-      (SELECT ap.photo_id FROM album_photos ap
-        WHERE ap.album_id = ${albums}.id
-        ORDER BY ap.added_at ASC
-        LIMIT 1)
-    )
-  )`;
-
-const oldestTakenAt = sql`(
-    SELECT MIN(p.taken_at) FROM album_photos ap
-      JOIN photos p ON p.id = ap.photo_id
-      WHERE ap.album_id = ${albums}.id
-  )`;
 
 const findOwnedAlbum = async (
   db: DrizzleD1Database<typeof schema>,
@@ -50,9 +36,6 @@ const albumPeriod = z
   .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/)
   .nullable();
 
-const hasValidPeriod = (value: { periodEnd: string | null; periodStart: string | null }) =>
-  value.periodEnd === null || (value.periodStart !== null && value.periodStart <= value.periodEnd);
-
 const periodMessage = { message: "終了年月は開始年月以降にしてください" };
 
 const createAlbumInput = z
@@ -63,7 +46,12 @@ const createAlbumInput = z
     title: z.string().min(1).max(200),
     visibility: z.enum(["public", "private"]).default("private"),
   })
-  .refine(hasValidPeriod, periodMessage);
+  .refine(
+    (value) =>
+      value.periodEnd === null ||
+      (value.periodStart !== null && value.periodStart <= value.periodEnd),
+    periodMessage,
+  );
 
 export const createAlbum = createServerFn({ method: "POST" })
   .validator(createAlbumInput)
@@ -74,27 +62,19 @@ export const createAlbum = createServerFn({ method: "POST" })
     }
     const db = drizzle(env.DB, { schema });
     const id = nanoid();
-    const requested = data.slug?.trim() ?? "";
-    if (requested) {
-      if (!SLUG_PATTERN.test(requested)) {
-        return { error: "URL に使えない文字が含まれています", success: false } as const;
-      }
-      const [duplicate] = await db
-        .select({ id: albums.id })
-        .from(albums)
-        .where(eq(albums.slug, requested))
-        .limit(1);
-      if (duplicate) {
-        return { error: "この URL は既に使われています", success: false } as const;
-      }
+    let slug = data.slug?.trim() ?? "";
+    if (slug && !SLUG_PATTERN.test(slug)) {
+      return { error: "URL に使えない文字が含まれています", success: false } as const;
     }
-    const normalized = data.title
-      .normalize("NFKD")
-      .replaceAll(/[\u0300-\u036F]/g, "")
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, "-")
-      .replaceAll(/^-+|-+$/g, "");
-    const slug = requested || `${normalized || "album"}-${nanoid(6)}`;
+    if (!slug) {
+      const normalized = data.title
+        .normalize("NFKD")
+        .replaceAll(/[\u0300-\u036F]/g, "")
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, "-")
+        .replaceAll(/^-+|-+$/g, "");
+      slug = `${normalized || "album"}-${nanoid(6)}`;
+    }
     try {
       await db.insert(albums).values({
         id,
@@ -106,7 +86,7 @@ export const createAlbum = createServerFn({ method: "POST" })
         visibility: data.visibility,
       });
     } catch {
-      // 重複チェックの後に他のリクエストが割り込むと一意制約に違反しうる
+      // 一意制約があるため slug が重複するとここに来る
       return { error: "この URL は既に使われています", success: false } as const;
     }
     return { id, slug, success: true } as const;
@@ -121,7 +101,12 @@ const updateAlbumInput = z
     title: z.string().min(1).max(200),
     visibility: z.enum(["public", "private"]),
   })
-  .refine(hasValidPeriod, periodMessage);
+  .refine(
+    (value) =>
+      value.periodEnd === null ||
+      (value.periodStart !== null && value.periodStart <= value.periodEnd),
+    periodMessage,
+  );
 
 export const updateAlbum = createServerFn({ method: "POST" })
   .validator(updateAlbumInput)
@@ -141,26 +126,22 @@ export const updateAlbum = createServerFn({ method: "POST" })
       return { error: "アルバムが見つかりません", success: false } as const;
     }
 
-    const [duplicate] = await db
-      .select({ id: albums.id })
-      .from(albums)
-      .where(and(eq(albums.slug, data.slug), ne(albums.id, data.id)))
-      .limit(1);
-    if (duplicate) {
+    try {
+      await db
+        .update(albums)
+        .set({
+          periodEnd: data.periodEnd,
+          periodStart: data.periodStart,
+          slug: data.slug,
+          title: data.title,
+          updatedAt: new Date(),
+          visibility: data.visibility,
+        })
+        .where(eq(albums.id, data.id));
+    } catch {
+      // 一意制約があるため slug が重複するとここに来る
       return { error: "この URL は既に使われています", success: false } as const;
     }
-
-    await db
-      .update(albums)
-      .set({
-        periodEnd: data.periodEnd,
-        periodStart: data.periodStart,
-        slug: data.slug,
-        title: data.title,
-        updatedAt: new Date(),
-        visibility: data.visibility,
-      })
-      .where(eq(albums.id, data.id));
 
     return { slug: data.slug, success: true } as const;
   });
@@ -192,29 +173,18 @@ export const listMyAlbums = createServerFn({ method: "GET" })
     }
     const rows = await db
       .select({
-        coverPhotoId: albums.coverPhotoId,
         coverStorageKey: photos.storageKey,
-        createdAt: albums.createdAt,
         id: albums.id,
         periodEnd: albums.periodEnd,
         periodStart: albums.periodStart,
-        photoCount: sql<number>`(
-            SELECT COUNT(*) FROM album_photos WHERE album_photos.album_id = ${albums}.id
-          )`.as("photo_count"),
         slug: albums.slug,
         title: albums.title,
-        updatedAt: albums.updatedAt,
         visibility: albums.visibility,
       })
       .from(albums)
       .leftJoin(photos, eq(photos.id, coverPhotoId))
       .where(and(...conditions))
-      .orderBy(
-        sql`${albums}.period_start IS NULL`,
-        desc(albums.periodStart),
-        desc(oldestTakenAt),
-        desc(albums.createdAt),
-      )
+      .orderBy(...albumListOrder)
       .limit(data.limit ?? 200);
     return { albums: rows, success: true } as const;
   });
@@ -253,17 +223,7 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
 
     const direction = data.order === "asc" ? asc : desc;
     const photoRows = await db
-      .select({
-        alt: photos.alt,
-        caption: photos.caption,
-        height: photos.height,
-        id: photos.id,
-        latitude: photos.latitude,
-        longitude: photos.longitude,
-        storageKey: photos.storageKey,
-        takenAt: photos.takenAt,
-        width: photos.width,
-      })
+      .select(photoCardColumns)
       .from(albumPhotos)
       .innerJoin(photos, eq(albumPhotos.photoId, photos.id))
       .where(eq(albumPhotos.albumId, album.id))
@@ -273,20 +233,7 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
         direction(albumPhotos.addedAt),
       );
 
-    return {
-      album,
-      photos: photoRows.map((row) => ({
-        alt: row.alt,
-        caption: row.caption,
-        hasLocation: row.latitude !== null && row.longitude !== null,
-        height: row.height,
-        id: row.id,
-        storageKey: row.storageKey,
-        takenAt: row.takenAt?.toISOString() ?? null,
-        width: row.width,
-      })),
-      success: true,
-    } as const;
+    return { album, photos: photoRows.map((row) => toPhotoCard(row)), success: true } as const;
   });
 
 const setAlbumCoverInput = z.object({
@@ -346,25 +293,27 @@ export const addPhotosToAlbum = createServerFn({ method: "POST" })
       return { error: "アルバムが見つかりません", success: false } as const;
     }
 
+    const photoIds = [...new Set(data.photoIds)];
+
     let ownedCount = 0;
-    for (let offset = 0; offset < data.photoIds.length; offset += ID_CHUNK_SIZE) {
+    for (let offset = 0; offset < photoIds.length; offset += ID_CHUNK_SIZE) {
       // D1 のバインドパラメータ上限を超えないよう ID を分割して問い合わせる
-      const chunk = data.photoIds.slice(offset, offset + ID_CHUNK_SIZE);
+      const chunk = photoIds.slice(offset, offset + ID_CHUNK_SIZE);
       const owned = await db
         .select({ id: photos.id })
         .from(photos)
         .where(and(eq(photos.userId, userId), inArray(photos.id, chunk)));
       ownedCount += owned.length;
     }
-    if (ownedCount !== data.photoIds.length) {
+    if (ownedCount !== photoIds.length) {
       return { error: "追加できない写真が含まれています", success: false } as const;
     }
 
     let inserted = 0;
-    for (let offset = 0; offset < data.photoIds.length; offset += INSERT_CHUNK_SIZE) {
-      const rows = data.photoIds
+    for (let offset = 0; offset < photoIds.length; offset += INSERT_CHUNK_SIZE) {
+      const rows = photoIds
         .slice(offset, offset + INSERT_CHUNK_SIZE)
-        .map((photoId) => ({ albumId: data.albumId, photoId }));
+        .map((photoId) => ({ albumId: album.id, photoId }));
       // 1 行あたり 2 パラメータを使うため挿入はさらに小さく分割する
       const result = await db
         .insert(albumPhotos)
@@ -412,7 +361,7 @@ export const removePhotosFromAlbum = createServerFn({ method: "POST" })
     const coverRemoved = album.coverPhotoId !== null && data.photoIds.includes(album.coverPhotoId);
     await db
       .update(albums)
-      .set({ coverPhotoId: coverRemoved ? null : album.coverPhotoId, updatedAt: new Date() })
+      .set({ ...(coverRemoved && { coverPhotoId: null }), updatedAt: new Date() })
       .where(eq(albums.id, album.id));
 
     return { removed, success: true } as const;
@@ -449,8 +398,8 @@ export const deleteAlbum = createServerFn({ method: "POST" })
       );
     }
 
-    await db.delete(albumPhotos).where(eq(albumPhotos.albumId, album.id));
-    await db.delete(albums).where(and(eq(albums.id, album.id), eq(albums.userId, userId)));
+    // 外部キーが cascade のため album_photos の行も合わせて消える
+    await db.delete(albums).where(eq(albums.id, album.id));
 
     return { deletedPhotos, success: true } as const;
   });

@@ -15,13 +15,13 @@ import type { PhotoCardData } from "#/components/molecules/PhotoCard";
 
 type PhotoLibraryProps = {
   photos: PhotoCardData[];
-  albums: { id: string; title: string | null }[];
+  albums: { id: string; title: string }[];
   order: "asc" | "desc";
   view: "grid" | "table";
   onOrderChange: (next: "asc" | "desc") => void;
   onViewChange: (next: "grid" | "table") => void;
   album?: { id: string; slug: string };
-  emptyMessage?: string;
+  emptyMessage: string;
 };
 
 export const PhotoLibrary = ({
@@ -43,17 +43,19 @@ export const PhotoLibrary = ({
   const [notice, setNotice] = useState<string | null>(null);
 
   const toggle = (photoId: string, extend: boolean) => {
-    const anchorIndex = photos.findIndex((p) => p.id === lastSelectedId);
-    const targetIndex = photos.findIndex((p) => p.id === photoId);
     setSelected((prev) => {
       const next = new Set(prev);
-      if (extend && anchorIndex !== -1 && targetIndex !== -1) {
-        const [from, to] =
-          anchorIndex < targetIndex ? [anchorIndex, targetIndex] : [targetIndex, anchorIndex];
-        for (const photo of photos.slice(from, to + 1)) {
-          next.add(photo.id);
+      if (extend) {
+        const anchorIndex = photos.findIndex((p) => p.id === lastSelectedId);
+        const targetIndex = photos.findIndex((p) => p.id === photoId);
+        if (anchorIndex !== -1 && targetIndex !== -1) {
+          const [from, to] =
+            anchorIndex < targetIndex ? [anchorIndex, targetIndex] : [targetIndex, anchorIndex];
+          for (const photo of photos.slice(from, to + 1)) {
+            next.add(photo.id);
+          }
+          return next;
         }
-        return next;
       }
       if (next.has(photoId)) {
         next.delete(photoId);
@@ -65,23 +67,37 @@ export const PhotoLibrary = ({
     setLastSelectedId(photoId);
   };
 
+  const selectAll = () => {
+    setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]));
+  };
+
   useHotkeys([
     ["Backspace", () => selected.size > 0 && setModal("delete")],
     ["Delete", () => selected.size > 0 && setModal("delete")],
     ["Escape", () => setSelected(new Set())],
-    ["mod+A", () => setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]))],
+    ["mod+A", selectAll],
   ]);
 
-  const handleRemove = async () => {
-    if (!album || selected.size === 0 || submitting) {
+  const List = view === "table" ? PhotoTable : PhotoMasonry;
+
+  const run = async (action: () => Promise<void>) => {
+    if (submitting) {
       return;
     }
     setSubmitting(true);
     setError(null);
     setNotice(null);
     try {
+      await action();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRemove = async (target: { id: string }) => {
+    await run(async () => {
       const result = await removePhotosFromAlbum({
-        data: { albumId: album.id, photoIds: [...selected] },
+        data: { albumId: target.id, photoIds: [...selected] },
       });
       if (result.success) {
         setSelected(new Set());
@@ -90,19 +106,11 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   const handleDelete = async () => {
-    if (selected.size === 0 || submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
+    await run(async () => {
       const result = await deletePhotos({ data: { ids: [...selected] } });
       if (result.success) {
         setSelected(new Set());
@@ -111,19 +119,11 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   const handleAddToAlbum = async (albumId: string) => {
-    if (selected.size === 0 || submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
+    await run(async () => {
       const result = await addPhotosToAlbum({ data: { albumId, photoIds: [...selected] } });
       if (result.success) {
         setSelected(new Set());
@@ -136,19 +136,11 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   const handleCreateAlbum = async (title: string) => {
-    if (selected.size === 0 || submitting) {
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    try {
+    await run(async () => {
       const created = await createAlbum({ data: { title } });
       if (!created.success) {
         setError(created.error);
@@ -164,9 +156,7 @@ export const PhotoLibrary = ({
       } else {
         setError(result.error);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   return (
@@ -185,9 +175,7 @@ export const PhotoLibrary = ({
             albums={album ? albums.filter((a) => a.id !== album.id) : albums}
             modal={modal}
             onModalChange={setModal}
-            onSelectAll={() =>
-              setSelected((prev) => new Set([...prev, ...photos.map((p) => p.id)]))
-            }
+            onSelectAll={selectAll}
             onCancel={() => {
               setSelected(new Set());
               setError(null);
@@ -195,7 +183,7 @@ export const PhotoLibrary = ({
             onDelete={handleDelete}
             onAddToAlbum={handleAddToAlbum}
             onCreateAlbum={handleCreateAlbum}
-            onRemoveFromAlbum={album ? handleRemove : undefined}
+            onRemoveFromAlbum={album ? () => handleRemove(album) : undefined}
           />
         )}
       </Group>
@@ -211,19 +199,15 @@ export const PhotoLibrary = ({
         </Text>
       )}
 
-      {view === "table" ? (
-        <PhotoTable
-          photos={photos}
-          albumSlug={album?.slug}
-          emptyMessage={emptyMessage}
-          selectedPhotoIds={selected}
-          onSelect={toggle}
-        />
+      {photos.length === 0 ? (
+        <Text c="dimmed" size="sm">
+          {emptyMessage}
+        </Text>
       ) : (
-        <PhotoMasonry
+        <List
           photos={photos}
           albumSlug={album?.slug}
-          emptyMessage={emptyMessage}
+          order={order}
           selectedPhotoIds={selected}
           onSelect={toggle}
         />

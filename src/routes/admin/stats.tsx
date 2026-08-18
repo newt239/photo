@@ -4,6 +4,7 @@ import { Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { Notice } from "#/components/atoms/Notice";
+import { formatBytes } from "#/lib/format.ts";
 import { getPhotoStats } from "#/server/stats.ts";
 
 const StatsPage = () => {
@@ -19,19 +20,13 @@ const StatsPage = () => {
     );
   }
 
-  const capacity =
-    overview.totalBytes < 1024 * 1024
-      ? `${(overview.totalBytes / 1024).toFixed(1)} KB`
-      : overview.totalBytes < 1024 * 1024 * 1024
-        ? `${(overview.totalBytes / (1024 * 1024)).toFixed(1)} MB`
-        : `${(overview.totalBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   const period =
     overview.earliest === null || overview.latest === null
       ? "撮影日時が未設定"
       : `${new Date(overview.earliest).toLocaleDateString("ja-JP")} 〜 ${new Date(overview.latest).toLocaleDateString("ja-JP")}`;
   const cards = [
     { label: "総枚数", value: `${overview.totalPhotos.toLocaleString()} 枚` },
-    { label: "合計容量", value: capacity },
+    { label: "合計容量", value: formatBytes(overview.totalBytes) },
     { label: "撮影期間", value: period },
     { label: "位置情報あり", value: `${overview.geotagged.toLocaleString()} 枚` },
     { label: "キャプション未入力", value: `${overview.missingCaption.toLocaleString()} 枚` },
@@ -42,15 +37,13 @@ const StatsPage = () => {
     },
     { label: "アルバム未所属", value: `${overview.unfiledPhotos.toLocaleString()} 枚` },
   ];
-  const columnCharts = [
+  const charts = [
     { data: months, title: "月別の枚数" },
     { data: hours, title: "時間帯別の枚数" },
     { data: focalLengths, title: "焦点距離" },
     { data: isoValues, title: "ISO 感度" },
-  ];
-  const barCharts = [
-    { data: cameras, title: "カメラ別の枚数" },
-    { data: lenses, title: "レンズ別の枚数" },
+    { data: cameras, title: "カメラ別の枚数", vertical: true },
+    { data: lenses, title: "レンズ別の枚数", vertical: true },
   ];
 
   return (
@@ -70,38 +63,20 @@ const StatsPage = () => {
         ))}
       </SimpleGrid>
 
-      {columnCharts.map((chart) =>
+      {charts.map((chart) =>
         chart.data.length === 0 ? null : (
           <Stack key={chart.title} gap="xs">
             <Title order={4}>{chart.title}</Title>
             <BarChart
-              h={260}
+              h={chart.vertical ? 40 * chart.data.length + 40 : 260}
               data={chart.data}
               dataKey="label"
+              orientation={chart.vertical ? "vertical" : undefined}
               series={[{ color: "blue.6", label: "枚数", name: "count" }]}
               barProps={{ radius: 4 }}
-              gridAxis="y"
+              gridAxis={chart.vertical ? "x" : "y"}
               tickLine="none"
-              unit=" 枚"
-            />
-          </Stack>
-        ),
-      )}
-
-      {barCharts.map((chart) =>
-        chart.data.length === 0 ? null : (
-          <Stack key={chart.title} gap="xs">
-            <Title order={4}>{chart.title}</Title>
-            <BarChart
-              h={40 * chart.data.length + 40}
-              data={chart.data}
-              dataKey="label"
-              orientation="vertical"
-              series={[{ color: "blue.6", label: "枚数", name: "count" }]}
-              barProps={{ radius: 4 }}
-              gridAxis="x"
-              tickLine="none"
-              yAxisProps={{ width: 160 }}
+              yAxisProps={chart.vertical ? { width: 160 } : undefined}
               unit=" 枚"
             />
           </Stack>
@@ -122,14 +97,6 @@ export const Route = createFileRoute("/admin/stats")({
     if (!result.success) {
       throw notFound();
     }
-    return {
-      cameras: result.cameras,
-      focalLengths: result.focalLengths,
-      hours: result.hours,
-      isoValues: result.isoValues,
-      lenses: result.lenses,
-      months: result.months,
-      overview: result.overview,
-    };
+    return result;
   },
 });
