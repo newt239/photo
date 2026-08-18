@@ -2,6 +2,7 @@ import { Paper, Stack, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { UploadDropzone } from "#/components/organisms/UploadDropzone";
+import { APP_NAME } from "#/lib/app.ts";
 
 const PhotosUploadPage = () => (
   <Stack p="xl" gap="md">
@@ -14,5 +15,5 @@ const PhotosUploadPage = () => (
 
 export const Route = createFileRoute("/admin/photos/upload")({
   component: PhotosUploadPage,
-  head: () => ({ meta: [{ title: "アップロード | photos.newt239.dev" }] }),
+  head: () => ({ meta: [{ title: `アップロード | ${APP_NAME}` }] }),
 });

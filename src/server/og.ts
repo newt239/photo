@@ -1,5 +1,6 @@
 import { ImageResponse, loadGoogleFont } from "workers-og";
 
+import { APP_NAME } from "#/lib/app.ts";
 import { jpegDataUrl } from "#/server/image-source.ts";
 
 const OG_WIDTH = 1200;
@@ -34,7 +35,7 @@ const renderOgImage = async ({ title, subheading: sub, coverStorageKeys }: Rende
 
   const [boldFont, regularFont, covers] = await Promise.all([
     loadGoogleFont({ family: "Noto Sans JP", text: heading, weight: 700 }),
-    loadGoogleFont({ family: "Noto Sans JP", text: subheading || "photos", weight: 400 }),
+    loadGoogleFont({ family: "Noto Sans JP", text: subheading || APP_NAME, weight: 400 }),
     Promise.all(
       coverStorageKeys.map((storageKey) =>
         jpegDataUrl(storageKey, {

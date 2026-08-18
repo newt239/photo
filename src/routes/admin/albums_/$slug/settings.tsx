@@ -17,6 +17,7 @@ import { ArrowLeftIcon, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 
 import { AlbumCover } from "#/components/organisms/AlbumCover";
 import { AlbumForm, type AlbumFormValues } from "#/components/organisms/AlbumForm";
+import { APP_NAME } from "#/lib/app.ts";
 import { deleteAlbum, getAlbumBySlug, updateAlbum } from "#/server/albums.ts";
 
 const AlbumSettingsPage = () => {
@@ -194,7 +195,7 @@ const AlbumSettingsPage = () => {
 export const Route = createFileRoute("/admin/albums_/$slug/settings")({
   component: AlbumSettingsPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `設定 | ${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
+    meta: [{ title: `設定 | ${loaderData?.album.title ?? "アルバム"} | ${APP_NAME}` }],
   }),
   loader: async ({ params }: { params: { slug: string } }) => {
     const result = await getAlbumBySlug({ data: { slug: params.slug } });

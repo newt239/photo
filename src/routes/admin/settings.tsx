@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SignOutButton } from "#/components/atoms/SignOutButton";
 import { ColorSchemeControl } from "#/components/molecules/ColorSchemeControl";
 import { UserProfile } from "#/components/molecules/UserProfile";
+import { APP_NAME } from "#/lib/app.ts";
 
 const SettingsPage = () => (
   <Stack p="xl" gap="xl">
@@ -36,5 +37,5 @@ const SettingsPage = () => (
 
 export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "設定 | photos.newt239.dev" }] }),
+  head: () => ({ meta: [{ title: `設定 | ${APP_NAME}` }] }),
 });

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { VisibilityIcon } from "#/components/atoms/VisibilityIcon";
 import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
+import { APP_NAME } from "#/lib/app.ts";
 import { formatAlbumPeriod } from "#/lib/format.ts";
 import { getAlbumBySlug } from "#/server/albums.ts";
 
@@ -97,7 +98,7 @@ const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
 export const Route = createFileRoute("/admin/albums/$slug")({
   component: AlbumDetailPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
+    meta: [{ title: `${loaderData?.album.title ?? "アルバム"} | ${APP_NAME}` }],
   }),
   loader: async ({
     deps,

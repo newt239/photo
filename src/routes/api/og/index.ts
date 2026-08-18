@@ -5,6 +5,7 @@ import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "#/db/schema.ts";
 import { albums, photos } from "#/db/schema.ts";
+import { APP_NAME } from "#/lib/app.ts";
 import { ogImageResponse } from "#/server/og.ts";
 import { coverPhotoId } from "#/server/public.ts";
 
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/api/og/")({
         return ogImageResponse(request, {
           coverStorageKeys: rows.map((row) => row.storageKey),
           subheading: null,
-          title: "photos.newt239.dev",
+          title: APP_NAME,
         });
       },
     },

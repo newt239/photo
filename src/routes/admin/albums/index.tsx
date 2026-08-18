@@ -6,6 +6,7 @@ import { z } from "zod";
 import { AlbumCard } from "#/components/molecules/AlbumCard";
 import { AlbumFilterBar, type AlbumFilters } from "#/components/molecules/AlbumFilterBar";
 import { FilterHeader } from "#/components/molecules/FilterHeader";
+import { APP_NAME } from "#/lib/app.ts";
 import { listMyAlbums } from "#/server/albums.ts";
 
 const AlbumsIndexPage = () => {
@@ -72,7 +73,7 @@ const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
 
 export const Route = createFileRoute("/admin/albums/")({
   component: AlbumsIndexPage,
-  head: () => ({ meta: [{ title: "アルバム | photos.newt239.dev" }] }),
+  head: () => ({ meta: [{ title: `アルバム | ${APP_NAME}` }] }),
   loader: async ({ deps }: { deps: ReturnType<typeof loaderDeps> }) => {
     // 絞り込みが無いときは親 /admin の一覧と同じ結果になるため問い合わせない
     if (deps.q === undefined && deps.year === undefined) {

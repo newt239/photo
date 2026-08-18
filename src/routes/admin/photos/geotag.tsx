@@ -3,6 +3,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 
 import { TimelineGeotagPanel } from "#/components/organisms/TimelineGeotagPanel";
+import { APP_NAME } from "#/lib/app.ts";
 import { listPhotosMissingLocation } from "#/server/photos.ts";
 
 const PhotosGeotagPage = () => {
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/admin/photos/geotag")({
   component: PhotosGeotagPage,
   head: () => ({
     links: [{ href: leafletCss, rel: "stylesheet" }],
-    meta: [{ title: "位置情報の一括設定 | photos.newt239.dev" }],
+    meta: [{ title: `位置情報の一括設定 | ${APP_NAME}` }],
   }),
   loader: async () => {
     const result = await listPhotosMissingLocation({ data: {} });

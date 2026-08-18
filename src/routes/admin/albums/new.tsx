@@ -5,6 +5,7 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 
 import { AlbumForm, type AlbumFormValues } from "#/components/organisms/AlbumForm";
+import { APP_NAME } from "#/lib/app.ts";
 import { createAlbum } from "#/server/albums.ts";
 
 const NewAlbumPage = () => {
@@ -60,5 +61,5 @@ const NewAlbumPage = () => {
 
 export const Route = createFileRoute("/admin/albums/new")({
   component: NewAlbumPage,
-  head: () => ({ meta: [{ title: "新規アルバム | photos.newt239.dev" }] }),
+  head: () => ({ meta: [{ title: `新規アルバム | ${APP_NAME}` }] }),
 });

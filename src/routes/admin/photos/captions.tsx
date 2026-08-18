@@ -3,6 +3,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { PhotoDraftQueue } from "#/components/organisms/PhotoDraftQueue";
+import { APP_NAME } from "#/lib/app.ts";
 import { listMyPhotos } from "#/server/photo-list.ts";
 
 const PhotoCaptionsPage = () => {
@@ -40,7 +41,7 @@ const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
 
 export const Route = createFileRoute("/admin/photos/captions")({
   component: PhotoCaptionsPage,
-  head: () => ({ meta: [{ title: "説明を生成 | photos.newt239.dev" }] }),
+  head: () => ({ meta: [{ title: `説明を生成 | ${APP_NAME}` }] }),
   loader: async ({ deps }: { deps: ReturnType<typeof loaderDeps> }) => {
     const result = await listMyPhotos({ data: { limit: 50, missing: deps.field } });
     if (!result.success) {

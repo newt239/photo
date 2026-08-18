@@ -6,6 +6,7 @@ import { z } from "zod";
 import { FilterHeader } from "#/components/molecules/FilterHeader";
 import { PhotoFilterBar, type PhotoFilters } from "#/components/molecules/PhotoFilterBar";
 import { PhotoLibrary } from "#/components/organisms/PhotoLibrary";
+import { APP_NAME } from "#/lib/app.ts";
 import { listCameraModels, listMyPhotos } from "#/server/photo-list.ts";
 
 const AdminIndexPage = () => {
@@ -113,7 +114,7 @@ const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
 
 export const Route = createFileRoute("/admin/")({
   component: AdminIndexPage,
-  head: () => ({ meta: [{ title: "写真 | photos.newt239.dev" }] }),
+  head: () => ({ meta: [{ title: `写真 | ${APP_NAME}` }] }),
   loader: async ({ deps }: { deps: ReturnType<typeof loaderDeps> }) => {
     const [result, cameras] = await Promise.all([
       listMyPhotos({
