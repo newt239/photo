@@ -9,6 +9,31 @@ import { photos } from "#/db/schema.ts";
 import { missingLocation } from "#/server/photos.ts";
 import { getCurrentUserId } from "#/server/user.ts";
 
+export const photoCardColumns = {
+  alt: photos.alt,
+  caption: photos.caption,
+  height: photos.height,
+  id: photos.id,
+  latitude: photos.latitude,
+  longitude: photos.longitude,
+  storageKey: photos.storageKey,
+  takenAt: photos.takenAt,
+  width: photos.width,
+};
+
+export const toPhotoCard = (row: {
+  [K in keyof typeof photoCardColumns]: (typeof photos.$inferSelect)[K];
+}) => ({
+  alt: row.alt,
+  caption: row.caption,
+  hasLocation: row.latitude !== null && row.longitude !== null,
+  height: row.height,
+  id: row.id,
+  storageKey: row.storageKey,
+  takenAt: row.takenAt?.toISOString() ?? null,
+  width: row.width,
+});
+
 const listMyPhotosInput = z.object({
   album: z.string().optional(),
   camera: z.string().optional(),
@@ -72,17 +97,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
     const direction = data.order === "asc" ? asc : desc;
     const [rows, counted] = await db.batch([
       db
-        .select({
-          alt: photos.alt,
-          caption: photos.caption,
-          height: photos.height,
-          id: photos.id,
-          latitude: photos.latitude,
-          longitude: photos.longitude,
-          storageKey: photos.storageKey,
-          takenAt: photos.takenAt,
-          width: photos.width,
-        })
+        .select(photoCardColumns)
         .from(photos)
         .where(where)
         .orderBy(
@@ -99,16 +114,7 @@ export const listMyPhotos = createServerFn({ method: "GET" })
     ]);
 
     return {
-      photos: rows.map((row) => ({
-        alt: row.alt,
-        caption: row.caption,
-        hasLocation: row.latitude !== null && row.longitude !== null,
-        height: row.height,
-        id: row.id,
-        storageKey: row.storageKey,
-        takenAt: row.takenAt?.toISOString() ?? null,
-        width: row.width,
-      })),
+      photos: rows.map((row) => toPhotoCard(row)),
       success: true,
       total: counted[0].count,
     } as const;

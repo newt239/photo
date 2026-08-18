@@ -34,9 +34,7 @@ const searchSchema = z.object({
   field: z.enum(["caption", "alt"]).default("caption"),
 });
 
-const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => ({
-  field: search.field,
-});
+const loaderDeps = ({ search }: { search: z.infer<typeof searchSchema> }) => search;
 
 export const Route = createFileRoute("/admin/photos/captions")({
   component: PhotoCaptionsPage,

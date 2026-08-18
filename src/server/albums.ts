@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import * as schema from "#/db/schema.ts";
 import { albumPhotos, albums, photos } from "#/db/schema.ts";
+import { photoCardColumns, toPhotoCard } from "#/server/photo-list.ts";
 import { deleteOwnedPhotos } from "#/server/photos.ts";
 import { albumListOrder, coverPhotoId } from "#/server/public.ts";
 import { getCurrentUserId } from "#/server/user.ts";
@@ -65,13 +66,16 @@ export const createAlbum = createServerFn({ method: "POST" })
     if (requested && !SLUG_PATTERN.test(requested)) {
       return { error: "URL に使えない文字が含まれています", success: false } as const;
     }
-    const normalized = data.title
-      .normalize("NFKD")
-      .replaceAll(/[\u0300-\u036F]/g, "")
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, "-")
-      .replaceAll(/^-+|-+$/g, "");
-    const slug = requested || `${normalized || "album"}-${nanoid(6)}`;
+    let slug = requested;
+    if (!slug) {
+      const normalized = data.title
+        .normalize("NFKD")
+        .replaceAll(/[\u0300-\u036F]/g, "")
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, "-")
+        .replaceAll(/^-+|-+$/g, "");
+      slug = `${normalized || "album"}-${nanoid(6)}`;
+    }
     try {
       await db.insert(albums).values({
         id,
@@ -220,17 +224,7 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
 
     const direction = data.order === "asc" ? asc : desc;
     const photoRows = await db
-      .select({
-        alt: photos.alt,
-        caption: photos.caption,
-        height: photos.height,
-        id: photos.id,
-        latitude: photos.latitude,
-        longitude: photos.longitude,
-        storageKey: photos.storageKey,
-        takenAt: photos.takenAt,
-        width: photos.width,
-      })
+      .select(photoCardColumns)
       .from(albumPhotos)
       .innerJoin(photos, eq(albumPhotos.photoId, photos.id))
       .where(eq(albumPhotos.albumId, album.id))
@@ -240,20 +234,7 @@ export const getAlbumBySlug = createServerFn({ method: "GET" })
         direction(albumPhotos.addedAt),
       );
 
-    return {
-      album,
-      photos: photoRows.map((row) => ({
-        alt: row.alt,
-        caption: row.caption,
-        hasLocation: row.latitude !== null && row.longitude !== null,
-        height: row.height,
-        id: row.id,
-        storageKey: row.storageKey,
-        takenAt: row.takenAt?.toISOString() ?? null,
-        width: row.width,
-      })),
-      success: true,
-    } as const;
+    return { album, photos: photoRows.map((row) => toPhotoCard(row)), success: true } as const;
   });
 
 const setAlbumCoverInput = z.object({

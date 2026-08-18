@@ -57,11 +57,7 @@ export const usePhotoZoom = (photoKey: string | null) => {
   };
 
   const startPinch = () => {
-    const points = [...pointersRef.current.values()];
-    const [a, b] = points;
-    if (!a || !b) {
-      return;
-    }
+    const [a, b] = [...pointersRef.current.values()];
     const { current } = viewRef;
     pinchRef.current = {
       distance: Math.hypot(a.x - b.x, a.y - b.y),

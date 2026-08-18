@@ -221,7 +221,7 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
     }
     setSavingAll(true);
     for (const target of targets) {
-      updateItem(target.id, { error: undefined, saved: false });
+      updateItem(target.id, { error: undefined });
     }
     try {
       for (let offset = 0; offset < targets.length; offset += 100) {
@@ -238,15 +238,12 @@ export const UploadDropzone = ({ onComplete }: { onComplete?: (photoIds: string[
             },
           });
           for (const target of chunk) {
-            updateItem(
-              target.id,
-              result.success ? { saved: true } : { error: result.error, saved: false },
-            );
+            updateItem(target.id, result.success ? { saved: true } : { error: result.error });
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           for (const target of chunk) {
-            updateItem(target.id, { error: message, saved: false });
+            updateItem(target.id, { error: message });
           }
         }
       }

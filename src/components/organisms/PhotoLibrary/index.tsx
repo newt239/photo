@@ -43,17 +43,19 @@ export const PhotoLibrary = ({
   const [notice, setNotice] = useState<string | null>(null);
 
   const toggle = (photoId: string, extend: boolean) => {
-    const anchorIndex = photos.findIndex((p) => p.id === lastSelectedId);
-    const targetIndex = photos.findIndex((p) => p.id === photoId);
     setSelected((prev) => {
       const next = new Set(prev);
-      if (extend && anchorIndex !== -1 && targetIndex !== -1) {
-        const [from, to] =
-          anchorIndex < targetIndex ? [anchorIndex, targetIndex] : [targetIndex, anchorIndex];
-        for (const photo of photos.slice(from, to + 1)) {
-          next.add(photo.id);
+      if (extend) {
+        const anchorIndex = photos.findIndex((p) => p.id === lastSelectedId);
+        const targetIndex = photos.findIndex((p) => p.id === photoId);
+        if (anchorIndex !== -1 && targetIndex !== -1) {
+          const [from, to] =
+            anchorIndex < targetIndex ? [anchorIndex, targetIndex] : [targetIndex, anchorIndex];
+          for (const photo of photos.slice(from, to + 1)) {
+            next.add(photo.id);
+          }
+          return next;
         }
-        return next;
       }
       if (next.has(photoId)) {
         next.delete(photoId);

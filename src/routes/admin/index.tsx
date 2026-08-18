@@ -134,7 +134,7 @@ export const Route = createFileRoute("/admin/")({
     if (!result.success) {
       throw notFound();
     }
-    return { cameras, photos: result.photos, total: result.total };
+    return { cameras, ...result };
   },
   loaderDeps,
   validateSearch: searchSchema,

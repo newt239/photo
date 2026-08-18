@@ -51,6 +51,16 @@ export const PhotoBulkActions = ({
 }: PhotoBulkActionsProps) => {
   const [albumId, setAlbumId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const cancelButton = (
+    <Button
+      variant="default"
+      leftSection={<XIcon size={16} />}
+      onClick={() => onModalChange(null)}
+      disabled={submitting}
+    >
+      キャンセルする
+    </Button>
+  );
 
   return (
     <Group gap="sm" wrap="nowrap">
@@ -133,14 +143,7 @@ export const PhotoBulkActions = ({
             nothingFoundMessage="アルバムが見つかりません"
           />
           <Group justify="flex-end" gap="sm">
-            <Button
-              variant="default"
-              leftSection={<XIcon size={16} />}
-              onClick={() => onModalChange(null)}
-              disabled={submitting}
-            >
-              キャンセルする
-            </Button>
+            {cancelButton}
             <Button
               leftSection={<FolderInputIcon size={16} />}
               loading={submitting}
@@ -175,14 +178,7 @@ export const PhotoBulkActions = ({
             作成したアルバムは非公開です。公開状態はアルバムの設定から変更できます。
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button
-              variant="default"
-              leftSection={<XIcon size={16} />}
-              onClick={() => onModalChange(null)}
-              disabled={submitting}
-            >
-              キャンセルする
-            </Button>
+            {cancelButton}
             <Button
               leftSection={<PlusIcon size={16} />}
               loading={submitting}
@@ -211,14 +207,7 @@ export const PhotoBulkActions = ({
             写真が含まれているすべてのアルバムからも取り除かれます。
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button
-              variant="default"
-              leftSection={<XIcon size={16} />}
-              onClick={() => onModalChange(null)}
-              disabled={submitting}
-            >
-              キャンセルする
-            </Button>
+            {cancelButton}
             <Button
               color="red"
               leftSection={<Trash2Icon size={16} />}

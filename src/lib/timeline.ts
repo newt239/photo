@@ -218,7 +218,7 @@ export const matchTimeline = (
       source: "interpolated",
     };
   }
-  if (prev && prevDiff <= toleranceMs && prevDiff <= nextDiff) {
+  if (prev && prevDiff <= toleranceMs) {
     return {
       diffMs: prevDiff,
       latitude: prev.latitude,

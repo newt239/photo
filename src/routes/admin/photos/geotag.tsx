@@ -30,6 +30,6 @@ export const Route = createFileRoute("/admin/photos/geotag")({
     if (!result.success) {
       throw notFound();
     }
-    return { photos: result.photos };
+    return result;
   },
 });

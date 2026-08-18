@@ -43,6 +43,6 @@ export const Route = createFileRoute("/admin")({
     if (!result.success) {
       throw redirect({ params: { _splat: "" }, to: "/login/$" });
     }
-    return { albums: result.albums };
+    return result;
   },
 });

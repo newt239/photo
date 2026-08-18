@@ -213,10 +213,10 @@ export const getPhoto = createServerFn({ method: "GET" })
       return { error: "写真が見つかりません", success: false } as const;
     }
     // 全件を取得して JS で探すのを避けるため LAG/LEAD で前後 1 件だけを求める
-    const ordering =
-      data.order === "asc"
-        ? sql`ORDER BY p.taken_at IS NULL, p.taken_at ASC, p.uploaded_at ASC`
-        : sql`ORDER BY p.taken_at IS NULL, p.taken_at DESC, p.uploaded_at DESC`;
+    const sortDirection = data.order === "asc" ? sql`ASC` : sql`DESC`;
+    // 一覧の並び順と揃えるため同着の第 3 キーはアルバム内では追加順にする
+    const tieBreaker = data.albumSlug ? sql`ap.added_at` : sql`p.uploaded_at`;
+    const ordering = sql`ORDER BY p.taken_at IS NULL, p.taken_at ${sortDirection}, ${tieBreaker} ${sortDirection}`;
     const source = data.albumSlug
       ? sql`FROM album_photos ap
           JOIN photos p ON p.id = ap.photo_id
