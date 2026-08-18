@@ -12,6 +12,7 @@ import type { PhotoCardData } from "#/components/molecules/PhotoCard";
 
 type PhotoTableProps = {
   photos: PhotoCardData[];
+  actionsId: string;
   albumSlug?: string;
   order: "asc" | "desc";
   selectedPhotoIds: Set<string>;
@@ -20,6 +21,7 @@ type PhotoTableProps = {
 
 export const PhotoTable = ({
   photos,
+  actionsId,
   albumSlug,
   order,
   selectedPhotoIds,
@@ -49,6 +51,7 @@ export const PhotoTable = ({
                   readOnly
                   onClick={(event) => onSelect(p.id, event.shiftKey)}
                   aria-label={name ?? "この写真を選択する"}
+                  aria-actions={selected ? actionsId : undefined}
                 />
               </Table.Td>
               <Table.Td>

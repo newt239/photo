@@ -264,7 +264,7 @@ export const PhotoDetailView = ({ photo, albumSlug, order, previousId, nextId }:
         </div>
         <Group gap="xs" wrap="nowrap">
           {currentAlbum && (
-            <Menu position="bottom-end" shadow="md" width={240}>
+            <Menu id="photo-actions" position="bottom-end" shadow="md" width={240}>
               <Menu.Target>
                 <ActionIcon variant="default" disabled={settingCover} aria-label="この写真の操作">
                   <EllipsisIcon size={16} />
@@ -293,12 +293,22 @@ export const PhotoDetailView = ({ photo, albumSlug, order, previousId, nextId }:
         <div className={classes.viewer}>
           <div ref={stageRef} className={classes.stage} {...stageProps}>
             <div ref={canvasRef} className={classes.canvas} style={{ transform }}>
-              <img src={imageSrc} alt={alt || caption || ""} draggable={false} />
+              <img
+                src={imageSrc}
+                alt={alt || caption || ""}
+                draggable={false}
+                aria-actions={
+                  currentAlbum
+                    ? "photo-actions photo-zoom-out photo-zoom-in photo-zoom-reset"
+                    : "photo-zoom-out photo-zoom-in photo-zoom-reset"
+                }
+              />
             </div>
           </div>
           <Group className={classes.toolbar} gap="xs" justify="space-between" wrap="nowrap">
             <Group gap="xs" wrap="nowrap">
               <ActionIcon
+                id="photo-zoom-out"
                 variant="default"
                 onClick={() => zoomTo(scale / 1.5)}
                 disabled={scale <= 0.25}
@@ -310,6 +320,7 @@ export const PhotoDetailView = ({ photo, albumSlug, order, previousId, nextId }:
                 {Math.round(scale * 100)}%
               </Text>
               <ActionIcon
+                id="photo-zoom-in"
                 variant="default"
                 onClick={() => zoomTo(scale * 1.5)}
                 disabled={scale >= 4}
@@ -318,6 +329,7 @@ export const PhotoDetailView = ({ photo, albumSlug, order, previousId, nextId }:
                 <ZoomInIcon size={16} />
               </ActionIcon>
               <ActionIcon
+                id="photo-zoom-reset"
                 variant="default"
                 onClick={reset}
                 disabled={scale === 1}

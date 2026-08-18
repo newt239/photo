@@ -20,13 +20,21 @@ export type PhotoCardData = {
 
 type PhotoCardProps = {
   photo: PhotoCardData;
+  actionsId: string;
   albumSlug?: string;
   order: "asc" | "desc";
   selected: boolean;
   onSelect: (photoId: string, extend: boolean) => void;
 };
 
-export const PhotoCard = ({ photo, albumSlug, order, selected, onSelect }: PhotoCardProps) => {
+export const PhotoCard = ({
+  photo,
+  actionsId,
+  albumSlug,
+  order,
+  selected,
+  onSelect,
+}: PhotoCardProps) => {
   const thumb = (
     <div className={classes.thumb} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
       <img
@@ -56,6 +64,7 @@ export const PhotoCard = ({ photo, albumSlug, order, selected, onSelect }: Photo
         readOnly
         onClick={(event) => onSelect(photo.id, event.shiftKey)}
         aria-label={photo.caption ?? photo.alt ?? "この写真を選択する"}
+        aria-actions={selected ? actionsId : undefined}
       />
     </div>
   );

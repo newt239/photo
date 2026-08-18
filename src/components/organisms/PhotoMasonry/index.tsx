@@ -5,12 +5,14 @@ import classes from "./PhotoMasonry.module.css";
 
 export const PhotoMasonry = ({
   photos,
+  actionsId,
   albumSlug,
   order,
   selectedPhotoIds,
   onSelect,
 }: {
   photos: PhotoCardData[];
+  actionsId: string;
   albumSlug?: string;
   order: "asc" | "desc";
   selectedPhotoIds: Set<string>;
@@ -29,6 +31,7 @@ export const PhotoMasonry = ({
           <div key={p.id} className={classes.item} data-index={index}>
             <PhotoCard
               photo={p}
+              actionsId={actionsId}
               albumSlug={albumSlug}
               order={order}
               selected={selectedPhotoIds.has(p.id)}
