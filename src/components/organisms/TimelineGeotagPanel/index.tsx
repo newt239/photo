@@ -262,6 +262,9 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
                               onChange={(event) => toggle(photo.id, event.currentTarget.checked)}
                               disabled={applying}
                               aria-label="この写真に適用する"
+                              aria-actions={
+                                excludedIds.has(photo.id) ? undefined : "timeline-geotag-apply"
+                              }
                             />
                           </Table.Td>
                           <Table.Td>
@@ -314,6 +317,7 @@ export const TimelineGeotagPanel = ({ photos }: Props) => {
           )}
           <Group justify="flex-end">
             <Button
+              id="timeline-geotag-apply"
               leftSection={<MapPinIcon size={16} />}
               onClick={handleApply}
               loading={applying}

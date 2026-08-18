@@ -41,6 +41,7 @@ export const PhotoLibrary = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const bulkActionsId = "photo-bulk-actions";
 
   const toggle = (photoId: string, extend: boolean) => {
     setSelected((prev) => {
@@ -173,6 +174,7 @@ export const PhotoLibrary = ({
             selectedCount={selected.size}
             submitting={submitting}
             albums={album ? albums.filter((a) => a.id !== album.id) : albums}
+            menuId={bulkActionsId}
             modal={modal}
             onModalChange={setModal}
             onSelectAll={selectAll}
@@ -206,6 +208,7 @@ export const PhotoLibrary = ({
       ) : (
         <List
           photos={photos}
+          actionsId={bulkActionsId}
           albumSlug={album?.slug}
           order={order}
           selectedPhotoIds={selected}

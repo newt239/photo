@@ -114,6 +114,7 @@ const AlbumAddPhotosPage = () => {
             <Stack gap="md">
               <PhotoPicker
                 photos={photos}
+                actionsId="album-add-photos"
                 disabledPhotoIds={alreadyAdded}
                 selectedPhotoIds={selected}
                 onToggle={(photoId) => {
@@ -130,6 +131,7 @@ const AlbumAddPhotosPage = () => {
               />
               <Group justify="flex-end">
                 <Button
+                  id="album-add-photos"
                   leftSection={<PlusIcon size={16} />}
                   onClick={() => {
                     handleSubmit();

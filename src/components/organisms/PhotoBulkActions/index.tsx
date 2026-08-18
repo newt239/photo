@@ -26,6 +26,7 @@ type PhotoBulkActionsProps = {
   selectedCount: number;
   submitting: boolean;
   albums: { id: string; title: string }[];
+  menuId: string;
   modal: "add" | "create" | "delete" | null;
   onModalChange: (next: "add" | "create" | "delete" | null) => void;
   onSelectAll: () => void;
@@ -40,6 +41,7 @@ export const PhotoBulkActions = ({
   selectedCount,
   submitting,
   albums,
+  menuId,
   modal,
   onModalChange,
   onSelectAll,
@@ -67,7 +69,7 @@ export const PhotoBulkActions = ({
       <Text size="sm" c="dimmed">
         {selectedCount} 枚を選択中
       </Text>
-      <Menu position="bottom-end" shadow="md" width={240}>
+      <Menu id={menuId} position="bottom-end" shadow="md" width={240}>
         <Menu.Target>
           <ActionIcon variant="default" disabled={submitting} aria-label="選択した写真の操作">
             <EllipsisIcon size={16} />

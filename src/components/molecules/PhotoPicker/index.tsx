@@ -12,6 +12,7 @@ type PhotoPickerItem = {
 
 type PhotoPickerProps = {
   photos: PhotoPickerItem[];
+  actionsId: string;
   disabledPhotoIds: Set<string>;
   selectedPhotoIds: Set<string>;
   onToggle: (photoId: string) => void;
@@ -19,6 +20,7 @@ type PhotoPickerProps = {
 
 export const PhotoPicker = ({
   photos,
+  actionsId,
   disabledPhotoIds,
   selectedPhotoIds,
   onToggle,
@@ -41,6 +43,7 @@ export const PhotoPicker = ({
             disabled={already}
             onChange={() => onToggle(p.id)}
             aria-label={p.caption ?? p.id}
+            aria-actions={checked && !already ? actionsId : undefined}
           />
         </label>
       );
