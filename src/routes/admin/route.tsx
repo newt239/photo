@@ -4,6 +4,7 @@ import { Link, Outlet, createFileRoute, redirect } from "@tanstack/react-router"
 
 import { AdminNavbar } from "#/components/organisms/AdminNavbar";
 import { KeyboardShortcutHelp } from "#/components/organisms/KeyboardShortcutHelp";
+import { APP_NAME } from "#/lib/app.ts";
 import { listMyAlbums } from "#/server/albums.ts";
 
 const AdminLayout = () => {
@@ -19,7 +20,7 @@ const AdminLayout = () => {
         <Group h="100%" px="md" gap="sm">
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           <Text component={Link} to="/admin" fw={700} c="inherit" td="none">
-            photos.newt239.dev
+            {APP_NAME}
           </Text>
           <Group ml="auto" gap="xs">
             <KeyboardShortcutHelp />

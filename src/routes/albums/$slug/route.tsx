@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { AlbumViewerControls } from "#/components/organisms/AlbumViewerControls";
 import { env } from "#/env.ts";
+import { APP_NAME } from "#/lib/app.ts";
 import { formatAlbumPeriod } from "#/lib/format.ts";
 import { getPublicAlbumBySlug } from "#/server/public.ts";
 
@@ -63,7 +64,7 @@ export const Route = createFileRoute("/albums/$slug")({
     const version = loaderData ? new Date(loaderData.album.updatedAt).getTime() : 0;
     return {
       meta: [
-        { title: `${title} | photos.newt239.dev` },
+        { title: `${title} | ${APP_NAME}` },
         { content: title, property: "og:title" },
         { content: url, property: "og:url" },
         {

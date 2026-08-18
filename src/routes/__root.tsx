@@ -4,6 +4,7 @@ import mantineDropzoneCss from "@mantine/dropzone/styles.css?url";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 
 import { env } from "#/env.ts";
+import { APP_NAME } from "#/lib/app.ts";
 import { cookieColorSchemeManager } from "#/lib/color-scheme.ts";
 import { ClerkProvider } from "#/providers/ClerkProvider.tsx";
 import { getColorSchemeCookie } from "#/server/color-scheme.ts";
@@ -74,10 +75,10 @@ export const Route = createRootRoute({
         name: "viewport",
       },
       {
-        title: "photos.newt239.dev",
+        title: APP_NAME,
       },
       {
-        content: "photos.newt239.dev",
+        content: APP_NAME,
         property: "og:site_name",
       },
       {
@@ -85,7 +86,7 @@ export const Route = createRootRoute({
         property: "og:type",
       },
       {
-        content: "photos.newt239.dev",
+        content: APP_NAME,
         property: "og:title",
       },
       {

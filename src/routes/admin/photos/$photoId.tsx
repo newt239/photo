@@ -3,6 +3,7 @@ import leafletCss from "leaflet/dist/leaflet.css?url";
 import { z } from "zod";
 
 import { PhotoDetailView } from "#/components/organisms/PhotoDetailView";
+import { APP_NAME } from "#/lib/app.ts";
 import { getPhoto } from "#/server/photos.ts";
 
 const PhotoDetailPage = () => {
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/admin/photos/$photoId")({
   component: PhotoDetailPage,
   head: ({ loaderData }) => ({
     links: [{ href: leafletCss, rel: "stylesheet" }],
-    meta: [{ title: `${loaderData?.photo.caption ?? "写真"} | photos.newt239.dev` }],
+    meta: [{ title: `${loaderData?.photo.caption ?? "写真"} | ${APP_NAME}` }],
   }),
   loader: async ({
     deps,

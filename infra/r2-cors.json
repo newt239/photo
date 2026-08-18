@@ -6,7 +6,7 @@
         "methods": ["GET", "PUT", "HEAD"],
         "origins": [
           "http://localhost:3000",
-          "https://photos.newt239.dev",
+          "https://fernweh.newt239.dev",
           "https://*.newtpia.workers.dev"
         ]
       },

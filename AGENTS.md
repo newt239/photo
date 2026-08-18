@@ -57,7 +57,7 @@
 
 Clerk の本番インスタンスは primary domain `newt239.dev` とそのサブドメインしか redirect 先として許可しないため、`*.workers.dev` のプレビュー URL では本番キーだとログインできません。プレビューでは Clerk の Development インスタンスを使います。
 
-Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。このバージョンは接続先の Worker `photos` の上に載ります。`wrangler.jsonc` に別環境を書いても CI が Worker 名を `photos` に上書きするため、別 Worker には出せません。
+Workers Builds は production ブランチ以外へのコミットでは deploy command の代わりに Version command を実行し、production に昇格しないバージョンを作ります。このバージョンは接続先の Worker `fernweh` の上に載ります。`wrangler.jsonc` に別環境を書いても CI が Worker 名を `fernweh` に上書きするため、別 Worker には出せません。
 
 本番の secret と同じ名前を `--var` で上書きしてはなりません。一度それで本番の `CLERK_SECRET_KEY` と `VITE_CLERK_PUBLISHABLE_KEY` が Worker から消え、全リクエストが 500 になりました。プレビュー用の値は別名で渡し、コード側で優先します。
 

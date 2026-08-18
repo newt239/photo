@@ -6,6 +6,7 @@ import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 
 import { PhotoPicker } from "#/components/molecules/PhotoPicker";
 import { UploadDropzone } from "#/components/organisms/UploadDropzone";
+import { APP_NAME } from "#/lib/app.ts";
 import { addPhotosToAlbum, getAlbumBySlug } from "#/server/albums.ts";
 import { listMyPhotos } from "#/server/photo-list.ts";
 
@@ -150,7 +151,7 @@ const AlbumAddPhotosPage = () => {
 export const Route = createFileRoute("/admin/albums_/$slug/add")({
   component: AlbumAddPhotosPage,
   head: ({ loaderData }) => ({
-    meta: [{ title: `写真を追加 | ${loaderData?.album.title ?? "アルバム"} | photos.newt239.dev` }],
+    meta: [{ title: `写真を追加 | ${loaderData?.album.title ?? "アルバム"} | ${APP_NAME}` }],
   }),
   loader: async ({ params }: { params: { slug: string } }) => {
     const [detail, myPhotos] = await Promise.all([

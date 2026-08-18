@@ -1,4 +1,4 @@
-# photo
+# fernweh.newt239.dev
 
 個人向け写真管理アプリ。Cloudflare Workers 上で動作する TanStack Start ベースの SSR アプリ。
 

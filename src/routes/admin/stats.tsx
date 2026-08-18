@@ -4,6 +4,7 @@ import { Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { Notice } from "#/components/atoms/Notice";
+import { APP_NAME } from "#/lib/app.ts";
 import { formatBytes } from "#/lib/format.ts";
 import { getPhotoStats } from "#/server/stats.ts";
 
@@ -90,7 +91,7 @@ export const Route = createFileRoute("/admin/stats")({
   component: StatsPage,
   head: () => ({
     links: [{ href: mantineChartsCss, rel: "stylesheet" }],
-    meta: [{ title: "統計 | photos.newt239.dev" }],
+    meta: [{ title: `統計 | ${APP_NAME}` }],
   }),
   loader: async () => {
     const result = await getPhotoStats();
