@@ -2,4 +2,4 @@
 User-agent: *
 Disallow: /admin
 
-Sitemap: https://photos.newt239.dev/sitemap.xml
+Sitemap: https://fernweh.newt239.dev/sitemap.xml

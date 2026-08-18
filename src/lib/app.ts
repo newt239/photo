@@ -1,1 +1,1 @@
-export const APP_NAME = "photos.newt239.dev";
+export const APP_NAME = "fernweh.newt239.dev";
