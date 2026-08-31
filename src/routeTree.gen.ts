@@ -16,6 +16,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as AlbumsSlugRouteRouteImport } from './routes/albums/$slug/route'
+import { Route as ApiAlbumsDotjsonRouteImport } from './routes/api/albums[.]json'
 import { Route as LoginSplatRouteImport } from './routes/login/$'
 import { Route as RegisterSplatRouteImport } from './routes/register/$'
 import { Route as AdminAlbumsIndexRouteImport } from './routes/admin/albums/index'
@@ -66,6 +67,11 @@ const AdminStatsRoute = AdminStatsRouteImport.update({
 const AlbumsSlugRouteRoute = AlbumsSlugRouteRouteImport.update({
   id: '/albums/$slug',
   path: '/albums/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAlbumsDotjsonRoute = ApiAlbumsDotjsonRouteImport.update({
+  id: '/api/albums.json',
+  path: '/api/albums.json',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginSplatRoute = LoginSplatRouteImport.update({
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/api/albums.json': typeof ApiAlbumsDotjsonRoute
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin/': typeof AdminIndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/api/albums.json': typeof ApiAlbumsDotjsonRoute
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin': typeof AdminIndexRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/albums/$slug': typeof AlbumsSlugRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/api/albums.json': typeof ApiAlbumsDotjsonRoute
   '/login/$': typeof LoginSplatRoute
   '/register/$': typeof RegisterSplatRoute
   '/admin/': typeof AdminIndexRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/albums/$slug'
     | '/admin/settings'
     | '/admin/stats'
+    | '/api/albums.json'
     | '/login/$'
     | '/register/$'
     | '/admin/'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/settings'
     | '/admin/stats'
+    | '/api/albums.json'
     | '/login/$'
     | '/register/$'
     | '/admin'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/albums/$slug'
     | '/admin/settings'
     | '/admin/stats'
+    | '/api/albums.json'
     | '/login/$'
     | '/register/$'
     | '/admin/'
@@ -305,6 +317,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AlbumsSlugRouteRoute: typeof AlbumsSlugRouteRouteWithChildren
+  ApiAlbumsDotjsonRoute: typeof ApiAlbumsDotjsonRoute
   LoginSplatRoute: typeof LoginSplatRoute
   RegisterSplatRoute: typeof RegisterSplatRoute
   ApiOgIndexRoute: typeof ApiOgIndexRoute
@@ -360,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/albums/$slug'
       fullPath: '/albums/$slug'
       preLoaderRoute: typeof AlbumsSlugRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/albums.json': {
+      id: '/api/albums.json'
+      path: '/api/albums.json'
+      fullPath: '/api/albums.json'
+      preLoaderRoute: typeof ApiAlbumsDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/$': {
@@ -532,6 +552,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AlbumsSlugRouteRoute: AlbumsSlugRouteRouteWithChildren,
+  ApiAlbumsDotjsonRoute: ApiAlbumsDotjsonRoute,
   LoginSplatRoute: LoginSplatRoute,
   RegisterSplatRoute: RegisterSplatRoute,
   ApiOgIndexRoute: ApiOgIndexRoute,
