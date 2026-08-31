@@ -14,8 +14,8 @@ export const Route = createFileRoute("/api/albums.json")({
   server: {
     handlers: {
       GET: async () => {
-        const db = drizzle(cloudflareEnv.DB, { schema }),
-         rows = await db
+        const db = drizzle(cloudflareEnv.DB, { schema });
+        const rows = await db
           .select({
             coverStorageKey: photos.storageKey,
             periodEnd: albums.periodEnd,
@@ -27,9 +27,9 @@ export const Route = createFileRoute("/api/albums.json")({
           .leftJoin(photos, eq(photos.id, coverPhotoId))
           .where(eq(albums.visibility, "public"))
           .orderBy(...albumListOrder)
-          .limit(5),
+          .limit(5);
 
-         body = {
+        const body = {
           albums: rows.map((row) => ({
             period: formatAlbumPeriod(row.periodStart, row.periodEnd),
             slug: row.slug,
