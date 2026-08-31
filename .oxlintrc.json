@@ -87,7 +87,6 @@
     "react/no-object-type-as-default-prop": "off",
     "react/no-unknown-property": ["warn", { "ignore": ["aria-actions"] }],
     "react/only-export-components": "off",
-    "react/react-compiler": "off",
     "react/react-in-jsx-scope": "off",
     "react-perf/jsx-no-jsx-as-prop": "off",
     "react-perf/jsx-no-new-array-as-prop": "off",
