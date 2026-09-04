@@ -14,8 +14,19 @@
 ## セットアップ
 
 ```bash
-mise install
 pnpm install
+```
+
+### Node のバージョン
+
+pnpm が `package.json` の `devEngines.runtime` を参照し、`pnpm run` 経由のコマンドを指定バージョンの Node で実行する。未取得の場合は自動でダウンロードされるため、別途バージョンマネージャーを用意する必要はない。CI も同じフィールドを参照する。
+
+### pnpm のバージョン
+
+`package.json` の `packageManager` で固定している。pnpm 12 はネイティブバイナリのため pnpm 11 以下からは自動で切り替わらない。手元が pnpm 11 以下なら一度だけ次を実行する。
+
+```bash
+curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=12.3.1 sh -
 ```
 
 `.env.local` に以下を設定:
