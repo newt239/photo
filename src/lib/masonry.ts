@@ -10,10 +10,15 @@ const masonryLayout = <T extends { height: number; width: number }>(
         lane = candidate;
       }
     }
-    const position = { column: lanes.indexOf(lane), rowsAbove: lane.count, top: lane.height };
+    const entry = {
+      ...item,
+      column: lanes.indexOf(lane),
+      rowsAbove: lane.count,
+      top: lane.height,
+    };
     lane.count += 1;
     lane.height += item.height / item.width;
-    return { ...item, ...position };
+    return entry;
   });
 
   return {
@@ -31,14 +36,14 @@ export const masonryStyle = (
   { canvas, gap = false, item }: { canvas: string; gap?: boolean; item: string },
 ) => {
   const layouts = columnCounts.map((columns) => masonryLayout(items, columns));
-  return [
-    `.${canvas}{${layouts
-      .map(
-        (layout, i) =>
-          `--h${i + 1}:${layout.totalHeight};${gap ? `--gr${i + 1}:${Math.max(0, layout.totalRows - 1)};` : ""}`,
-      )
-      .join("")}}`,
-    ...items.map(
+  const canvasStyle = layouts
+    .map(
+      (layout, i) =>
+        `--h${i + 1}:${layout.totalHeight};${gap ? `--gr${i + 1}:${Math.max(0, layout.totalRows - 1)};` : ""}`,
+    )
+    .join("");
+  const itemStyles = items
+    .map(
       (_, index) =>
         `.${item}[data-index="${index}"]{${layouts
           .map((layout, i) => {
@@ -46,6 +51,7 @@ export const masonryStyle = (
             return `--c${i + 1}:${placed.column};--y${i + 1}:${placed.top};${gap ? `--r${i + 1}:${placed.rowsAbove};` : ""}`;
           })
           .join("")}}`,
-    ),
-  ].join("");
+    )
+    .join("");
+  return `.${canvas}{${canvasStyle}}${itemStyles}`;
 };
