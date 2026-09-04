@@ -57,7 +57,7 @@ export const usePhotoZoom = (photoKey: string | null) => {
   };
 
   const startPinch = () => {
-    const [a, b] = [...pointersRef.current.values()];
+    const [a, b] = pointersRef.current.values();
     const { current } = viewRef;
     pinchRef.current = {
       distance: Math.hypot(a.x - b.x, a.y - b.y),
@@ -75,7 +75,7 @@ export const usePhotoZoom = (photoKey: string | null) => {
     if (pointersRef.current.size < 2) {
       pinchRef.current = null;
     }
-    const [remaining] = [...pointersRef.current.values()];
+    const [remaining] = pointersRef.current.values();
     const { current } = viewRef;
     panRef.current = remaining
       ? { pointerX: remaining.x, pointerY: remaining.y, x: current.x, y: current.y }
@@ -131,7 +131,7 @@ export const usePhotoZoom = (photoKey: string | null) => {
         const stage = stageRef.current;
         const pinch = pinchRef.current;
         if (pinch && stage) {
-          const [a, b] = [...pointers.values()];
+          const [a, b] = pointers.values();
           if (!a || !b) {
             return;
           }

@@ -44,6 +44,14 @@
 - `pnpm run typecheck` - TypeScript で型チェック
 - `pnpm run codecheck` - typecheck + lint + format + knip を一括実行
 
+### ツールチェーンのバージョン
+
+Node は `package.json` の `devEngines.runtime`、pnpm は `packageManager` で固定します。`mise.toml` や `.node-version` は使いません。
+
+- `devEngines.runtime.onFail` は `ignore` にしてあります。`download` にしてはなりません。npm はバージョンが一致しないときだけ `onFail` を見ますが `download` を解釈できず `EBADDEVENGINES` で落ち、Workers Builds の deploy command が `npx wrangler` なのでデプロイが失敗します
+- pnpm 側の自動ダウンロードは `pnpm-workspace.yaml` の `runtimeOnFail: download` で維持しています。`pnpm install` が Node を取得してロックファイルに固定し、`pnpm run` 経由のコマンドがそのランタイムで動きます
+- pnpm 12 はネイティブバイナリのため、pnpm 11 以下は `packageManager` を見ても自動で切り替われず `SyntaxError` になります。手元の pnpm が 11 以下なら README の手順で入れ直してください
+
 ### データベース
 
 - `pnpm run db:generate` - `src/db/schema.ts` からマイグレーション SQL を `./drizzle` に生成
