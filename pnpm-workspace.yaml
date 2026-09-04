@@ -10,3 +10,4 @@ allowBuilds:
 saveExact: true
 minimumReleaseAge: 10080
 minimumReleaseAgeExcludePrune: true
+runtimeOnFail: download
