@@ -4,18 +4,12 @@
 
 ## 技術スタック
 
-TanStack Start (React 19) / Mantine / Clerk / Cloudflare D1 + Drizzle ORM / Cloudflare R2 / Cloudflare Workers
+TanStack Start / React / Mantine / Clerk / Cloudflare D1 + Drizzle ORM / Cloudflare R2 / Cloudflare Workers
 
 ## セットアップ
 
 ```bash
 pnpm install
-```
-
-pnpm 12 はネイティブバイナリのため pnpm 11 以下からは自動で切り替わらない。手元が pnpm 11 以下なら一度だけ次を実行する。
-
-```bash
-curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=12.3.1 sh -
 ```
 
 `.env.local` に以下を設定する。
@@ -34,5 +28,3 @@ pnpm build      # 本番ビルド
 pnpm preview    # ビルド成果物のプレビュー
 pnpm codecheck  # typecheck + lint + format + knip
 ```
-
-設計方針・デプロイ・データベース運用の詳細は [CLAUDE.md](./CLAUDE.md) を参照。
