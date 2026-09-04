@@ -9,3 +9,4 @@ allowBuilds:
   workerd: true
 saveExact: true
 minimumReleaseAge: 10080
+minimumReleaseAgeExcludePrune: true
